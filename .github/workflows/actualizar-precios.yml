@@ -1,10 +1,9 @@
 name: Actualizar precios
 
 on:
-  workflow_dispatch:   # botón manual (para la prueba)
-  # Cuando la prueba funcione, quitá el # de las 2 líneas siguientes:
-  # schedule:
-  #   - cron: "*/10 * * * *"
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"  
 
 permissions:
   contents: write
