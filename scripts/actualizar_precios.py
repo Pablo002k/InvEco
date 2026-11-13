@@ -5,7 +5,7 @@ import json, os, sys, time, urllib.parse, urllib.request, urllib.error
 from datetime import datetime, timezone
 
 BASE = "https://api.iolinversiones.com"
-TIPOS = ["cedears", "stocks"]   # tipos de activo a traer
+TIPOS = ["acciones", "cedears", "etfs"]   # tipos de activo a traer
 PLAZO = "T1"                    # T1 = 24hs, T0 = inmediato
 
 
