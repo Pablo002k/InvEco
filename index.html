@@ -6,61 +6,128 @@
 <title>Prueba de precios</title>
 <style>
   :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
-  body { margin: 0; padding: 16px; max-width: 1100px; margin-inline: auto; }
-  h1 { font-size: 1.3rem; margin: 0 0 4px; }
-  #estado { font-size: .9rem; opacity: .75; margin-bottom: 12px; }
-  input { width: 100%; padding: 10px; font-size: 1rem; box-sizing: border-box; }
+  body { margin: 0; padding: 16px; max-width: 1150px; margin-inline: auto; }
+  h1 { font-size: 1.3rem; margin: 0 0 8px; }
+  .barra { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; font-size: .9rem; }
+  button { padding: 8px 14px; font-size: .9rem; cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+  .filtros { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; }
+  input, select { padding: 9px; font-size: 1rem; box-sizing: border-box; width: 100%; }
   .cols { display: grid; grid-template-columns: 1fr 1.3fr; gap: 16px; margin-top: 12px; }
-  @media (max-width: 800px) { .cols { grid-template-columns: 1fr; } }
-  .lista { max-height: 460px; overflow: auto; border: 1px solid #8884; }
-  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  @media (max-width: 800px) { .cols, .filtros { grid-template-columns: 1fr; } }
+  .lista { max-height: 520px; overflow: auto; border: 1px solid #8884; }
+  table { border-collapse: collapse; width: 100%; font-size: .88rem; }
   th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #8883; }
-  td.n { text-align: right; font-variant-numeric: tabular-nums; }
-  tr.f { cursor: pointer; } tr.f:hover { background: #8882; }
-  #tv { height: 460px; border: 1px solid #8884; }
-  #sel { margin: 0 0 8px; font-weight: 600; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.f { cursor: pointer; } tr.f:hover, tr.sel { background: #8883; }
+  small { opacity: .65; display: block; }
+  #tv { height: 420px; border: 1px solid #8884; }
+  #det { margin: 0 0 8px; font-size: .9rem; line-height: 1.5; }
 </style>
 </head>
 <body>
 <h1>Prueba: precios de IOL + gráfico de TradingView</h1>
-<div id="estado">Cargando…</div>
-<input id="buscar" placeholder="Buscar por símbolo o nombre (ej: AAPL, SPY, GGAL)">
+<div class="barra">
+  <button id="btn" disabled>Actualizar precios</button>
+  <span id="estado">Cargando…</span>
+</div>
+<div class="filtros">
+  <input id="buscar" placeholder="Buscar por símbolo o nombre (ej: AAPL, SPY, AL30)">
+  <select id="ftipo"><option value="">Todos los tipos</option></select>
+  <select id="fmon"><option value="">Todas las monedas</option></select>
+</div>
 <div class="cols">
   <div class="lista"><table>
     <thead><tr><th>Símbolo</th><th>Tipo</th><th class="n">Último</th><th class="n">Var %</th></tr></thead>
     <tbody id="filas"></tbody></table></div>
-  <div><p id="sel">Elegí un activo de la lista</p><div id="tv"></div></div>
+  <div><p id="det">Elegí un activo de la lista.</p><div id="tv"></div></div>
 </div>
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
-let datos = [];
+// Dónde están los precios (la rama "datos" del repositorio):
+const URL_PRECIOS = "https://raw.githubusercontent.com/Pablo002k/InvEco/datos/precios.json";
+const ESPERA_MS = 5 * 60 * 1000;   // cada cuánto hay datos nuevos
+const NOMBRES = { acciones: "Acciones", cedears: "CEDEARs", etfs: "ETFs", bonos: "Bonos", letras: "Letras",
+  obligaciones_negociables: "Obligaciones negociables", indices: "Índices", monedas: "Monedas" };
+
+let datos = [], actualizado = null, elegido = null, habilitadoDesde = 0;
 const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const nombreTipo = t => NOMBRES[t] || t;
+
+function llenar(sel, valores, etiqueta) {
+  const actual = sel.value;
+  sel.innerHTML = sel.options[0].outerHTML + valores.map(v => `<option value="${esc(v)}">${esc(etiqueta(v))}</option>`).join("");
+  sel.value = actual;
+}
 
 function pintar() {
-  const q = $("buscar").value.trim().toLowerCase();
-  const lista = datos.filter(d => !q || d.s.toLowerCase().includes(q) || d.nombre.toLowerCase().includes(q)).slice(0, 300);
+  const q = $("buscar").value.trim().toLowerCase(), t = $("ftipo").value, m = $("fmon").value;
+  const lista = datos.filter(d => (!q || d.s.toLowerCase().includes(q) || (d.nombre || "").toLowerCase().includes(q))
+    && (!t || d.tipo === t) && (!m || d.moneda === m)).slice(0, 300);
   $("filas").innerHTML = lista.map(d =>
-    `<tr class="f" data-s="${d.s}"><td>${d.s}</td><td>${d.tipo}</td>` +
-    `<td class="n">${d.ultimo ?? "-"}</td><td class="n">${d.variacion_pct ?? "-"}</td></tr>`).join("");
+    `<tr class="f${d.s === elegido ? " sel" : ""}" data-s="${esc(d.s)}"><td>${esc(d.s)}<small>${esc(d.nombre)}</small></td>` +
+    `<td>${esc(nombreTipo(d.tipo))}</td><td class="n">${d.ultimo ?? "-"}</td><td class="n">${d.variacion_pct ?? "-"}</td></tr>`).join("");
 }
 
-function grafico(sim) {
-  const d = datos.find(x => x.s === sim);
-  $("sel").textContent = `${sim} — ${d.nombre} · IOL: ${d.ultimo} ${d.moneda}`;
+function detalle() {
+  const d = datos.find(x => x.s === elegido);
+  if (!d) return;
+  $("det").innerHTML = `<b>${esc(d.s)}</b> · ${esc(d.nombre)} (${esc(nombreTipo(d.tipo))}, ${esc(d.moneda)})<br>` +
+    `Último: <b>${d.ultimo ?? "-"}</b> · Var: ${d.variacion_pct ?? "-"}% · Compra: ${d.compra ?? "-"} · Venta: ${d.venta ?? "-"}<br>` +
+    `Apertura ${d.apertura ?? "-"} · Máx ${d.maximo ?? "-"} · Mín ${d.minimo ?? "-"} · Cierre ant. ${d.cierre_anterior ?? "-"} · Volumen ${d.volumen ?? "-"}`;
+}
+
+function elegir(sim) {
+  elegido = sim; detalle(); pintar();
   $("tv").innerHTML = "";
-  new TradingView.widget({ container_id: "tv", symbol: "BCBA:" + sim, interval: "D",
-    locale: "es", theme: "light", autosize: true, timezone: "America/Argentina/Buenos_Aires" });
+  new TradingView.widget({ container_id: "tv", symbol: "BCBA:" + sim, interval: "D", locale: "es",
+    theme: "light", autosize: true, timezone: "America/Argentina/Buenos_Aires" });
 }
 
-fetch("data/precios.json?" + Date.now()).then(r => r.json()).then(j => {
+// Pide los precios y actualiza SOLO la tabla (no recarga la página ni el gráfico).
+async function cargar() {
+  const r = await fetch(URL_PRECIOS + "?t=" + Math.floor(Date.now() / 30000));
+  const j = await r.json();
+  if (!j.actualizado) throw new Error("vacío");
+  const t = new Date(j.actualizado);
+  if (actualizado && t.getTime() === actualizado.getTime()) return false;
+  actualizado = t;
+  habilitadoDesde = t.getTime() + ESPERA_MS;
   datos = Object.entries(j.precios).map(([s, v]) => ({ s, ...v })).sort((a, b) => a.s.localeCompare(b.s));
-  if (!datos.length) { $("estado").textContent = "Todavía no hay precios: ejecutá primero la acción en GitHub."; return; }
-  $("estado").textContent = `${datos.length} activos · actualizado ${new Date(j.actualizado).toLocaleString("es-AR")}`;
-  pintar();
-}).catch(() => { $("estado").textContent = "Todavía no hay precios: ejecutá primero la acción en GitHub."; });
+  llenar($("ftipo"), [...new Set(datos.map(d => d.tipo))], nombreTipo);
+  llenar($("fmon"), [...new Set(datos.map(d => d.moneda).filter(Boolean))], x => x);
+  pintar(); detalle();
+  return true;
+}
 
+function reloj() {
+  if (!actualizado) return;
+  const falta = habilitadoDesde - Date.now();
+  const hora = actualizado.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+  if (falta > 0) {
+    const s = Math.ceil(falta / 1000);
+    $("btn").disabled = true;
+    $("estado").textContent = `${datos.length} activos · precios de las ${hora} · próxima actualización en ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  } else {
+    $("btn").disabled = false;
+    $("estado").textContent = `${datos.length} activos · precios de las ${hora} · ya puede haber datos nuevos`;
+  }
+}
+
+$("btn").addEventListener("click", async () => {
+  $("btn").disabled = true; $("estado").textContent = "Buscando precios nuevos…";
+  try {
+    if (!(await cargar())) habilitadoDesde = Date.now() + 20000;   // todavía no hay datos nuevos: reintento en 20 s
+  } catch (e) { habilitadoDesde = Date.now() + 20000; }
+});
 $("buscar").addEventListener("input", pintar);
-$("filas").addEventListener("click", e => { const tr = e.target.closest("tr"); if (tr) grafico(tr.dataset.s); });
+$("ftipo").addEventListener("change", pintar);
+$("fmon").addEventListener("change", pintar);
+$("filas").addEventListener("click", e => { const tr = e.target.closest("tr"); if (tr) elegir(tr.dataset.s); });
+
+cargar().catch(() => { $("estado").textContent = "Todavía no hay precios: ejecutá primero la acción en GitHub."; });
+setInterval(reloj, 1000);
 </script>
 </body>
 </html>
