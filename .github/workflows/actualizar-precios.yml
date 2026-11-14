@@ -21,10 +21,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Traer y publicar precios de IOL
+      - name: Instalar herramienta de Firebase
+        run: pip install -q firebase-admin
+
+      - name: Traer precios de IOL y ejecutar órdenes
         run: python3 -u scripts/actualizar_precios.py
         env:
           IOL_USUARIO: ${{ secrets.IOL_USUARIO }}
           IOL_CLAVE: ${{ secrets.IOL_CLAVE }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FIREBASE_CLAVE: ${{ secrets.FIREBASE_CLAVE }}
           MINUTOS: ${{ inputs.minutos }}
