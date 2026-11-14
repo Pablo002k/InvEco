@@ -1,7 +1,7 @@
 """Trae precios de IOL y los publica en la rama 'datos' del repositorio.
 Solo LEE precios: no usa ninguna función de compra o venta.
 La clave llega por variables secretas: nunca se escribe acá."""
-import json, os, shutil, subprocess, sys, tempfile, time
+import json, os, re, shutil, subprocess, sys, tempfile, time
 import urllib.parse, urllib.request, urllib.error
 from datetime import datetime, timezone
 
@@ -106,6 +106,97 @@ def publicar(salida):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+RE_USD = re.compile(r"usd|d[oó]lar|u\$s", re.I)
+TASA = lambda d: 0.003 if d.get("tipo") == "letras" else 0.0071   # comisión + IVA (aprox.)
+
+
+def operable(d):
+    return (d.get("tipo") in ("acciones", "cedears", "etfs")
+            and not RE_USD.search(d.get("moneda") or "") and (d.get("ultimo") or 0) > 0)
+
+
+def ejecutar(db, oref, o, px, tasa):
+    from firebase_admin import firestore
+    uref = db.collection("users").document(o["uid"])
+
+    @firestore.transactional
+    def paso(tx):
+        cur = oref.get(transaction=tx).to_dict()
+        if not cur or cur.get("estado") != "pendiente":
+            return False
+        u = uref.get(transaction=tx).to_dict()
+        pos, cash, n, s = dict(u.get("pos") or {}), u["cash"], o["cant"], o["s"]
+        bruto = n * px
+        com = round(bruto * tasa, 2)
+        p = pos.get(s, {"c": 0, "costo": 0})
+        if o["lado"] == "C":
+            if bruto + com > cash:
+                tx.update(oref, {"estado": "rechazada", "motivo": "Efectivo insuficiente."})
+                return False
+            cash -= bruto + com
+            pos[s] = {"c": p["c"] + n, "costo": p["costo"] + bruto + com}
+        else:
+            if n > p["c"]:
+                tx.update(oref, {"estado": "rechazada", "motivo": "No había cantidad suficiente para vender."})
+                return False
+            cash += bruto - com
+            resto = p["c"] - n
+            if resto:
+                pos[s] = {"c": resto, "costo": p["costo"] / p["c"] * resto}
+            else:
+                pos.pop(s)
+        ms = int(time.time() * 1000)
+        ops = (u.get("ops") or []) + [{"t": ms, "s": s, "l": o["lado"], "c": n, "p": px, "com": com}]
+        tx.update(uref, {"cash": round(cash, 2), "pos": pos, "ops": ops[-200:]})
+        tx.update(oref, {"estado": "ejecutada", "fill": {"px": px, "com": com, "t": ms}})
+        return True
+    return paso(db.transaction())
+
+
+def motor(precios):
+    """Evalúa las órdenes pendientes con los precios reales. Solo corre en horario de mercado."""
+    clave = os.environ.get("FIREBASE_CLAVE")
+    if not clave:
+        print("Motor de órdenes: falta el secreto FIREBASE_CLAVE, se omite.")
+        return
+    import firebase_admin
+    from firebase_admin import credentials, firestore
+    from zoneinfo import ZoneInfo
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(credentials.Certificate(json.loads(clave)))
+    db = firestore.client()
+    ahora = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
+    hoy, mins = ahora.strftime("%Y-%m-%d"), ahora.hour * 60 + ahora.minute
+    abierto = ahora.weekday() < 5 and 645 <= mins < 1080
+    docs = sorted(db.collection("ordenes").where("estado", "==", "pendiente").stream(),
+                  key=lambda x: x.to_dict().get("t", 0))
+    hechas = 0
+    for dd in docs:
+        o, oref = dd.to_dict(), dd.reference
+        if o.get("vigencia") == "dia" and (o.get("dia", "") < hoy or (o.get("dia") == hoy and mins >= 1080)):
+            oref.update({"estado": "vencida"})
+            continue
+        d = precios.get(o["s"])
+        if not abierto or not d or not (d.get("ultimo") or 0) > 0:
+            continue
+        if not operable(d):
+            oref.update({"estado": "rechazada", "motivo": "Activo no habilitado para operar."})
+            continue
+        ult = d["ultimo"]
+        compra, venta = d.get("compra") or ult, d.get("venta") or ult   # compra = oferta de compra; venta = oferta de venta
+        c = o["lado"] == "C"
+        ref = venta if c else compra
+        if o["tipo"] == "stop_limite" and not o.get("activada"):
+            if (c and ult >= o["stop"]) or (not c and ult <= o["stop"]):
+                oref.update({"activada": True})
+            else:
+                continue
+        if o["tipo"] != "mercado" and ((c and ref > o["limite"]) or (not c and ref < o["limite"])):
+            continue
+        hechas += ejecutar(db, oref, o, ref, TASA(d))
+    print(f"Motor de órdenes: {len(docs)} pendientes, {hechas} ejecutadas. Mercado {'abierto' if abierto else 'cerrado'}.")
+
+
 def main():
     usuario, clave = os.environ.get("IOL_USUARIO"), os.environ.get("IOL_CLAVE")
     if not usuario or not clave:
@@ -115,7 +206,12 @@ def main():
     while True:
         ciclo += 1
         try:
-            publicar(traer(usuario, clave, ciclo == 1))
+            salida = traer(usuario, clave, ciclo == 1)
+            publicar(salida)
+            try:
+                motor(salida["precios"])
+            except Exception as e:
+                print("Motor de órdenes con error:", e)
             print(f"Ciclo {ciclo} OK")
         except Exception as e:
             print(f"Ciclo {ciclo} con error: {e}")
