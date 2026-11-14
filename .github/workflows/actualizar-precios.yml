@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Traer y publicar precios de IOL
-        run: python3 scripts/actualizar_precios.py
+        run: python3 -u scripts/actualizar_precios.py
         env:
           IOL_USUARIO: ${{ secrets.IOL_USUARIO }}
           IOL_CLAVE: ${{ secrets.IOL_CLAVE }}
