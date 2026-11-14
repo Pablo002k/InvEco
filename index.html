@@ -35,7 +35,7 @@ small{opacity:.65;display:block}
 </div>
 
 <div id="app" class="hide">
-  <div><b id="yo"></b> · <span id="resumen"></span> <button id="sal">Salir</button></div>
+  <div><b id="yo"></b> · <span id="resumen"></span> · <span id="reloj"></span> <button id="sal">Salir</button></div>
   <nav id="tabs"></nav>
 
   <section id="t-mercado">
@@ -44,7 +44,7 @@ small{opacity:.65;display:block}
       <p><b>Pesos y dólares.</b> Muchos activos aparecen repetidos: la versión simple se cotiza en pesos y las que terminan en C o D, en dólares. Por ahora solo se opera en pesos.</p>
       <p><b>Acción:</b> una parte de una empresa. <b>CEDEAR:</b> un certificado que representa acciones de empresas del exterior y se compra en pesos. <b>ETF:</b> una canasta de activos que se compra como una sola acción.</p>
       <p><b>Bono:</b> un préstamo que le hacés al Estado a cambio de intereses. <b>Letra:</b> un bono de corto plazo. <b>Obligación negociable:</b> un bono emitido por una empresa. Bonos, letras y obligaciones se muestran solo como referencia.</p>
-      <p>Si querés saber más sobre algún término, buscalo en internet.</p>
+      <p>Para profundizar en cualquiera de estos conceptos, podés consultar fuentes especializadas o conversarlo con tu docente.</p>
     </details>
     <div class="g f">
       <input id="buscar" placeholder="Buscar por símbolo o nombre (ejemplo: AAPL, SPY, AL30)">
@@ -55,8 +55,14 @@ small{opacity:.65;display:block}
       <div class="l"><table><thead><tr><th>Símbolo</th><th>Tipo</th><th class="n">Último</th><th class="n">Var. %</th></tr></thead><tbody id="filas"></tbody></table></div>
       <div>
         <p id="det">Elegí un activo de la lista.</p>
-        <div id="op" class="hide card"><input id="cant" type="number" min="1" step="1" placeholder="Cantidad de unidades">
-          <br><br><button id="comp">Comprar</button> <button id="vend">Vender</button> <span id="omsg"></span></div>
+        <div id="op" class="hide card"><b>Nueva orden</b>
+          <div class="g f" style="margin:8px 0"><select id="olado"><option value="C">Comprar</option><option value="V">Vender</option></select>
+            <select id="otipo"><option value="mercado">A precio de mercado</option><option value="limite">Límite</option><option value="stop_limite">Stop límite</option></select>
+            <select id="ovig"><option value="dia">Válida por el día</option><option value="cancelar">Hasta cancelar</option></select></div>
+          <div class="g f"><input id="cant" type="number" min="1" step="1" placeholder="Cantidad de unidades">
+            <input id="olim" type="number" min="0" step="0.01" placeholder="Precio límite" class="hide">
+            <input id="ostop" type="number" min="0" step="0.01" placeholder="Precio stop" class="hide"></div>
+          <p id="oest"></p><button id="pub">Publicar orden</button> <span id="omsg"></span></div>
         <div id="tv"></div>
       </div>
     </div>
@@ -87,17 +93,24 @@ const URL_PRECIOS="https://raw.githubusercontent.com/Pablo002k/InvEco/datos/prec
 const ESPERA_MS=5*60*1000;
 const NOMBRES={acciones:"Acciones",cedears:"CEDEARs",etfs:"ETFs",bonos:"Bonos",letras:"Letras",obligaciones_negociables:"Obligaciones negociables",indices:"Índices",monedas:"Monedas"};
 const nt=t=>NOMBRES[t]||t;
-let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ver=null,tab="mercado";
+const TZ="America/Argentina/Buenos_Aires";
+const fh=t=>new Date(t).toLocaleString("es-AR",{timeZone:TZ,day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"});
+const nom=u=>u.nombre||u.usuario;
+const TASA=d=>d.tipo==="letras"?0.003:0.0071;   // comisión + IVA (aprox.)
+function ba(){const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:TZ,weekday:"short",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date()).map(x=>[x.type,x.value]));
+  const m=+p.hour*60+ +p.minute;return{dia:`${p.year}-${p.month}-${p.day}`,hora:`${p.hour}:${p.minute}:${p.second}`,abierto:!["Sat","Sun"].includes(p.weekday)&&m>=645&&m<1080};}
+function relojBA(){const b=ba();$("reloj").textContent=`Buenos Aires ${b.hora} · `+(b.abierto?"Mercado abierto":"Mercado cerrado (abre a las 10:45, de lunes a viernes)");$("pub").disabled=!b.abierto;}
+let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],ver=null,tab="mercado";
 
 /* ---------- Acceso ---------- */
 const correo=u=>u+"@economia-aula.app";
 const ERR={"auth/invalid-credential":"Usuario o contraseña incorrectos.","auth/email-already-in-use":"Ese usuario ya existe. Elegí otro.","auth/weak-password":"La contraseña debe tener al menos 6 caracteres.","auth/network-request-failed":"No hay conexión. Revisá tu internet."};
 async function acceso(nuevo){
-  const u=$("u").value.trim().toLowerCase(),p=$("p").value;
+  const raw=$("u").value.trim(),u=raw.toLowerCase(),p=$("p").value;
   if(!/^[a-z0-9._-]{3,20}$/.test(u))return $("msg").textContent="El usuario debe tener entre 3 y 20 caracteres: letras, números, punto, guion o guion bajo.";
   try{
     if(nuevo){const c=await createUserWithEmailAndPassword(auth,correo(u),p);
-      await setDoc(doc(db,"users",c.user.uid),{usuario:u,cash:CAPITAL,pos:{},ops:[]});}
+      await setDoc(doc(db,"users",c.user.uid),{usuario:u,nombre:raw,cash:CAPITAL,pos:{},ops:[]});}
     else await signInWithEmailAndPassword(auth,correo(u),p);
   }catch(e){$("msg").textContent=ERR[e.code]||"No se pudo completar la acción. Probá de nuevo.";}
 }
@@ -110,12 +123,13 @@ onAuthStateChanged(auth,u=>{
   onSnapshot(collection(db,"users"),s=>{todos=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
   onSnapshot(query(collection(db,"notas"),orderBy("t","desc"),limit(200)),s=>{notas=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
   onSnapshot(collection(db,"comentarios"),s=>{coment=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
+  onSnapshot(query(collection(db,"ordenes"),orderBy("t","desc"),limit(300)),s=>{ordenes=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
   armarTabs();
 });
 
 /* ---------- Pestañas ---------- */
 function armarTabs(){
-  const t=[["mercado","Mercado"],["cartera","Mi cartera"],["ranking","Compañeros y ranking"],["notas","Notas semanales"]];
+  const t=[["mercado","Mercado"],["cartera","Mi cartera"],["ranking","Ranking"],["notas","Notas semanales"]];
   $("tabs").innerHTML=t.map(([k,n])=>`<button data-k="${k}" class="${k===tab?"on":""}">${n}</button>`).join("");
 }
 $("tabs").onclick=e=>{const k=e.target.dataset.k;if(!k)return;tab=k;
@@ -133,27 +147,33 @@ function ficha(u){
   const v=valor(u),r=pct(v);
   const filas=Object.entries(u.pos||{}).map(([s,p])=>{const px=precio(s)??p.costo/p.c,val=p.c*px,res=val-p.costo;
     return`<tr><td>${esc(s)}</td><td class="n">${p.c}</td><td class="n">${$$(p.costo/p.c)}</td><td class="n">${$$(px)}</td><td class="n">${$$(val)}</td><td class="n ${cls(res)}">${$$(res)}</td></tr>`}).join("");
-  const ops=[...(u.ops||[])].reverse().slice(0,15).map(o=>`<li>${new Date(o.t).toLocaleDateString("es-AR")} · ${o.l==="C"?"Compra":"Venta"} de ${o.c} ${esc(o.s)} a ${$$(o.p)}</li>`).join("");
-  const cm=coment.filter(c=>c.para===u.id).sort((a,b)=>b.t-a.t).map(c=>`<p><b>Comentario del docente:</b> ${esc(c.texto)} ${esAdmin?`<button data-del="comentarios/${c.id}">Borrar</button>`:""}</p>`).join("");
-  const nn=notas.filter(n=>n.uid===u.id).slice(0,5).map(n=>`<p><b>${esc(n.semana)}:</b> ${esc(n.texto)}</p>`).join("");
+  const ops=[...(u.ops||[])].reverse().slice(0,15).map(o=>`<li>${fh(o.t)} · ${o.l==="C"?"Compra":"Venta"} de ${o.c} ${esc(o.s)} a ${$$(o.p)}${o.com!=null?` (comisión ${$$(o.com)})`:""}</li>`).join("");
+  const TT={mercado:"a precio de mercado",limite:"límite",stop_limite:"stop límite"};
+  const ords=ordenes.filter(o=>o.uid===u.id).slice(0,15).map(o=>`<li>${fh(o.t)} · ${o.lado==="C"?"Compra":"Venta"} de ${o.cant} ${esc(o.s)} (${TT[o.tipo]}${o.limite?` ${$$(o.limite)}`:""}${o.stop?`, stop ${$$(o.stop)}`:""}; ${o.vigencia==="dia"?"por el día":"hasta cancelar"}) · <b>${esc(o.estado)}</b>${o.fill?` a ${$$(o.fill.px)}`:""}${o.motivo?` · ${esc(o.motivo)}`:""} ${o.estado==="pendiente"&&u.id===user.uid?`<button data-canc="${o.id}">Cancelar</button>`:""}</li>`).join("");
+  const cm=coment.filter(c=>c.para===u.id).sort((a,b)=>b.t-a.t).map(c=>`<p><b>Comentario del docente</b> (${fh(c.t)}): ${esc(c.texto)} ${esAdmin?`<button data-del="comentarios/${c.id}">Borrar</button>`:""}</p>`).join("");
+  const nn=notas.filter(n=>n.uid===u.id).slice(0,5).map(n=>`<p><b>${esc(n.semana)}</b> (${fh(n.t)}): ${esc(n.texto)}</p>`).join("");
   const adm=esAdmin?`<div class="card"><b>Herramientas del docente</b><br><br><textarea id="ctxt" rows="2" placeholder="Escribí un comentario visible para todos"></textarea><br><br><button data-com="${u.id}">Publicar comentario</button> <button data-reset="${u.id}">Reiniciar cartera</button></div>`:"";
-  return`<div class="card"><h3>${esc(u.usuario)}</h3><p>Efectivo: <b>${$$(u.cash)}</b> · Valor total: <b>${$$(v)}</b> · Resultado: <b class="${cls(r)}">${r.toFixed(2)} %</b></p>
+  return`<div class="card"><h3>${esc(nom(u))}</h3><p>Efectivo: <b>${$$(u.cash)}</b> · Valor total: <b>${$$(v)}</b> · Resultado: <b class="${cls(r)}">${r.toFixed(2)} %</b></p>
   ${filas?`<div class="l"><table><thead><tr><th>Activo</th><th class="n">Cant.</th><th class="n">Costo prom.</th><th class="n">Precio</th><th class="n">Valor</th><th class="n">Resultado</th></tr></thead><tbody>${filas}</tbody></table></div>`:"<p>Todavía no tiene activos.</p>"}
-  <h4>Últimas operaciones</h4><ul>${ops||"<li>Sin operaciones.</li>"}</ul>${cm}<h4>Notas recientes</h4>${nn||"<p>Sin notas.</p>"}${adm}</div>`;
+  <h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul><h4>Operaciones ejecutadas</h4><ul>${ops||"<li>Sin operaciones.</li>"}</ul>${cm}<h4>Notas recientes</h4>${nn||"<p>Sin notas.</p>"}${adm}</div>`;
 }
 
 function pintarTodo(){
   if(!user)return;
   const yo=todos.find(u=>u.id===user.uid);
-  $("yo").textContent=yo?.usuario||"";
-  if(yo)$("resumen").textContent=`Efectivo ${$$(yo.cash)} · Total ${$$(valor(yo))} (${pct(valor(yo)).toFixed(2)} %)`;
+  $("yo").textContent=yo?nom(yo):"";
+  if(yo&&!esAdmin)$("resumen").textContent=`Efectivo ${$$(yo.cash)} · Total ${$$(valor(yo))} (${pct(valor(yo)).toFixed(2)} %)`;
   if(tab==="cartera")$("t-cartera").innerHTML=ficha(yo);
   if(tab==="ranking"){
-    const r=[...todos].filter(u=>u.id!==undefined).map(u=>({...u,v:valor(u)})).sort((a,b)=>b.v-a.v);
-    $("rank").innerHTML=`<div class="card"><b>Ranking en vivo</b> <small>Se recalcula con cada actualización de precios.</small><table><thead><tr><th>#</th><th>Usuario</th><th class="n">Valor total</th><th class="n">Resultado</th></tr></thead><tbody>${r.map((u,i)=>`<tr class="k${u.id===ver?" s":""}" data-ver="${u.id}"><td>${i+1}</td><td>${esc(u.usuario)}</td><td class="n">${$$(u.v)}</td><td class="n ${cls(u.v-CAPITAL)}">${pct(u.v).toFixed(2)} %</td></tr>`).join("")}</tbody></table><small>Tocá un usuario para ver su cartera.</small></div>`;
+    const keep=$("ctxt")?{v:$("ctxt").value,f:document.activeElement===$("ctxt")}:null;
+    const comp=u=>{const g={};for(const[s,p]of Object.entries(u.pos||{})){const t=nt(datos.find(d=>d.s===s)?.tipo||"Otros");(g[t]=g[t]||[]).push(`${s} ×${p.c}`);}
+      return`Efectivo ${$$(u.cash)}`+Object.entries(g).map(([t,l])=>` · ${t}: ${l.join(", ")}`).join("");};
+    const r=todos.filter(u=>(u.usuario||"")!==ADMIN).map(u=>({...u,v:valor(u)})).sort((a,b)=>b.v-a.v);
+    $("rank").innerHTML=`<div class="card"><b>Ranking en vivo</b> <small>Se recalcula con cada actualización de precios.</small><table><thead><tr><th>#</th><th>Usuario e inversiones</th><th class="n">Valor total</th><th class="n">Resultado</th></tr></thead><tbody>${r.map((u,i)=>`<tr class="k${u.id===ver?" s":""}" data-ver="${u.id}"><td>${i+1}</td><td>${esc(nom(u))}<small>${esc(comp(u))}</small></td><td class="n">${$$(u.v)}</td><td class="n ${cls(u.v-CAPITAL)}">${pct(u.v).toFixed(2)} %</td></tr>`).join("")}</tbody></table><small>Tocá un usuario para ver su cartera completa.</small></div>`;
     $("ficha").innerHTML=ficha(todos.find(u=>u.id===ver));
+    if(keep&&$("ctxt")){$("ctxt").value=keep.v;if(keep.f)$("ctxt").focus();}
   }
-  if(tab==="notas")$("nlista").innerHTML=notas.map(n=>`<div class="card"><b>${esc(n.usuario)}</b> · ${esc(n.semana)}<p>${esc(n.texto)}</p>${esAdmin||n.uid===user.uid?`<button data-del="notas/${n.id}">Borrar</button>`:""}</div>`).join("")||"<p>Todavía no hay notas.</p>";
+  if(tab==="notas")$("nlista").innerHTML=notas.map(n=>`<div class="card"><b>${esc(n.usuario)}</b> · ${esc(n.semana)} · ${fh(n.t)}<p>${esc(n.texto)}</p>${esAdmin||n.uid===user.uid?`<button data-del="notas/${n.id}">Borrar</button>`:""}</div>`).join("")||"<p>Todavía no hay notas.</p>";
 }
 document.body.addEventListener("click",async e=>{
   const t=e.target,tr=t.closest("tr[data-ver]");
@@ -161,6 +181,7 @@ document.body.addEventListener("click",async e=>{
   if(t.dataset.del&&confirm("¿Seguro que querés borrarlo?"))await deleteDoc(doc(db,...t.dataset.del.split("/")));
   if(t.dataset.com&&$("ctxt").value.trim()){const u=todos.find(x=>x.id===t.dataset.com);
     await addDoc(collection(db,"comentarios"),{para:u.id,texto:$("ctxt").value.trim().slice(0,600),t:Date.now()});}
+  if(t.dataset.canc)await updateDoc(doc(db,"ordenes",t.dataset.canc),{estado:"cancelada"});
   if(t.dataset.reset&&confirm("Esto devuelve la cartera al capital inicial. ¿Continuar?"))
     await updateDoc(doc(db,"users",t.dataset.reset),{cash:CAPITAL,pos:{},ops:[]});
 });
@@ -170,7 +191,7 @@ $("npub").onclick=async()=>{
   const x=$("ntxt").value.trim();if(x.length<10)return $("nmsg").textContent="Escribí al menos una o dos oraciones.";
   const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));
   const yo=todos.find(u=>u.id===user.uid);
-  await addDoc(collection(db,"notas"),{uid:user.uid,usuario:yo.usuario,semana:"Semana del "+d.toLocaleDateString("es-AR",{day:"numeric",month:"long"}),texto:x,t:Date.now()});
+  await addDoc(collection(db,"notas"),{uid:user.uid,usuario:nom(yo),semana:"Semana del "+d.toLocaleDateString("es-AR",{day:"numeric",month:"long"}),texto:x,t:Date.now()});
   $("ntxt").value="";$("nmsg").textContent="Nota publicada.";
 };
 
@@ -185,7 +206,7 @@ const operable=d=>["acciones","cedears","etfs"].includes(d.tipo)&&!/usd|d[oó]la
 function detalle(){
   const d=datos.find(x=>x.s===elegido);if(!d)return;
   $("det").innerHTML=`<b>${esc(d.s)}</b> · ${esc(d.nombre)} (${esc(nt(d.tipo))}, ${esc(d.moneda)})<br>Último: <b>${d.ultimo??"-"}</b> · Variación: ${d.variacion_pct??"-"} % · Compra: ${d.compra??"-"} · Venta: ${d.venta??"-"}<br>Apertura ${d.apertura??"-"} · Máximo ${d.maximo??"-"} · Mínimo ${d.minimo??"-"} · Cierre anterior ${d.cierre_anterior??"-"} · Volumen ${d.volumen??"-"}`;
-  $("op").classList.toggle("hide",!operable(d));
+  $("op").classList.toggle("hide",!operable(d)||esAdmin);estimar();
 }
 function elegir(s){elegido=s;detalle();pintar();$("omsg").textContent="";$("tv").innerHTML="";
   new TradingView.widget({container_id:"tv",symbol:"BCBA:"+s,interval:"D",locale:"es",theme:"light",autosize:true,timezone:"America/Argentina/Buenos_Aires"});}
@@ -210,25 +231,31 @@ $("btn").onclick=async()=>{$("btn").disabled=true;$("estado").textContent="Busca
 ["buscar","ftipo","fmon"].forEach(i=>$(i).addEventListener(i==="buscar"?"input":"change",pintar));
 $("filas").onclick=e=>{const tr=e.target.closest("tr");if(tr)elegir(tr.dataset.s);};
 
-async function operar(lado){
-  const d=datos.find(x=>x.s===elegido),n=Math.floor(+$("cant").value),m=$("omsg");
+function estimar(){
+  const d=datos.find(x=>x.s===elegido);if(!d)return;
+  const n=Math.floor(+$("cant").value)||0,t=$("otipo").value,px=t==="mercado"?d.ultimo:(+$("olim").value||d.ultimo),tasa=(TASA(d)*100).toFixed(2);
+  $("oest").textContent=n?`Importe estimado: ${$$(n*px)} más comisión e IVA de aproximadamente ${$$(n*px*TASA(d))} (${tasa} %).`:`La comisión estimada es del ${tasa} % del importe, IVA incluido.`;
+}
+$("otipo").onchange=()=>{$("olim").classList.toggle("hide",$("otipo").value==="mercado");$("ostop").classList.toggle("hide",$("otipo").value!=="stop_limite");estimar();};
+["cant","olim","ostop"].forEach(i=>$(i).addEventListener("input",estimar));
+$("pub").onclick=async()=>{
+  const d=datos.find(x=>x.s===elegido),n=Math.floor(+$("cant").value),t=$("otipo").value,lim=+$("olim").value,stp=+$("ostop").value,m=$("omsg");
+  const yo=todos.find(u=>u.id===user.uid);
+  if(!ba().abierto)return m.textContent="El mercado está cerrado. Se puede operar de lunes a viernes, de 10:45 a 18:00.";
   if(!d||!(n>0))return m.textContent="Ingresá una cantidad entera mayor que cero.";
   if(!operable(d))return m.textContent="Por ahora solo se opera con acciones, CEDEARs y ETFs cotizados en pesos.";
-  const px=d.ultimo,ref=doc(db,"users",user.uid);
+  if(t!=="mercado"&&!(lim>0))return m.textContent="Indicá un precio límite mayor que cero.";
+  if(t==="stop_limite"&&!(stp>0))return m.textContent="Indicá un precio stop mayor que cero.";
   try{
-    await runTransaction(db,async t=>{
-      const s=(await t.get(ref)).data(),pos={...s.pos},p=pos[d.s]||{c:0,costo:0};let cash=s.cash;
-      if(lado==="C"){const tot=n*px;if(tot>cash)throw"No te alcanza el efectivo para esta compra.";cash-=tot;pos[d.s]={c:p.c+n,costo:p.costo+tot};}
-      else{if(n>p.c)throw"No tenés esa cantidad para vender.";cash+=n*px;const r=p.c-n;if(r)pos[d.s]={c:r,costo:p.costo/p.c*r};else delete pos[d.s];}
-      t.update(ref,{cash,pos,ops:[...(s.ops||[]),{t:Date.now(),s:d.s,l:lado,c:n,p:px}].slice(-200)});
-    });
-    m.textContent=`Listo: ${lado==="C"?"compraste":"vendiste"} ${n} ${d.s} a ${$$(px)}.`;$("cant").value="";
-  }catch(e){m.textContent=typeof e==="string"?e:"No se pudo operar. Probá de nuevo.";}
-}
-$("comp").onclick=()=>operar("C");$("vend").onclick=()=>operar("V");
+    await addDoc(collection(db,"ordenes"),{uid:user.uid,usuario:nom(yo),s:d.s,lado:$("olado").value,tipo:t,cant:n,
+      ...(t!=="mercado"?{limite:lim}:{}),...(t==="stop_limite"?{stop:stp,activada:false}:{}),
+      vigencia:$("ovig").value,dia:ba().dia,estado:"pendiente",t:Date.now()});
+    m.textContent="Orden publicada. Se evalúa en cada actualización de precios, cada 5 minutos como máximo.";$("cant").value="";
+  }catch{m.textContent="No se pudo publicar la orden. Probá de nuevo.";}
+};
 
 cargar().catch(()=>{$("estado").textContent="Todavía no hay precios. Ejecutá primero la acción en GitHub.";});
-setInterval(reloj,1000);
+setInterval(()=>{reloj();relojBA();},1000);relojBA();
 </script>
 </body>
 </html>
