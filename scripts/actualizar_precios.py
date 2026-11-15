@@ -1,7 +1,7 @@
 """Trae precios de IOL y los publica en la rama 'datos' del repositorio.
 Solo LEE precios: no usa ninguna función de compra o venta.
 La clave llega por variables secretas: nunca se escribe acá."""
-import json, os, re, shutil, subprocess, sys, tempfile, time
+import html, json, os, re, shutil, subprocess, sys, tempfile, time
 import urllib.parse, urllib.request, urllib.error
 from datetime import datetime, timezone
 
@@ -152,6 +152,51 @@ def ejecutar(db, oref, o, px, tasa):
     return paso(db.transaction())
 
 
+def og(url):
+    """Obtiene título e imagen de un enlace (vista previa)."""
+    out = {"url": url, "titulo": "", "imagen": "", "sitio": ""}
+    try:
+        m = re.search(r"(?:youtube\.com/(?:watch\?v=|shorts/|embed/)|youtu\.be/)([\w-]{11})", url)
+        if m:
+            out["imagen"] = f"https://img.youtube.com/vi/{m.group(1)}/hqdefault.jpg"
+            out["sitio"] = "YouTube"
+            req = urllib.request.Request("https://www.youtube.com/oembed?format=json&url=" + urllib.parse.quote(url, safe=""),
+                                         headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=10) as r:
+                out["titulo"] = json.load(r).get("title", "")
+            return out
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+            "Accept-Language": "es"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            h = r.read(300000).decode("utf-8", "replace")
+
+        def meta(k):
+            for pat in (r'<meta[^>]+(?:property|name)=["\']%s["\'][^>]*content=["\']([^"\']*)' % k,
+                        r'<meta[^>]+content=["\']([^"\']*)["\'][^>]*(?:property|name)=["\']%s["\']' % k):
+                f = re.search(pat, h, re.I)
+                if f:
+                    return html.unescape(f.group(1)).strip()
+            return ""
+        t = re.search(r"<title[^>]*>([^<]*)", h, re.I)
+        out["titulo"] = meta("og:title") or (html.unescape(t.group(1)).strip() if t else "")
+        out["imagen"] = meta("og:image")
+        out["sitio"] = meta("og:site_name") or urllib.parse.urlparse(url).netloc
+    except Exception as e:
+        print("Vista previa sin datos:", url[:60], type(e).__name__)
+    return out
+
+
+def vistas_previas(db):
+    """Agrega vista previa a las novedades nuevas que tengan enlaces."""
+    for dd in db.collection("novedades").stream():
+        n = dd.to_dict()
+        if "previews" in n:
+            continue
+        urls = re.findall(r"https?://[^\s<]+", n.get("texto", ""))[:3]
+        dd.reference.update({"previews": [og(u) for u in urls]})
+
+
 def motor(precios):
     """Evalúa las órdenes pendientes con los precios reales. Solo corre en horario de mercado."""
     clave = os.environ.get("FIREBASE_CLAVE")
@@ -165,6 +210,10 @@ def motor(precios):
     if not firebase_admin._apps:
         firebase_admin.initialize_app(credentials.Certificate(json.loads(clave)))
     db = firestore.client()
+    try:
+        vistas_previas(db)
+    except Exception as e:
+        print("Vistas previas con error:", e)
     ahora = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
     hoy, mins = ahora.strftime("%Y-%m-%d"), ahora.hour * 60 + ahora.minute
     abierto = ahora.weekday() < 5 and 645 <= mins < 1080
