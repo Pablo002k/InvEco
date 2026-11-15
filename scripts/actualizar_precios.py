@@ -118,18 +118,26 @@ def operable(d):
 PARES = [("AL30", "AL30D"), ("GD30", "GD30D"), ("AL35", "AL35D"), ("GD35", "GD35D")]
 
 
-def mon_de(d):
-    return "USD" if RE_USD.search(d.get("moneda") or "") else "ARS"
+def mon_de(s, d, precios):
+    """Cuenta en la que se opera: ARS (pesos), USD (dólar MEP, terminados en D) o CCL (dólar cable, terminados en C)."""
+    if not RE_USD.search(d.get("moneda") or ""):
+        return "ARS"
+    base = precios.get(s[:-1])
+    return "CCL" if s.endswith("C") and base and not RE_USD.search(base.get("moneda") or "") else "USD"
 
 
-def tc(precios):
-    """Dólar MEP implícito: se compra un bono en pesos y se vende su versión en dólares."""
-    for a, b in PARES:
-        pa, pb = precios.get(a), precios.get(b)
+def tc(precios, tipo="MEP"):
+    """Dólar implícito: se compra un bono en pesos y se vende su versión en dólares (D = MEP, C = cable/CCL)."""
+    suf = "C" if tipo == "CCL" else "D"
+    for a in ("AL30", "GD30", "AL35", "GD35"):
+        pa, pb = precios.get(a), precios.get(a + suf)
         if pa and pb and pa.get("ultimo") and pb.get("ultimo"):
             f = lambda d, k: d.get(k) or d["ultimo"]
             return {"compra": f(pa, "venta") / f(pb, "compra"), "venta": f(pa, "compra") / f(pb, "venta"),
                     "mid": pa["ultimo"] / pb["ultimo"], "par": a}
+    if tipo == "CCL":
+        m = fxmed(precios)
+        return {"compra": m, "venta": m, "mid": m, "par": "CEDEARs"}
     return None
 
 
@@ -142,7 +150,7 @@ def fxmed(precios):
 def ejecutar(db, oref, o, px, tasa, mon="ARS"):
     from firebase_admin import firestore
     uref = db.collection("users").document(o["uid"])
-    campo = "usd" if mon == "USD" else "cash"
+    campo = {"ARS": "cash", "USD": "usd", "CCL": "ccl"}[mon]
 
     @firestore.transactional
     def paso(tx):
@@ -156,7 +164,7 @@ def ejecutar(db, oref, o, px, tasa, mon="ARS"):
         p = pos.get(s, {"c": 0, "costo": 0})
         if o["lado"] == "C":
             if bruto + com > cash:
-                tx.update(oref, {"estado": "rechazada", "motivo": "Saldo insuficiente en " + ("dólares." if mon == "USD" else "pesos.")})
+                tx.update(oref, {"estado": "rechazada", "motivo": "Saldo insuficiente en " + {"ARS": "pesos.", "USD": "dólares MEP.", "CCL": "dólares CCL."}[mon]})
                 return False
             cash -= bruto + com
             pos[s] = {"c": p["c"] + n, "costo": p["costo"] + bruto + com, "m": mon}
@@ -179,12 +187,14 @@ def ejecutar(db, oref, o, px, tasa, mon="ARS"):
 
 
 def cambio(db, oref, o, precios):
-    """Compra o venta de dólares (MEP): dos operaciones, con comisión en cada una."""
-    t = tc(precios)
+    """Compra o venta de dólares (MEP o CCL): dos operaciones, con comisión en cada una."""
+    tipo = o.get("tc", "MEP")
+    t = tc(precios, tipo)
     if not t:
         return False
     from firebase_admin import firestore
     uref = db.collection("users").document(o["uid"])
+    campo = "ccl" if tipo == "CCL" else "usd"
 
     @firestore.transactional
     def paso(tx):
@@ -192,9 +202,9 @@ def cambio(db, oref, o, precios):
         if not cur or cur.get("estado") != "pendiente":
             return False
         u = uref.get(transaction=tx).to_dict()
-        n, cash, usd = o["cant"], u["cash"], u.get("usd", 0)
+        n, cash, usd = o["cant"], u["cash"], u.get(campo, 0)
         if o["lado"] == "CD":
-            p = t["compra"]
+            p = t["compra"]          # el alumno paga el precio de venta del mercado
             ars = n * p
             com = round(ars * 2 * 0.0071, 2)
             if ars + com > cash:
@@ -203,7 +213,7 @@ def cambio(db, oref, o, precios):
             cash -= ars + com
             usd += n
         else:
-            p = t["venta"]
+            p = t["venta"]           # el alumno recibe el precio de compra del mercado
             if n > usd:
                 tx.update(oref, {"estado": "rechazada", "motivo": "Dólares insuficientes."})
                 return False
@@ -212,12 +222,11 @@ def cambio(db, oref, o, precios):
             cash += ars - com
             usd -= n
         ms = int(time.time() * 1000)
-        ops = (u.get("ops") or []) + [{"t": ms, "s": "USD", "l": o["lado"], "c": n, "p": round(p, 4), "com": com, "m": "ARS"}]
-        tx.update(uref, {"cash": round(cash, 2), "usd": round(usd, 2), "ops": ops[-1000:]})
+        ops = (u.get("ops") or []) + [{"t": ms, "s": "USD", "l": o["lado"], "c": n, "p": round(p, 4), "com": com, "m": "ARS", "tc": tipo}]
+        tx.update(uref, {"cash": round(cash, 2), campo: round(usd, 2), "ops": ops[-1000:]})
         tx.update(oref, {"estado": "ejecutada", "fill": {"px": round(p, 4), "com": com, "t": ms}})
         return True
     return paso(db.transaction())
-
 
 
 def og(url):
@@ -356,13 +365,14 @@ def evolucion(db, precios):
     if ahora - ULT["t"] < 14 * 60 * 1000:
         return
     v = {}
-    mep = (tc(precios) or {}).get("mid") or fxmed(precios)
+    mep = (tc(precios, "MEP") or {}).get("mid") or fxmed(precios)
+    ccl = (tc(precios, "CCL") or {}).get("mid") or mep
     for dd in db.collection("users").stream():
         u = dd.to_dict()
-        val = u.get("cash", 0) + u.get("usd", 0) * mep
+        val = u.get("cash", 0) + u.get("usd", 0) * mep + u.get("ccl", 0) * ccl
         for s, p in (u.get("pos") or {}).items():
             px = (precios.get(s) or {}).get("ultimo") or (p["costo"] / p["c"] if p["c"] else 0)
-            val += p["c"] * px * (mep if p.get("m") == "USD" else 1)
+            val += p["c"] * px * {"USD": mep, "CCL": ccl}.get(p.get("m"), 1)
         v[dd.id] = round(val, 2)
     db.collection("evolucion").document(str(ahora)).set({"t": ahora, "v": v})
     ULT["t"] = ahora
@@ -417,7 +427,7 @@ def motor(precios):
                 continue
         if o["tipo"] != "mercado" and ((c and ref > o["limite"]) or (not c and ref < o["limite"])):
             continue
-        hechas += ejecutar(db, oref, o, ref, TASA(d), mon_de(d))
+        hechas += ejecutar(db, oref, o, ref, TASA(d), mon_de(o["s"], d, precios))
     print(f"Motor de órdenes: {len(docs)} pendientes, {hechas} ejecutadas. Mercado {'abierto' if abierto else 'cerrado'}.")
     try:
         dividendos(db, precios, hoy)
