@@ -21,7 +21,7 @@ tr.k{cursor:pointer}tr.k:hover,tr.s{background:#8883}
 small{opacity:.65;display:block}
 #tv{height:380px;border:1px solid #8884}
 .card{border:1px solid #8884;padding:10px;margin:10px 0}
-.pv{display:flex;gap:10px;border:1px solid #8884;margin-top:8px;text-decoration:none;color:inherit}.pv img{width:150px;object-fit:cover}.pv span{padding:8px}.nota{border-left:4px solid #3b82f6}.consejo{border-left:4px solid #d97706}.resp{border-left:4px solid #8886;margin-left:18px}.up{color:#0a7d33}.dn{color:#c0282d}.hide{display:none}
+.pv{display:flex;gap:10px;border:1px solid #8884;margin-top:8px;text-decoration:none;color:inherit}.pv img{width:150px;object-fit:cover}.pv span{padding:8px}.nota{border-left:4px solid #3b82f6}.consejo{border-left:4px solid #d97706}.resp{border-left:4px solid #8886;margin-left:18px}.res{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}.res>div{border:1px solid #8884;padding:8px}.res small{display:block}.up{color:#0a7d33}.dn{color:#c0282d}.hide{display:none}
 </style>
 </head>
 <body>
@@ -46,6 +46,7 @@ small{opacity:.65;display:block}
       <p><b>Bono:</b> un préstamo que le hacés al Estado a cambio de intereses. <b>Letra:</b> un bono de corto plazo. <b>Obligación negociable:</b> un bono emitido por una empresa. Bonos, letras y obligaciones se muestran solo como referencia.</p>
       <p>Para profundizar en cualquiera de estos conceptos, podés consultar fuentes especializadas o conversarlo con tu docente.</p>
     </details>
+    <details class="card"><summary>Calendario de dividendos (próximos pagos)</summary><div id="divtab"></div></details>
     <div class="g f">
       <input id="buscar" placeholder="Buscar por símbolo o nombre (ejemplo: AAPL, SPY, AL30)">
       <select id="ftipo"><option value="">Todos los tipos</option></select>
@@ -86,6 +87,7 @@ small{opacity:.65;display:block}
 </div>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -119,7 +121,7 @@ const TASA=d=>d.tipo==="letras"?0.003:0.0071;   // comisión + IVA (aprox.)
 function ba(){const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:TZ,weekday:"short",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date()).map(x=>[x.type,x.value]));
   const m=+p.hour*60+ +p.minute;return{dia:`${p.year}-${p.month}-${p.day}`,hora:`${p.hour}:${p.minute}:${p.second}`,abierto:!["Sat","Sun"].includes(p.weekday)&&m>=645&&m<1080};}
 function relojBA(){const b=ba();$("reloj").textContent=`Buenos Aires ${b.hora} · `+(b.abierto?"Mercado abierto":"Mercado cerrado (abre a las 10:45, de lunes a viernes)");$("pub").disabled=!b.abierto;}
-let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],novs=[],ver=null,verAlu=null,editNov=null,libro=null,unsubLibro=null,tab="mercado";
+let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],novs=[],ver=null,verAlu=null,editNov=null,evo=[],calDiv=null,libro=null,unsubLibro=null,tab="mercado";
 
 /* ---------- Acceso ---------- */
 const correo=u=>u+"@economia-aula.app";
@@ -144,6 +146,7 @@ onAuthStateChanged(auth,u=>{
   onSnapshot(collection(db,"comentarios"),s=>{coment=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
   onSnapshot(query(collection(db,"ordenes"),orderBy("t","desc"),limit(300)),s=>{ordenes=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
   onSnapshot(query(collection(db,"novedades"),orderBy("t","desc"),limit(100)),s=>{novs=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
+  onSnapshot(query(collection(db,"evolucion"),orderBy("t","desc"),limit(200)),s=>{evo=s.docs.map(d=>d.data()).reverse();pintarTodo();});
   armarTabs();
 });
 
@@ -162,6 +165,37 @@ function valor(u){let v=u.cash;for(const[s,p]of Object.entries(u.pos||{}))v+=p.c
 const pct=v=>((v-CAPITAL)/CAPITAL*100);
 const cls=n=>n>=0?"up":"dn";
 
+function contable(u){
+  const A={};
+  for(const o of [...(u.ops||[])].sort((a,b)=>a.t-b.t)){
+    const a=A[o.s]=A[o.s]||{c:0,costo:0,rec:0,real:0,com:0,div:0};
+    if(o.l==="C"){a.c+=o.c;a.costo+=o.c*o.p+(o.com||0);a.com+=o.com||0;}
+    else if(o.l==="V"){const cu=a.c?a.costo/a.c:0,neto=o.c*o.p-(o.com||0);a.rec+=neto;a.real+=neto-o.c*cu;a.costo-=o.c*cu;a.c-=o.c;a.com+=o.com||0;}
+    else if(o.l==="D")a.div+=o.monto||0;
+  }
+  let ten=0,nr=0,re=0,cm=0,dv=0;
+  const filas=Object.entries(A).map(([s,a])=>{const px=precio(s)??(a.c?a.costo/a.c:0),val=a.c*px,nore=a.c?val-a.costo:0;ten+=val;nr+=nore;re+=a.real;cm+=a.com;dv+=a.div;return{s,...a,px,val,nore};});
+  return{filas,ten,nr,re,cm,dv,pat:u.cash+ten};
+}
+function grafEvo(u){
+  const P=evo.map(e=>({t:e.t,v:e.v?.[u.id]})).filter(p=>p.v!=null);
+  if(P.length<2)return"<small>El gráfico de evolución aparecerá cuando haya al menos dos registros del patrimonio (se guardan cada 15 minutos en horario de mercado).</small>";
+  const W=600,H=170,m=30,t0=P[0].t,t1=P[P.length-1].t,vs=P.map(p=>p.v).concat(CAPITAL),mn=Math.min(...vs),mx=Math.max(...vs);
+  const X=t=>m+(W-2*m)*(t-t0)/(t1-t0||1),Y=v=>H-m-(H-2*m)*(v-mn)/(mx-mn||1);
+  return`<h4>Evolución del patrimonio</h4><svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:720px"><line x1="${m}" x2="${W-m}" y1="${Y(CAPITAL)}" y2="${Y(CAPITAL)}" stroke="#8886" stroke-dasharray="4"/><polyline fill="none" stroke="#3b82f6" stroke-width="2" points="${P.map(p=>X(p.t).toFixed(1)+","+Y(p.v).toFixed(1)).join(" ")}"/><text x="${m}" y="12" font-size="11" fill="currentColor">${$$(mx)}</text><text x="${m}" y="${H-8}" font-size="11" fill="currentColor">${$$(mn)}</text><text x="${W-m}" y="${H-8}" font-size="11" text-anchor="end" fill="currentColor">${fh(t1)}</text></svg><small>La línea punteada marca el capital inicial (${$$(CAPITAL)}).</small>`;
+}
+function estado(u){
+  const c=contable(u),res=c.pat-CAPITAL,k=(t,v,cl="")=>`<div><small>${t}</small><b class="${cl}">${v}</b></div>`;
+  const F=c.filas.sort((a,b)=>a.s.localeCompare(b.s)).map(a=>`<tr><td>${esc(a.s)}</td><td class="n">${a.c}</td><td class="n">${a.c?$$(a.costo/a.c):"-"}</td><td class="n">${a.c?$$(a.px):"-"}</td><td class="n">${$$(a.val)}</td><td class="n ${cls(a.nore)}">${a.c?$$(a.nore):"-"}</td><td class="n ${cls(a.real)}">${$$(a.real)}</td><td class="n">${$$(a.rec)}</td><td class="n">${$$(a.com)}</td><td class="n">${$$(a.div)}</td></tr>`).join("");
+  const TO={C:"Compra",V:"Venta",D:"Dividendo cobrado"};
+  const L=[...(u.ops||[])].sort((a,b)=>a.t-b.t).slice(-50).map(o=>{const b=o.c*o.p,n=o.l==="C"?b+(o.com||0):o.l==="V"?b-(o.com||0):o.monto;
+    return`<tr><td>${fh(o.t)}</td><td>${TO[o.l]}</td><td>${esc(o.s)}</td><td class="n">${o.c}</td><td class="n">${$$(o.p)}</td><td class="n">${o.l==="D"?"-":$$(b)}</td><td class="n">${$$(o.com||0)}</td><td class="n">${$$(n)}</td></tr>`}).join("");
+  return`<h4>Estado contable</h4><div class="res">${k("Efectivo disponible",$$(u.cash))}${k("Valor de las tenencias",$$(c.ten))}${k("Patrimonio total",$$(c.pat))}${k("Resultado total",`${$$(res)} (${(res/CAPITAL*100).toFixed(2)} %)`,cls(res))}${k("Resultado realizado",$$(c.re),cls(c.re))}${k("Resultado no realizado",$$(c.nr),cls(c.nr))}${k("Dividendos cobrados",$$(c.dv))}${k("Comisiones pagadas",$$(c.cm))}</div>
+  <small>El resultado realizado es la ganancia o pérdida de lo que ya se vendió. El no realizado es lo que se ganaría o perdería si se vendiera hoy a precio de mercado. El precio promedio de compra incluye las comisiones.</small>
+  ${grafEvo(u)}
+  <h4>Detalle por activo</h4>${F?`<div class="l"><table><thead><tr><th>Activo</th><th class="n">Cantidad disponible</th><th class="n">Precio promedio de compra</th><th class="n">Precio actual</th><th class="n">Valor actual</th><th class="n">Resultado no realizado</th><th class="n">Resultado realizado</th><th class="n">Recuperado por ventas</th><th class="n">Comisiones</th><th class="n">Dividendos</th></tr></thead><tbody>${F}</tbody></table></div>`:"<p>Todavía no tiene operaciones.</p>"}
+  <h4>Libro de operaciones</h4>${L?`<div class="l"><table><thead><tr><th>Fecha y hora</th><th>Operación</th><th>Activo</th><th class="n">Cantidad</th><th class="n">Precio</th><th class="n">Importe bruto</th><th class="n">Comisión</th><th class="n">Importe neto</th></tr></thead><tbody>${L}</tbody></table></div><small>Importe neto: lo que se pagó (en una compra, con la comisión incluida) o lo que se recibió (en una venta, ya descontada la comisión).</small>`:"<p>Todavía no hay operaciones.</p>"}`;
+}
 function ficha(u){
   if(!u)return"";
   const v=valor(u),r=pct(v),comT=(u.ops||[]).reduce((a,o)=>a+(o.com||0),0);
@@ -171,9 +205,7 @@ function ficha(u){
   const TT={mercado:"a precio de mercado",limite:"límite",stop_limite:"stop límite"};
   const ords=ordenes.filter(o=>o.uid===u.id).slice(0,15).map(o=>`<li>${fh(o.t)} · ${o.lado==="C"?"Compra":"Venta"} de ${o.cant} ${esc(o.s)} (${TT[o.tipo]}${o.limite?` ${$$(o.limite)}`:""}${o.stop?`, stop ${$$(o.stop)}`:""}; ${o.vigencia==="dia"?"por el día":"hasta cancelar"}) · <b>${esc(o.estado)}</b>${o.fill?` a ${$$(o.fill.px)}`:""}${o.motivo?` · ${esc(o.motivo)}`:""} ${o.estado==="pendiente"&&u.id===user.uid?`<button data-canc="${o.id}">Cancelar</button>`:""}</li>`).join("");
     const adm=esAdmin?`<div class="card"><b>Consejo general para este alumno</b><br><br><textarea id="ctxt" rows="2" placeholder="Escribí un consejo general para este alumno (lo verán todos)"></textarea><br><br><button data-com="${u.id}">Publicar consejo</button> <button data-reset="${u.id}">Reiniciar cartera</button></div>`:"";
-  return`<div class="card"><h3>${esc(nom(u))}</h3><p>Efectivo: <b>${$$(u.cash)}</b> · Valor total: <b>${$$(v)}</b> · Resultado: <b class="${cls(r)}">${r.toFixed(2)} %</b> · Comisiones pagadas: <b>${$$(comT)}</b></p>
-  ${filas?`<div class="l"><table><thead><tr><th>Activo</th><th class="n">Cant.</th><th class="n">Costo prom.</th><th class="n">Precio</th><th class="n">Valor</th><th class="n">Resultado</th></tr></thead><tbody>${filas}</tbody></table></div>`:"<p>Todavía no tiene activos.</p>"}
-  <h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul><h4>Operaciones ejecutadas</h4><ul>${ops||"<li>Sin operaciones.</li>"}</ul><h4>Mensajes</h4>${historial(u)}${adm}</div>`;
+  return`<div class="card"><h3>${esc(nom(u))}</h3>${estado(u)}<h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul><h4>Mensajes</h4>${historial(u)}${adm}</div>`;
 }
 
 function pintarTodo(){
@@ -193,7 +225,7 @@ function pintarTodo(){
   }
   if(tab==="alumnos"){
     const L=todos.filter(u=>(u.usuario||"")!==ADMIN).sort((a,b)=>nom(a).localeCompare(nom(b),"es",{sensitivity:"base"}));
-    $("alu-lista").innerHTML=`<div class="card"><b>Alumnos</b> <small>${L.length} registrados, en orden alfabético.</small><div class="g" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-top:8px">${L.map(u=>`<button data-alu="${u.id}" class="${u.id===verAlu?"on":""}">${esc(nom(u))}</button>`).join("")}</div></div>`;
+    $("alu-lista").innerHTML=`<div class="card"><b>Alumnos</b> <small>${L.length} registrados, en orden alfabético.</small> <button id="xls">Descargar planilla Excel</button><div class="g" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-top:8px">${L.map(u=>`<button data-alu="${u.id}" class="${u.id===verAlu?"on":""}">${esc(nom(u))}</button>`).join("")}</div></div>`;
     conservar($("alu-ficha"),verAlu,()=>{$("alu-ficha").innerHTML=ficha(todos.find(u=>u.id===verAlu))||"<p>Elegí un alumno para ver su registro completo.</p>";});
   }
   if(tab==="novedades"){
@@ -219,6 +251,7 @@ document.body.addEventListener("click",async e=>{
   if(t.dataset.cedn){editNov=null;pintarTodo();}
   if(t.dataset.gedn){const id=t.dataset.gedn,x=document.querySelector(`[data-ed="${id}"]`).value.trim();
     if(x){editNov=null;await updateDoc(doc(db,"novedades",id),{texto:x.slice(0,1500),editado:Date.now(),previews:null});}}
+  if(t.id==="xls")exportar();
   if(t.dataset.alu){verAlu=t.dataset.alu;pintarTodo();}
   if(t.dataset.resp){const ta=document.querySelector(`[data-rt="${t.dataset.resp}"]`),x=ta.value.trim(),n=notas.find(q=>q.id===t.dataset.resp);
     if(x&&n){ta.value="";await addDoc(collection(db,"comentarios"),{para:n.uid,notaId:n.id,texto:x.slice(0,600),t:Date.now()});}}
@@ -228,6 +261,21 @@ document.body.addEventListener("click",async e=>{
   if(t.dataset.reset&&confirm("Esto devuelve la cartera al capital inicial. ¿Continuar?"))
     await updateDoc(doc(db,"users",t.dataset.reset),{cash:CAPITAL,pos:{},ops:[]});
 });
+
+function exportar(){
+  if(typeof XLSX==="undefined")return alert("No se pudo cargar la herramienta de Excel. Revisá tu conexión e intentá de nuevo.");
+  const L=todos.filter(u=>(u.usuario||"")!==ADMIN).sort((a,b)=>nom(a).localeCompare(nom(b),"es",{sensitivity:"base"}));
+  const R=[["Alumno","Efectivo","Valor de las tenencias","Patrimonio total","Resultado ($)","Resultado (%)","Resultado realizado","Resultado no realizado","Dividendos cobrados","Comisiones pagadas","Notas publicadas","Notas evaluadas","Puntaje promedio"]];
+  const O=[["Alumno","Fecha y hora","Operación","Activo","Cantidad","Precio","Comisión","Importe neto"]];
+  for(const u of L){
+    const c=contable(u),ns=notas.filter(n=>n.uid===u.id),ev=ns.filter(n=>n.puntaje!=null),res=c.pat-CAPITAL;
+    R.push([nom(u),u.cash,c.ten,c.pat,res,+(res/CAPITAL*100).toFixed(2),c.re,c.nr,c.dv,c.cm,ns.length,ev.length,ev.length?+(ev.reduce((a,n)=>a+n.puntaje,0)/ev.length).toFixed(2):""]);
+    for(const o of [...(u.ops||[])].sort((a,b)=>a.t-b.t))O.push([nom(u),fh(o.t),{C:"Compra",V:"Venta",D:"Dividendo"}[o.l],o.s,o.c,o.p,o.com||0,o.l==="C"?o.c*o.p+(o.com||0):o.l==="V"?o.c*o.p-(o.com||0):o.monto]);
+  }
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(R),"Resumen");XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(O),"Operaciones");
+  XLSX.writeFile(wb,"alumnos_"+ba().dia+".xlsx");
+}
 
 /* ---------- Notas ---------- */
 $("npub").onclick=async()=>{
@@ -248,15 +296,23 @@ function pintar(){
 const operable=d=>["acciones","cedears","etfs"].includes(d.tipo)&&!/usd|d[oó]lar|u\$s/i.test(d.moneda||"")&&d.ultimo>0;
 function detalle(){
   const d=datos.find(x=>x.s===elegido);if(!d)return;
-  $("det").innerHTML=`<b>${esc(d.s)}</b> · ${esc(d.nombre)} (${esc(nt(d.tipo))}, ${esc(d.moneda)})<br>Último: <b>${d.ultimo??"-"}</b> · Variación: ${d.variacion_pct??"-"} % · Compra: ${d.compra??"-"} · Venta: ${d.venta??"-"}<br>Apertura ${d.apertura??"-"} · Máximo ${d.maximo??"-"} · Mínimo ${d.minimo??"-"} · Cierre anterior ${d.cierre_anterior??"-"} · Volumen ${d.volumen??"-"}`;
+  $("det").innerHTML=`<b>${esc(d.s)}</b> · ${esc(d.nombre)} (${esc(nt(d.tipo))}, ${esc(d.moneda)})<br>Último: <b>${d.ultimo??"-"}</b> · Variación: ${d.variacion_pct??"-"} % · Compra: ${d.compra??"-"} · Venta: ${d.venta??"-"}<br>Apertura ${d.apertura??"-"} · Máximo ${d.maximo??"-"} · Mínimo ${d.minimo??"-"} · Cierre anterior ${d.cierre_anterior??"-"} · Volumen ${d.volumen??"-"}${divTxt(d.s)}`;
   $("op").classList.toggle("hide",!operable(d)||esAdmin);estimar();
 }
+const fd=x=>x.split("-").reverse().join("/");
+const divTxt=s=>{const d=(calDiv?.dividendos||[]).filter(x=>x.s===s&&x.ex>=ba().dia).sort((a,b)=>a.ex.localeCompare(b.ex))[0];return d?`<br><b>Próximo dividendo:</b> USD ${d.usd} por unidad · corte ${fd(d.ex)} · pago ${fd(d.pago)}`:"";};
+function pintarDiv(){
+  if(!calDiv)return;
+  const L=calDiv.dividendos.filter(d=>d.ex>=ba().dia).sort((a,b)=>a.ex.localeCompare(b.ex));
+  $("divtab").innerHTML=L.length?`<table><thead><tr><th>Activo</th><th>Fecha de corte</th><th>Fecha de pago</th><th class="n">USD por CEDEAR</th></tr></thead><tbody>${L.map(d=>`<tr><td>${esc(d.s)}</td><td>${fd(d.ex)}</td><td>${fd(d.pago)}</td><td class="n">${d.usd}</td></tr>`).join("")}</tbody></table><small>Para cobrar hay que tener el activo antes de la fecha de corte. El dinero se acredita en la fecha de pago, en pesos, con una retención estimada del 30 % (10 % en Brasil). Fuente: ${esc(calDiv.fuente)}</small>`:"<small>No hay dividendos próximos cargados.</small>";
+}
+fetch("https://raw.githubusercontent.com/Pablo002k/InvEco/main/data/dividendos.json?t="+Math.floor(Date.now()/600000)).then(r=>r.json()).then(j=>{calDiv=j;pintarDiv();detalle();}).catch(()=>{});
 function pedirLibro(s){setDoc(doc(db,"libro_pedidos",s),{s,t:Date.now()}).catch(()=>{});}
 function pintarLibro(){
   const el=$("libro");el.classList.remove("hide");
   if(!libro){el.innerHTML="<b>Libro de ofertas</b><br><small>Consultando el libro de ofertas real de IOL. Puede demorar unos segundos.</small>";return;}
   const n=Math.max(libro.bids.length,libro.asks.length),c=(x)=>x?`${$$(x.p)} · ${x.c}`:"",f=Array.from({length:n},(_,i)=>`<tr><td class="n">${c(libro.bids[i])}</td><td class="n">${c(libro.asks[i])}</td></tr>`).join("");
-  el.innerHTML=`<b>Libro de ofertas de ${esc(libro.s)}</b> <small>Actualizado ${fh(libro.t)}</small><table><thead><tr><th class="n">Compra: precio · cantidad</th><th class="n">Venta: precio · cantidad</th></tr></thead><tbody>${f||"<tr><td colspan=2>Sin ofertas en este momento.</td></tr>"}</tbody></table>`;}
+  el.innerHTML=`<b>Libro de ofertas de ${esc(libro.s)}</b> <small>${libro.vacio&&libro.tl?`Último libro registrado el ${fh(libro.tl)} (ahora no hay ofertas en el mercado)`:`Actualizado ${fh(libro.t)}`}</small><table><thead><tr><th class="n">Compra: precio · cantidad</th><th class="n">Venta: precio · cantidad</th></tr></thead><tbody>${f||"<tr><td colspan=2>No hay ofertas en este momento. En el mercado real las órdenes se cancelan al cierre (18:00), por eso fuera de horario el libro está vacío.</td></tr>"}</tbody></table>`;}
 function verLibro(s){unsubLibro&&unsubLibro();libro=null;pintarLibro();pedirLibro(s);
   unsubLibro=onSnapshot(doc(db,"libros",s),x=>{libro=x.data()||null;pintarLibro();});}
 function elegir(s){elegido=s;verLibro(s);detalle();pintar();$("omsg").textContent="";$("tv").innerHTML="";
