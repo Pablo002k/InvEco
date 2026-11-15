@@ -3,7 +3,7 @@ Solo LEE precios: no usa ninguna función de compra o venta.
 La clave llega por variables secretas: nunca se escribe acá."""
 import html, json, os, re, shutil, subprocess, sys, tempfile, time
 import urllib.parse, urllib.request, urllib.error
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 BASE = "https://api.iolinversiones.com"
 TIPOS = ["acciones", "cedears", "etfs", "bonos", "obligaciones_negociables"]
@@ -147,7 +147,7 @@ def ejecutar(db, oref, o, px, tasa):
                 pos.pop(s)
         ms = int(time.time() * 1000)
         ops = (u.get("ops") or []) + [{"t": ms, "s": s, "l": o["lado"], "c": n, "p": px, "com": com}]
-        tx.update(uref, {"cash": round(cash, 2), "pos": pos, "ops": ops[-200:]})
+        tx.update(uref, {"cash": round(cash, 2), "pos": pos, "ops": ops[-1000:]})
         tx.update(oref, {"estado": "ejecutada", "fill": {"px": px, "com": com, "t": ms}})
         return True
     return paso(db.transaction())
@@ -222,8 +222,12 @@ def libros(db, tok):
             continue
         nivel = lambda L: [{"p": x["price"], "c": x["size"]}
                            for x in sorted(L or [], key=lambda x: x.get("position", 0))[:6]]
-        db.collection("libros").document(s).set({"s": s, "t": ahora, "bids": nivel(d.get("bids")),
-                                                  "asks": nivel(d.get("asks"))})
+        bids, asks = nivel(d.get("bids")), nivel(d.get("asks"))
+        ref = db.collection("libros").document(s)
+        if bids or asks:
+            ref.set({"s": s, "t": ahora, "tl": ahora, "vacio": False, "bids": bids, "asks": asks})
+        else:   # sin ofertas (mercado cerrado): se conserva el último libro real y se marca como vacío
+            ref.set({"s": s, "t": ahora, "vacio": True, "bids": [], "asks": []}, merge=True)
         time.sleep(0.3)
 
 
@@ -234,6 +238,78 @@ def pulso():
         libros(_db(), TOKEN["t"])
     except Exception as e:
         print("Libros de ofertas con error:", e)
+
+
+def dividendos(db, precios, hoy):
+    """Acredita los dividendos (calendario en data/dividendos.json) a quienes tenían el activo antes de la fecha ex."""
+    from firebase_admin import firestore
+    try:
+        cal = json.load(open("data/dividendos.json", encoding="utf-8"))
+    except Exception as e:
+        print("Sin calendario de dividendos:", e)
+        return
+    pendientes = [d for d in cal.get("dividendos", []) if d["pago"] <= hoy]
+    if not pendientes:
+        return
+    for d in pendientes:
+        s = d["s"]
+        px, usd_px = (precios.get(s) or {}).get("ultimo"), None
+        for suf in ("C", "D"):   # dólar implícito: precio en pesos / precio en dólares del mismo CEDEAR
+            usd_px = (precios.get(s + suf) or {}).get("ultimo")
+            if usd_px:
+                break
+        if not px or not usd_px:
+            print(f"Dividendo {d['id']}: sin precio para calcular el dólar implícito, se reintenta luego.")
+            continue
+        fx = px / usd_px
+        ret = d.get("ret", cal.get("retencion_por_defecto", 0.30))
+        corte = int(datetime.strptime(d["ex"], "%Y-%m-%d").replace(tzinfo=timezone(timedelta(hours=-3))).timestamp() * 1000)
+        for ud in db.collection("users").stream():
+            u = ud.to_dict()
+            if d["id"] in (u.get("divs") or []):
+                continue
+            qty = 0
+            for o in sorted(u.get("ops") or [], key=lambda x: x["t"]):
+                if o["t"] < corte and o["s"] == s and o["l"] in ("C", "V"):
+                    qty += o["c"] if o["l"] == "C" else -o["c"]
+            uref = ud.reference
+
+            @firestore.transactional
+            def pagar(tx):
+                cur = uref.get(transaction=tx).to_dict()
+                if d["id"] in (cur.get("divs") or []):
+                    return
+                upd = {"divs": (cur.get("divs") or []) + [d["id"]]}
+                if qty > 0:
+                    neto = round(qty * d["usd"] * (1 - ret) * fx, 2)
+                    upd["cash"] = round(cur["cash"] + neto, 2)
+                    upd["ops"] = ((cur.get("ops") or []) + [{"t": int(time.time() * 1000), "s": s, "l": "D", "c": qty,
+                                  "p": round(d["usd"] * (1 - ret) * fx, 4), "com": 0, "monto": neto,
+                                  "usd": d["usd"], "ret": ret}])[-1000:]
+                tx.update(uref, upd)
+            pagar(db.transaction())
+            if qty > 0:
+                print(f"Dividendo {d['id']} acreditado a {u.get('usuario')}: {qty} unidades.")
+
+
+ULT = {"t": 0}
+
+
+def evolucion(db, precios):
+    """Guarda el valor de cada cartera (cada 15 minutos) para el gráfico de evolución."""
+    ahora = int(time.time() * 1000)
+    if ahora - ULT["t"] < 14 * 60 * 1000:
+        return
+    v = {}
+    for dd in db.collection("users").stream():
+        u = dd.to_dict()
+        val = u.get("cash", 0)
+        for s, p in (u.get("pos") or {}).items():
+            px = (precios.get(s) or {}).get("ultimo") or (p["costo"] / p["c"] if p["c"] else 0)
+            val += p["c"] * px
+        v[dd.id] = round(val, 2)
+    db.collection("evolucion").document(str(ahora)).set({"t": ahora, "v": v})
+    ULT["t"] = ahora
 
 
 def motor(precios):
@@ -283,6 +359,12 @@ def motor(precios):
             continue
         hechas += ejecutar(db, oref, o, ref, TASA(d))
     print(f"Motor de órdenes: {len(docs)} pendientes, {hechas} ejecutadas. Mercado {'abierto' if abierto else 'cerrado'}.")
+    try:
+        dividendos(db, precios, hoy)
+        if abierto:
+            evolucion(db, precios)
+    except Exception as e:
+        print("Dividendos o evolución con error:", e)
 
 
 def main():
