@@ -21,7 +21,7 @@ tr.k{cursor:pointer}tr.k:hover,tr.s{background:#8883}
 small{opacity:.65;display:block}
 #tv{height:380px;border:1px solid #8884}
 .card{border:1px solid #8884;padding:10px;margin:10px 0}
-.pv{display:flex;gap:10px;border:1px solid #8884;margin-top:8px;text-decoration:none;color:inherit}.pv img{width:150px;object-fit:cover}.pv span{padding:8px}.up{color:#0a7d33}.dn{color:#c0282d}.hide{display:none}
+.pv{display:flex;gap:10px;border:1px solid #8884;margin-top:8px;text-decoration:none;color:inherit}.pv img{width:150px;object-fit:cover}.pv span{padding:8px}.nota{border-left:4px solid #3b82f6}.consejo{border-left:4px solid #d97706}.resp{border-left:4px solid #8886;margin-left:18px}.up{color:#0a7d33}.dn{color:#c0282d}.hide{display:none}
 </style>
 </head>
 <body>
@@ -63,6 +63,7 @@ small{opacity:.65;display:block}
             <input id="olim" type="number" min="0" step="0.01" placeholder="Precio límite" class="hide">
             <input id="ostop" type="number" min="0" step="0.01" placeholder="Precio stop" class="hide"></div>
           <p id="oest"></p><button id="pub">Publicar orden</button> <span id="omsg"></span></div>
+        <div id="libro" class="card hide"></div>
         <div id="tv"></div>
       </div>
     </div>
@@ -102,14 +103,23 @@ const nt=t=>NOMBRES[t]||t;
 const TZ="America/Argentina/Buenos_Aires";
 const fh=t=>new Date(t).toLocaleString("es-AR",{timeZone:TZ,day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"});
 const nom=u=>u.nombre||u.usuario;
-const resp=n=>coment.filter(c=>c.notaId===n.id).sort((a,b)=>a.t-b.t).map(c=>`<div class="card" style="margin-left:18px"><small>Respuesta del docente · ${fh(c.t)}</small><br>${esc(c.texto)}${esAdmin?` <button data-del="comentarios/${c.id}">Borrar</button>`:""}</div>`).join("");
-function conservar(el,fn){const act=document.activeElement,k=x=>x.id||x.dataset.rt||x.dataset.pt||"",g=[...el.querySelectorAll("textarea,input")].map(x=>[k(x),x.value]),f=el.contains(act)?k(act):null;fn();
+const cab=(autor,tit,t)=>`<b>${esc(autor)}</b><br><small>${tit} · ${fh(t)}</small>`;
+const resp=n=>coment.filter(c=>c.notaId===n.id).sort((a,b)=>a.t-b.t).map(c=>`<div class="card resp">${cab("Docente","Respuesta",c.t)}<p style="white-space:pre-wrap">${esc(c.texto)}</p>${esAdmin?`<button data-del="comentarios/${c.id}">Borrar</button>`:""}</div>`).join("");
+function msgNota(n,u){return`<div class="card nota">${cab(nom(u),"Nota semanal · "+esc(n.semana),n.t)}<p style="white-space:pre-wrap">${esc(n.texto)}</p>${n.puntaje!=null&&(esAdmin||n.uid===user.uid)?`<b>Evaluada: ${n.puntaje}/10</b>`:""}${resp(n)}${esAdmin?`<div><input type="number" min="0" max="10" step="0.5" data-pt="${n.id}" value="${n.puntaje??""}" style="width:90px" placeholder="Puntaje"> <button data-ev="${n.id}">Guardar puntaje</button><br><br><textarea data-rt="${n.id}" rows="2" placeholder="Respondé a esta nota"></textarea><br><br><button data-resp="${n.id}">Enviar respuesta</button></div>`:""}</div>`;}
+function msgConsejo(c){return`<div class="card consejo">${cab("Docente","Consejo del docente",c.t)}<p style="white-space:pre-wrap">${esc(c.texto)}</p>${esAdmin?`<button data-del="comentarios/${c.id}">Borrar</button>`:""}</div>`;}
+function historial(u){  // mensajes en orden cronológico (los más antiguos primero); las respuestas van dentro de su nota
+  const it=[...notas.filter(n=>n.uid===u.id).map(n=>({t:n.t,h:msgNota(n,u)})),...coment.filter(c=>c.para===u.id&&!c.notaId).map(c=>({t:c.t,h:msgConsejo(c)}))].sort((a,b)=>a.t-b.t);
+  return it.map(i=>i.h).join("")||"<p>Todavía no hay mensajes.</p>";}
+function conservar(el,ctx,fn){  // conserva lo que se está escribiendo mientras la pantalla se actualiza
+  const k=x=>x.id||(x.dataset.rt?"rt"+x.dataset.rt:x.dataset.pt?"pt"+x.dataset.pt:x.dataset.ed?"ed"+x.dataset.ed:""),mismo=el._ctx===ctx,act=document.activeElement;
+  const g=mismo?[...el.querySelectorAll("textarea,input")].map(x=>[k(x),x.value]):[],f=mismo&&el.contains(act)?k(act):null;
+  fn();el._ctx=ctx;
   el.querySelectorAll("textarea,input").forEach(x=>{const r=g.find(([a])=>a&&a===k(x));if(r)x.value=r[1];if(f&&k(x)===f)x.focus();});}
 const TASA=d=>d.tipo==="letras"?0.003:0.0071;   // comisión + IVA (aprox.)
 function ba(){const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:TZ,weekday:"short",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date()).map(x=>[x.type,x.value]));
   const m=+p.hour*60+ +p.minute;return{dia:`${p.year}-${p.month}-${p.day}`,hora:`${p.hour}:${p.minute}:${p.second}`,abierto:!["Sat","Sun"].includes(p.weekday)&&m>=645&&m<1080};}
 function relojBA(){const b=ba();$("reloj").textContent=`Buenos Aires ${b.hora} · `+(b.abierto?"Mercado abierto":"Mercado cerrado (abre a las 10:45, de lunes a viernes)");$("pub").disabled=!b.abierto;}
-let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],novs=[],ver=null,verAlu=null,tab="mercado";
+let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],novs=[],ver=null,verAlu=null,editNov=null,libro=null,unsubLibro=null,tab="mercado";
 
 /* ---------- Acceso ---------- */
 const correo=u=>u+"@economia-aula.app";
@@ -160,12 +170,10 @@ function ficha(u){
   const ops=[...(u.ops||[])].reverse().slice(0,15).map(o=>`<li>${fh(o.t)} · ${o.l==="C"?"Compra":"Venta"} de ${o.c} ${esc(o.s)} a ${$$(o.p)}${o.com!=null?` (comisión ${$$(o.com)})`:""}</li>`).join("");
   const TT={mercado:"a precio de mercado",limite:"límite",stop_limite:"stop límite"};
   const ords=ordenes.filter(o=>o.uid===u.id).slice(0,15).map(o=>`<li>${fh(o.t)} · ${o.lado==="C"?"Compra":"Venta"} de ${o.cant} ${esc(o.s)} (${TT[o.tipo]}${o.limite?` ${$$(o.limite)}`:""}${o.stop?`, stop ${$$(o.stop)}`:""}; ${o.vigencia==="dia"?"por el día":"hasta cancelar"}) · <b>${esc(o.estado)}</b>${o.fill?` a ${$$(o.fill.px)}`:""}${o.motivo?` · ${esc(o.motivo)}`:""} ${o.estado==="pendiente"&&u.id===user.uid?`<button data-canc="${o.id}">Cancelar</button>`:""}</li>`).join("");
-  const cm=coment.filter(c=>c.para===u.id&&!c.notaId).sort((a,b)=>b.t-a.t).map(c=>`<p><b>Consejo del docente</b> (${fh(c.t)}): ${esc(c.texto)} ${esAdmin?`<button data-del="comentarios/${c.id}">Borrar</button>`:""}</p>`).join("");
-  const nn=notas.filter(n=>n.uid===u.id).slice(0,20).map(n=>`<div class="card"><b>${esc(n.semana)}</b> <small>${fh(n.t)}</small><p style="white-space:pre-wrap">${esc(n.texto)}</p>${n.puntaje!=null&&(esAdmin||n.uid===user.uid)?`<b>Evaluada: ${n.puntaje}/10</b>`:""}${resp(n)}${esAdmin?`<div><input type="number" min="0" max="10" step="0.5" data-pt="${n.id}" value="${n.puntaje??""}" style="width:90px" placeholder="Puntaje"> <button data-ev="${n.id}">Guardar puntaje</button><br><br><textarea data-rt="${n.id}" rows="2" placeholder="Respondé a esta nota"></textarea><br><br><button data-resp="${n.id}">Enviar respuesta</button></div>`:""}</div>`).join("");
-  const adm=esAdmin?`<div class="card"><b>Herramientas del docente</b><br><br><textarea id="ctxt" rows="2" placeholder="Escribí un consejo general para este alumno (lo verán todos)"></textarea><br><br><button data-com="${u.id}">Publicar consejo</button> <button data-reset="${u.id}">Reiniciar cartera</button></div>`:"";
+    const adm=esAdmin?`<div class="card"><b>Consejo general para este alumno</b><br><br><textarea id="ctxt" rows="2" placeholder="Escribí un consejo general para este alumno (lo verán todos)"></textarea><br><br><button data-com="${u.id}">Publicar consejo</button> <button data-reset="${u.id}">Reiniciar cartera</button></div>`:"";
   return`<div class="card"><h3>${esc(nom(u))}</h3><p>Efectivo: <b>${$$(u.cash)}</b> · Valor total: <b>${$$(v)}</b> · Resultado: <b class="${cls(r)}">${r.toFixed(2)} %</b> · Comisiones pagadas: <b>${$$(comT)}</b></p>
   ${filas?`<div class="l"><table><thead><tr><th>Activo</th><th class="n">Cant.</th><th class="n">Costo prom.</th><th class="n">Precio</th><th class="n">Valor</th><th class="n">Resultado</th></tr></thead><tbody>${filas}</tbody></table></div>`:"<p>Todavía no tiene activos.</p>"}
-  <h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul><h4>Operaciones ejecutadas</h4><ul>${ops||"<li>Sin operaciones.</li>"}</ul>${cm?`<h4>Consejos del docente</h4>${cm}`:""}<h4>Notas semanales</h4>${nn||"<p>Sin notas.</p>"}${adm}</div>`;
+  <h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul><h4>Operaciones ejecutadas</h4><ul>${ops||"<li>Sin operaciones.</li>"}</ul><h4>Mensajes</h4>${historial(u)}${adm}</div>`;
 }
 
 function pintarTodo(){
@@ -180,35 +188,40 @@ function pintarTodo(){
       return`Efectivo ${$$(u.cash)}`+Object.entries(g).map(([t,l])=>` · ${t}: ${l.join(", ")}`).join("");};
     const r=todos.filter(u=>(u.usuario||"")!==ADMIN).map(u=>({...u,v:valor(u)})).sort((a,b)=>b.v-a.v);
     $("rank").innerHTML=`<div class="card"><b>Ranking en vivo</b> <small>Se recalcula con cada actualización de precios.</small><table><thead><tr><th>#</th><th>Usuario e inversiones</th><th class="n">Valor total</th><th class="n">Resultado</th></tr></thead><tbody>${r.map((u,i)=>`<tr class="k${u.id===ver?" s":""}" data-ver="${u.id}"><td>${i+1}</td><td>${esc(nom(u))}<small>${esc(comp(u))}</small></td><td class="n">${$$(u.v)}</td><td class="n ${cls(u.v-CAPITAL)}">${pct(u.v).toFixed(2)} %</td></tr>`).join("")}</tbody></table><small>Tocá un usuario para ver su cartera completa.</small></div>`;
-    conservar($("ficha"),()=>{$("ficha").innerHTML=ficha(todos.find(u=>u.id===ver));});
+    conservar($("ficha"),ver,()=>{$("ficha").innerHTML=ficha(todos.find(u=>u.id===ver));});
     if(keep&&$("ctxt")){$("ctxt").value=keep.v;if(keep.f)$("ctxt").focus();}
   }
   if(tab==="alumnos"){
     const L=todos.filter(u=>(u.usuario||"")!==ADMIN).sort((a,b)=>nom(a).localeCompare(nom(b),"es",{sensitivity:"base"}));
     $("alu-lista").innerHTML=`<div class="card"><b>Alumnos</b> <small>${L.length} registrados, en orden alfabético.</small><div class="g" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-top:8px">${L.map(u=>`<button data-alu="${u.id}" class="${u.id===verAlu?"on":""}">${esc(nom(u))}</button>`).join("")}</div></div>`;
-    conservar($("alu-ficha"),()=>{$("alu-ficha").innerHTML=ficha(todos.find(u=>u.id===verAlu))||"<p>Elegí un alumno para ver su registro completo.</p>";});
+    conservar($("alu-ficha"),verAlu,()=>{$("alu-ficha").innerHTML=ficha(todos.find(u=>u.id===verAlu))||"<p>Elegí un alumno para ver su registro completo.</p>";});
   }
   if(tab==="novedades"){
     $("novf").classList.toggle("hide",!esAdmin);
     const enl=x=>esc(x).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
-    $("nov-lista").innerHTML=novs.map(n=>{
+    conservar($("nov-lista"),"nov",()=>{$("nov-lista").innerHTML=novs.map(n=>{
       const tarj=(n.texto.match(/https?:\/\/[^\s<]+/g)||[]).slice(0,3).map(u=>{const p=(n.previews||[]).find(x=>x.url===u);
         if(!p)return n.previews?"":"<small>Preparando la vista previa del enlace…</small>";
         return p.titulo||p.imagen?`<a class="pv" href="${esc(u)}" target="_blank" rel="noopener">${p.imagen?`<img src="${esc(p.imagen)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:""}<span><b>${esc(p.titulo||u)}</b><small>${esc(p.sitio||"")}</small></span></a>`:"";}).join("");
-      return`<div class="card"><small>${fh(n.t)}</small><p style="white-space:pre-wrap">${enl(n.texto)}</p>${tarj}${esAdmin?`<button data-del="novedades/${n.id}">Eliminar</button>`:""}</div>`;}).join("")||"<p>Todavía no hay novedades.</p>";
+      if(editNov===n.id)return`<div class="card"><b>Editar novedad</b><br><br><textarea data-ed="${n.id}" rows="4" maxlength="1500">${esc(n.texto)}</textarea><br><br><button data-gedn="${n.id}">Guardar cambios</button> <button data-cedn="1">Cancelar</button></div>`;
+      return`<div class="card"><small>${fh(n.t)}${n.editado?` · <i>Editado</i>`:""}</small><p style="white-space:pre-wrap">${enl(n.texto)}</p>${tarj}${esAdmin?`<button data-edn="${n.id}">Editar</button> <button data-del="novedades/${n.id}">Eliminar</button>`:""}</div>`;}).join("")||"<p>Todavía no hay novedades.</p>";});
   }
-  if(tab==="notas"&&!document.activeElement?.dataset?.pt)$("nlista").innerHTML=notas.map(n=>`<div class="card"><b>${esc(n.usuario)}</b> · ${esc(n.semana)} · ${fh(n.t)}<p>${esc(n.texto)}</p>${resp(n)}${n.puntaje!=null&&(esAdmin||n.uid===user.uid)?`<p><b>Evaluada: ${n.puntaje}/10</b></p>`:""}${esAdmin?`<input type="number" min="0" max="10" step="0.5" data-pt="${n.id}" value="${n.puntaje??""}" style="width:90px"> <button data-ev="${n.id}">Guardar puntaje</button> `:""}${esAdmin||n.uid===user.uid?`<button data-del="notas/${n.id}">Borrar</button>`:""}</div>`).join("")||"<p>Todavía no hay notas.</p>";
+  if(tab==="notas"){const yo=todos.find(u=>u.id===user.uid);$("nlista").innerHTML=yo?`<h4>Mi historial</h4>${historial(yo)}`:"";}
 }
 document.body.addEventListener("click",async e=>{
   const t=e.target,tr=t.closest("tr[data-ver]");
   if(tr){ver=tr.dataset.ver;pintarTodo();}
   if(t.dataset.del&&confirm("¿Seguro que querés borrarlo?"))await deleteDoc(doc(db,...t.dataset.del.split("/")));
-  if(t.dataset.com&&$("ctxt").value.trim()){const u=todos.find(x=>x.id===t.dataset.com);
-    await addDoc(collection(db,"comentarios"),{para:u.id,texto:$("ctxt").value.trim().slice(0,600),t:Date.now()});}
-  if(t.id==="npub2"){const x=$("ntx2").value.trim();if(x){await addDoc(collection(db,"novedades"),{texto:x.slice(0,1500),t:Date.now()});$("ntx2").value="";}}
+  if(t.dataset.com&&$("ctxt").value.trim()){const x=$("ctxt").value.trim().slice(0,600);$("ctxt").value="";
+    await addDoc(collection(db,"comentarios"),{para:t.dataset.com,texto:x,t:Date.now()});}
+  if(t.id==="npub2"){const x=$("ntx2").value.trim();if(x){$("ntx2").value="";await addDoc(collection(db,"novedades"),{texto:x.slice(0,1500),t:Date.now()});}}
+  if(t.dataset.edn){editNov=t.dataset.edn;pintarTodo();}
+  if(t.dataset.cedn){editNov=null;pintarTodo();}
+  if(t.dataset.gedn){const id=t.dataset.gedn,x=document.querySelector(`[data-ed="${id}"]`).value.trim();
+    if(x){editNov=null;await updateDoc(doc(db,"novedades",id),{texto:x.slice(0,1500),editado:Date.now(),previews:null});}}
   if(t.dataset.alu){verAlu=t.dataset.alu;pintarTodo();}
   if(t.dataset.resp){const ta=document.querySelector(`[data-rt="${t.dataset.resp}"]`),x=ta.value.trim(),n=notas.find(q=>q.id===t.dataset.resp);
-    if(x&&n){await addDoc(collection(db,"comentarios"),{para:n.uid,notaId:n.id,cita:(n.texto||"").slice(0,120),texto:x.slice(0,600),t:Date.now()});ta.value="";}}
+    if(x&&n){ta.value="";await addDoc(collection(db,"comentarios"),{para:n.uid,notaId:n.id,texto:x.slice(0,600),t:Date.now()});}}
   if(t.dataset.ev){const v=document.querySelector(`[data-pt="${t.dataset.ev}"]`).value;
     await updateDoc(doc(db,"notas",t.dataset.ev),{puntaje:v===""?null:Math.min(10,Math.max(0,+v))});}
   if(t.dataset.canc)await updateDoc(doc(db,"ordenes",t.dataset.canc),{estado:"cancelada"});
@@ -238,7 +251,15 @@ function detalle(){
   $("det").innerHTML=`<b>${esc(d.s)}</b> · ${esc(d.nombre)} (${esc(nt(d.tipo))}, ${esc(d.moneda)})<br>Último: <b>${d.ultimo??"-"}</b> · Variación: ${d.variacion_pct??"-"} % · Compra: ${d.compra??"-"} · Venta: ${d.venta??"-"}<br>Apertura ${d.apertura??"-"} · Máximo ${d.maximo??"-"} · Mínimo ${d.minimo??"-"} · Cierre anterior ${d.cierre_anterior??"-"} · Volumen ${d.volumen??"-"}`;
   $("op").classList.toggle("hide",!operable(d)||esAdmin);estimar();
 }
-function elegir(s){elegido=s;detalle();pintar();$("omsg").textContent="";$("tv").innerHTML="";
+function pedirLibro(s){setDoc(doc(db,"libro_pedidos",s),{s,t:Date.now()}).catch(()=>{});}
+function pintarLibro(){
+  const el=$("libro");el.classList.remove("hide");
+  if(!libro){el.innerHTML="<b>Libro de ofertas</b><br><small>Consultando el libro de ofertas real de IOL. Puede demorar unos segundos.</small>";return;}
+  const n=Math.max(libro.bids.length,libro.asks.length),c=(x)=>x?`${$$(x.p)} · ${x.c}`:"",f=Array.from({length:n},(_,i)=>`<tr><td class="n">${c(libro.bids[i])}</td><td class="n">${c(libro.asks[i])}</td></tr>`).join("");
+  el.innerHTML=`<b>Libro de ofertas de ${esc(libro.s)}</b> <small>Actualizado ${fh(libro.t)}</small><table><thead><tr><th class="n">Compra: precio · cantidad</th><th class="n">Venta: precio · cantidad</th></tr></thead><tbody>${f||"<tr><td colspan=2>Sin ofertas en este momento.</td></tr>"}</tbody></table>`;}
+function verLibro(s){unsubLibro&&unsubLibro();libro=null;pintarLibro();pedirLibro(s);
+  unsubLibro=onSnapshot(doc(db,"libros",s),x=>{libro=x.data()||null;pintarLibro();});}
+function elegir(s){elegido=s;verLibro(s);detalle();pintar();$("omsg").textContent="";$("tv").innerHTML="";
   new TradingView.widget({container_id:"tv",symbol:"BCBA:"+s,interval:"D",locale:"es",theme:"light",autosize:true,timezone:"America/Argentina/Buenos_Aires"});}
 async function cargar(){
   const j=await(await fetch(URL_PRECIOS+"?t="+Math.floor(Date.now()/30000))).json();
@@ -286,6 +307,7 @@ $("pub").onclick=async()=>{
 
 cargar().catch(()=>{$("estado").textContent="Todavía no hay precios. Ejecutá primero la acción en GitHub.";});
 setInterval(()=>{reloj();relojBA();},1000);relojBA();
+setInterval(()=>{if(elegido&&tab==="mercado")pedirLibro(elegido);},120000);
 </script>
 </body>
 </html>
