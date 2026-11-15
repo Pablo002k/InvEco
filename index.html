@@ -46,7 +46,6 @@ small{opacity:.65;display:block}
       <p><b>Bono:</b> un préstamo que le hacés al Estado a cambio de intereses. <b>Letra:</b> un bono de corto plazo. <b>Obligación negociable:</b> un bono emitido por una empresa. Bonos, letras y obligaciones se muestran solo como referencia.</p>
       <p>Para profundizar en cualquiera de estos conceptos, podés consultar fuentes especializadas o conversarlo con tu docente.</p>
     </details>
-    <details class="card"><summary>Calendario de dividendos (próximos pagos)</summary><div id="divtab"></div></details>
     <div class="g f">
       <input id="buscar" placeholder="Buscar por símbolo o nombre (ejemplo: AAPL, SPY, AL30)">
       <select id="ftipo"><option value="">Todos los tipos</option></select>
@@ -71,6 +70,9 @@ small{opacity:.65;display:block}
   </section>
 
   <section id="t-cartera" class="hide"></section>
+  <section id="t-divs" class="hide"><div class="card"><b>Calendario de dividendos</b>
+    <p>Un dividendo es la parte de las ganancias que una empresa reparte entre sus accionistas. Para cobrarlo hay que tener el activo antes de la fecha de corte, y el dinero se acredita en la fecha de pago. En este simulador se cobra en pesos, con una retención estimada (30 % para empresas de Estados Unidos). Las fechas marcadas como estimadas se calculan con la periodicidad habitual de cada empresa y pueden variar.</p></div>
+    <div id="divtab"></div></section>
   <section id="t-alumnos" class="hide"><div id="alu-lista"></div><div id="alu-ficha"></div></section>
   <section id="t-novedades" class="hide">
     <div id="novf" class="card hide"><b>Nueva novedad</b> <small>Podés incluir enlaces a videos, noticias o publicaciones: se mostrará una vista previa.</small><br><br>
@@ -106,14 +108,19 @@ const TZ="America/Argentina/Buenos_Aires";
 const fh=t=>new Date(t).toLocaleString("es-AR",{timeZone:TZ,day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"});
 const nom=u=>u.nombre||u.usuario;
 const cab=(autor,tit,t)=>`<b>${esc(autor)}</b><br><small>${tit} · ${fh(t)}</small>`;
-const resp=n=>coment.filter(c=>c.notaId===n.id).sort((a,b)=>a.t-b.t).map(c=>`<div class="card resp">${cab("Docente","Respuesta",c.t)}<p style="white-space:pre-wrap">${esc(c.texto)}</p>${esAdmin?`<button data-del="comentarios/${c.id}">Borrar</button>`:""}</div>`).join("");
-function msgNota(n,u){return`<div class="card nota">${cab(nom(u),"Nota semanal · "+esc(n.semana),n.t)}<p style="white-space:pre-wrap">${esc(n.texto)}</p>${n.puntaje!=null&&(esAdmin||n.uid===user.uid)?`<b>Evaluada: ${n.puntaje}/10</b>`:""}${resp(n)}${esAdmin?`<div><input type="number" min="0" max="10" step="0.5" data-pt="${n.id}" value="${n.puntaje??""}" style="width:90px" placeholder="Puntaje"> <button data-ev="${n.id}">Guardar puntaje</button><br><br><textarea data-rt="${n.id}" rows="2" placeholder="Respondé a esta nota"></textarea><br><br><button data-resp="${n.id}">Enviar respuesta</button></div>`:""}</div>`;}
-function msgConsejo(c){return`<div class="card consejo">${cab("Docente","Consejo del docente",c.t)}<p style="white-space:pre-wrap">${esc(c.texto)}</p>${esAdmin?`<button data-del="comentarios/${c.id}">Borrar</button>`:""}</div>`;}
-function historial(u){  // mensajes en orden cronológico (los más antiguos primero); las respuestas van dentro de su nota
-  const it=[...notas.filter(n=>n.uid===u.id).map(n=>({t:n.t,h:msgNota(n,u)})),...coment.filter(c=>c.para===u.id&&!c.notaId).map(c=>({t:c.t,h:msgConsejo(c)}))].sort((a,b)=>a.t-b.t);
+const hilo=(id,u,herr,siempre)=>{   // respuestas debajo del mensaje, en orden cronológico
+  const it=[...coment.filter(c=>c.notaId===id).map(c=>({t:c.t,a:"Docente",x:c.texto,d:herr?"comentarios/"+c.id:""})),...resps.filter(r=>r.root===id).map(r=>({t:r.t,a:r.usuario,x:r.texto,d:herr?"respuestas/"+r.id:""}))].sort((a,b)=>a.t-b.t);
+  const dr=coment.some(c=>c.notaId===id);
+  return it.map(i=>`<div class="card resp">${cab(i.a,"Respuesta",i.t)}<p style="white-space:pre-wrap">${esc(i.x)}</p>${i.d?`<button data-del="${i.d}">Borrar</button>`:""}</div>`).join("")
+   +(herr?`<div><textarea data-rt="${id}" rows="2" placeholder="Respondé a este mensaje"></textarea><br><br><button data-resp="${id}" data-para="${u.id}">Enviar respuesta</button></div>`:"")
+   +(!esAdmin&&u.id===user.uid&&(siempre||dr)?`<div><textarea data-sr="${id}" rows="2" placeholder="Escribí tu respuesta"></textarea><br><br><button data-sresp="${id}">Responder</button></div>`:"");};
+function msgNota(n,u,herr){return`<div class="card nota">${cab(nom(u),"Nota semanal · "+esc(n.semana),n.t)}<p style="white-space:pre-wrap">${esc(n.texto)}</p>${n.puntaje!=null&&(esAdmin||n.uid===user.uid)?`<b>Evaluada: ${n.puntaje}/10</b>`:""}${herr?`<div><input type="number" min="0" max="10" step="0.5" data-pt="${n.id}" value="${n.puntaje??""}" style="width:90px" placeholder="Puntaje"> <button data-ev="${n.id}">Guardar puntaje</button></div>`:""}${hilo(n.id,u,herr,false)}</div>`;}
+function msgConsejo(c,u,herr){return`<div class="card consejo">${cab("Docente","Consejo del docente",c.t)}<p style="white-space:pre-wrap">${esc(c.texto)}</p>${herr?`<button data-del="comentarios/${c.id}">Borrar</button>`:""}${hilo(c.id,u,herr,true)}</div>`;}
+function historial(u,herr){   // los mensajes más recientes primero; las respuestas quedan dentro de su mensaje
+  const it=[...notas.filter(n=>n.uid===u.id).map(n=>({t:n.t,h:msgNota(n,u,herr)})),...coment.filter(c=>c.para===u.id&&!c.notaId).map(c=>({t:c.t,h:msgConsejo(c,u,herr)}))].sort((a,b)=>b.t-a.t);
   return it.map(i=>i.h).join("")||"<p>Todavía no hay mensajes.</p>";}
 function conservar(el,ctx,fn){  // conserva lo que se está escribiendo mientras la pantalla se actualiza
-  const k=x=>x.id||(x.dataset.rt?"rt"+x.dataset.rt:x.dataset.pt?"pt"+x.dataset.pt:x.dataset.ed?"ed"+x.dataset.ed:""),mismo=el._ctx===ctx,act=document.activeElement;
+  const k=x=>x.id||(x.dataset.rt?"rt"+x.dataset.rt:x.dataset.pt?"pt"+x.dataset.pt:x.dataset.ed?"ed"+x.dataset.ed:x.dataset.sr?"sr"+x.dataset.sr:""),mismo=el._ctx===ctx,act=document.activeElement;
   const g=mismo?[...el.querySelectorAll("textarea,input")].map(x=>[k(x),x.value]):[],f=mismo&&el.contains(act)?k(act):null;
   fn();el._ctx=ctx;
   el.querySelectorAll("textarea,input").forEach(x=>{const r=g.find(([a])=>a&&a===k(x));if(r)x.value=r[1];if(f&&k(x)===f)x.focus();});}
@@ -121,7 +128,7 @@ const TASA=d=>d.tipo==="letras"?0.003:0.0071;   // comisión + IVA (aprox.)
 function ba(){const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:TZ,weekday:"short",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date()).map(x=>[x.type,x.value]));
   const m=+p.hour*60+ +p.minute;return{dia:`${p.year}-${p.month}-${p.day}`,hora:`${p.hour}:${p.minute}:${p.second}`,abierto:!["Sat","Sun"].includes(p.weekday)&&m>=645&&m<1080};}
 function relojBA(){const b=ba();$("reloj").textContent=`Buenos Aires ${b.hora} · `+(b.abierto?"Mercado abierto":"Mercado cerrado (abre a las 10:45, de lunes a viernes)");$("pub").disabled=!b.abierto;}
-let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],novs=[],ver=null,verAlu=null,editNov=null,evo=[],calDiv=null,libro=null,unsubLibro=null,tab="mercado";
+let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],novs=[],ver=null,verAlu=null,editNov=null,resps=[],evo=[],calDiv=null,libro=null,unsubLibro=null,tab="mercado";
 
 /* ---------- Acceso ---------- */
 const correo=u=>u+"@economia-aula.app";
@@ -147,16 +154,17 @@ onAuthStateChanged(auth,u=>{
   onSnapshot(query(collection(db,"ordenes"),orderBy("t","desc"),limit(300)),s=>{ordenes=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
   onSnapshot(query(collection(db,"novedades"),orderBy("t","desc"),limit(100)),s=>{novs=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
   onSnapshot(query(collection(db,"evolucion"),orderBy("t","desc"),limit(200)),s=>{evo=s.docs.map(d=>d.data()).reverse();pintarTodo();});
+  onSnapshot(query(collection(db,"respuestas"),orderBy("t","desc"),limit(500)),s=>{resps=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
   armarTabs();
 });
 
 /* ---------- Pestañas ---------- */
 function armarTabs(){
-  const t=esAdmin?[["mercado","Mercado"],["ranking","Ranking"],["alumnos","Alumnos"],["novedades","Novedades"]]:[["mercado","Mercado"],["cartera","Mi cartera"],["ranking","Ranking"],["notas","Mis notas semanales"],["novedades","Novedades"]];
+  const t=esAdmin?[["mercado","Mercado"],["ranking","Ranking"],["divs","Calendario de dividendos"],["alumnos","Alumnos"],["novedades","Novedades"]]:[["mercado","Mercado"],["cartera","Mi cartera"],["ranking","Ranking"],["divs","Calendario de dividendos"],["notas","Mis notas semanales"],["novedades","Novedades"]];
   $("tabs").innerHTML=t.map(([k,n])=>`<button data-k="${k}" class="${k===tab?"on":""}">${n}</button>`).join("");
 }
 $("tabs").onclick=e=>{const k=e.target.dataset.k;if(!k)return;tab=k;
-  for(const x of["mercado","cartera","ranking","notas","alumnos","novedades"])$("t-"+x).classList.toggle("hide",x!==k);
+  for(const x of["mercado","cartera","ranking","notas","alumnos","novedades","divs"])$("t-"+x).classList.toggle("hide",x!==k);
   armarTabs();pintarTodo();};
 
 /* ---------- Valuación ---------- */
@@ -196,7 +204,16 @@ function estado(u){
   <h4>Detalle por activo</h4>${F?`<div class="l"><table><thead><tr><th>Activo</th><th class="n">Cantidad disponible</th><th class="n">Precio promedio de compra</th><th class="n">Precio actual</th><th class="n">Valor actual</th><th class="n">Resultado no realizado</th><th class="n">Resultado realizado</th><th class="n">Recuperado por ventas</th><th class="n">Comisiones</th><th class="n">Dividendos</th></tr></thead><tbody>${F}</tbody></table></div>`:"<p>Todavía no tiene operaciones.</p>"}
   <h4>Libro de operaciones</h4>${L?`<div class="l"><table><thead><tr><th>Fecha y hora</th><th>Operación</th><th>Activo</th><th class="n">Cantidad</th><th class="n">Precio</th><th class="n">Importe bruto</th><th class="n">Comisión</th><th class="n">Importe neto</th></tr></thead><tbody>${L}</tbody></table></div><small>Importe neto: lo que se pagó (en una compra, con la comisión incluida) o lo que se recibió (en una venta, ya descontada la comisión).</small>`:"<p>Todavía no hay operaciones.</p>"}`;
 }
-function ficha(u){
+function proxDiv(u){
+  const hoy=ba().dia,fx=s=>{const a=precio(s),b=precio(s+"C")??precio(s+"D");return a&&b?a/b:null;};
+  const R=(calDiv?.dividendos||[]).filter(d=>d.pago>=hoy).sort((a,b)=>a.pago.localeCompare(b.pago)).map(d=>{
+    const corte=Date.parse(d.ex+"T00:00:00-03:00"),q=(u.ops||[]).reduce((a,o)=>o.s===d.s&&o.t<corte&&o.l!=="D"?a+(o.l==="C"?o.c:-o.c):a,0);
+    if(q<=0)return"";
+    const f=fx(d.s),dias=Math.round((Date.parse(d.pago+"T00:00:00Z")-Date.parse(hoy+"T00:00:00Z"))/864e5),neto=f?q*d.usd*(1-(d.ret??calDiv.retencion_por_defecto))*f:null;
+    return`<li><b>${esc(d.s)}</b>: se paga el ${fd(d.pago)} (${dias>0?`faltan ${dias} día${dias>1?"s":""}`:"se acredita hoy"}). Cobro estimado: <b>${neto?$$(neto):"a calcular"}</b> por ${q} unidades${d.estimado?" · fecha y monto estimados":""}.${d.ex>=hoy?` Para cobrarlo, hay que mantener el activo hasta la fecha de corte (${fd(d.ex)}).`:""}</li>`;}).join("");
+  return R?`<h4>Próximos dividendos de tu cartera</h4><ul>${R}</ul>`:"";
+}
+function ficha(u,herr){
   if(!u)return"";
   const v=valor(u),r=pct(v),comT=(u.ops||[]).reduce((a,o)=>a+(o.com||0),0);
   const filas=Object.entries(u.pos||{}).map(([s,p])=>{const px=precio(s)??p.costo/p.c,val=p.c*px,res=val-p.costo;
@@ -204,8 +221,8 @@ function ficha(u){
   const ops=[...(u.ops||[])].reverse().slice(0,15).map(o=>`<li>${fh(o.t)} · ${o.l==="C"?"Compra":"Venta"} de ${o.c} ${esc(o.s)} a ${$$(o.p)}${o.com!=null?` (comisión ${$$(o.com)})`:""}</li>`).join("");
   const TT={mercado:"a precio de mercado",limite:"límite",stop_limite:"stop límite"};
   const ords=ordenes.filter(o=>o.uid===u.id).slice(0,15).map(o=>`<li>${fh(o.t)} · ${o.lado==="C"?"Compra":"Venta"} de ${o.cant} ${esc(o.s)} (${TT[o.tipo]}${o.limite?` ${$$(o.limite)}`:""}${o.stop?`, stop ${$$(o.stop)}`:""}; ${o.vigencia==="dia"?"por el día":"hasta cancelar"}) · <b>${esc(o.estado)}</b>${o.fill?` a ${$$(o.fill.px)}`:""}${o.motivo?` · ${esc(o.motivo)}`:""} ${o.estado==="pendiente"&&u.id===user.uid?`<button data-canc="${o.id}">Cancelar</button>`:""}</li>`).join("");
-    const adm=esAdmin?`<div class="card"><b>Consejo general para este alumno</b><br><br><textarea id="ctxt" rows="2" placeholder="Escribí un consejo general para este alumno (lo verán todos)"></textarea><br><br><button data-com="${u.id}">Publicar consejo</button> <button data-reset="${u.id}">Reiniciar cartera</button></div>`:"";
-  return`<div class="card"><h3>${esc(nom(u))}</h3>${estado(u)}<h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul><h4>Mensajes</h4>${historial(u)}${adm}</div>`;
+    const adm=herr?`<div class="card"><b>Consejo general para este alumno</b><br><br><textarea id="ctxt" rows="2" placeholder="Escribí un consejo general para este alumno (lo verán todos)"></textarea><br><br><button data-com="${u.id}">Publicar consejo</button> <button data-reset="${u.id}">Reiniciar cartera</button></div>`:"";
+  return`<div class="card"><h3>${esc(nom(u))}</h3>${u.id===user.uid&&!esAdmin?proxDiv(u):""}${estado(u)}<h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul><h4>Mensajes</h4>${historial(u,herr)}${adm}</div>`;
 }
 
 function pintarTodo(){
@@ -220,13 +237,14 @@ function pintarTodo(){
       return`Efectivo ${$$(u.cash)}`+Object.entries(g).map(([t,l])=>` · ${t}: ${l.join(", ")}`).join("");};
     const r=todos.filter(u=>(u.usuario||"")!==ADMIN).map(u=>({...u,v:valor(u)})).sort((a,b)=>b.v-a.v);
     $("rank").innerHTML=`<div class="card"><b>Ranking en vivo</b> <small>Se recalcula con cada actualización de precios.</small><table><thead><tr><th>#</th><th>Usuario e inversiones</th><th class="n">Valor total</th><th class="n">Resultado</th></tr></thead><tbody>${r.map((u,i)=>`<tr class="k${u.id===ver?" s":""}" data-ver="${u.id}"><td>${i+1}</td><td>${esc(nom(u))}<small>${esc(comp(u))}</small></td><td class="n">${$$(u.v)}</td><td class="n ${cls(u.v-CAPITAL)}">${pct(u.v).toFixed(2)} %</td></tr>`).join("")}</tbody></table><small>Tocá un usuario para ver su cartera completa.</small></div>`;
-    conservar($("ficha"),ver,()=>{$("ficha").innerHTML=ficha(todos.find(u=>u.id===ver));});
+    conservar($("ficha"),ver,()=>{$("ficha").innerHTML=ficha(todos.find(u=>u.id===ver),false);});
     if(keep&&$("ctxt")){$("ctxt").value=keep.v;if(keep.f)$("ctxt").focus();}
   }
+  if(tab==="divs")pintarDiv();
   if(tab==="alumnos"){
     const L=todos.filter(u=>(u.usuario||"")!==ADMIN).sort((a,b)=>nom(a).localeCompare(nom(b),"es",{sensitivity:"base"}));
     $("alu-lista").innerHTML=`<div class="card"><b>Alumnos</b> <small>${L.length} registrados, en orden alfabético.</small> <button id="xls">Descargar planilla Excel</button><div class="g" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-top:8px">${L.map(u=>`<button data-alu="${u.id}" class="${u.id===verAlu?"on":""}">${esc(nom(u))}</button>`).join("")}</div></div>`;
-    conservar($("alu-ficha"),verAlu,()=>{$("alu-ficha").innerHTML=ficha(todos.find(u=>u.id===verAlu))||"<p>Elegí un alumno para ver su registro completo.</p>";});
+    conservar($("alu-ficha"),verAlu,()=>{$("alu-ficha").innerHTML=ficha(todos.find(u=>u.id===verAlu),true)||"<p>Elegí un alumno para ver su registro completo.</p>";});
   }
   if(tab==="novedades"){
     $("novf").classList.toggle("hide",!esAdmin);
@@ -253,8 +271,10 @@ document.body.addEventListener("click",async e=>{
     if(x){editNov=null;await updateDoc(doc(db,"novedades",id),{texto:x.slice(0,1500),editado:Date.now(),previews:null});}}
   if(t.id==="xls")exportar();
   if(t.dataset.alu){verAlu=t.dataset.alu;pintarTodo();}
-  if(t.dataset.resp){const ta=document.querySelector(`[data-rt="${t.dataset.resp}"]`),x=ta.value.trim(),n=notas.find(q=>q.id===t.dataset.resp);
-    if(x&&n){ta.value="";await addDoc(collection(db,"comentarios"),{para:n.uid,notaId:n.id,texto:x.slice(0,600),t:Date.now()});}}
+  if(t.dataset.resp){const ta=document.querySelector(`[data-rt="${t.dataset.resp}"]`),x=ta.value.trim();
+    if(x){ta.value="";await addDoc(collection(db,"comentarios"),{para:t.dataset.para,notaId:t.dataset.resp,texto:x.slice(0,600),t:Date.now()});}}
+  if(t.dataset.sresp){const ta=document.querySelector(`[data-sr="${t.dataset.sresp}"]`),x=ta.value.trim();
+    if(x){ta.value="";await addDoc(collection(db,"respuestas"),{uid:user.uid,usuario:nom(todos.find(u=>u.id===user.uid)),para:user.uid,root:t.dataset.sresp,texto:x.slice(0,600),t:Date.now()});}}
   if(t.dataset.ev){const v=document.querySelector(`[data-pt="${t.dataset.ev}"]`).value;
     await updateDoc(doc(db,"notas",t.dataset.ev),{puntaje:v===""?null:Math.min(10,Math.max(0,+v))});}
   if(t.dataset.canc)await updateDoc(doc(db,"ordenes",t.dataset.canc),{estado:"cancelada"});
@@ -302,11 +322,13 @@ function detalle(){
 const fd=x=>x.split("-").reverse().join("/");
 const divTxt=s=>{const d=(calDiv?.dividendos||[]).filter(x=>x.s===s&&x.ex>=ba().dia).sort((a,b)=>a.ex.localeCompare(b.ex))[0];return d?`<br><b>Próximo dividendo:</b> USD ${d.usd} por unidad · corte ${fd(d.ex)} · pago ${fd(d.pago)}`:"";};
 function pintarDiv(){
-  if(!calDiv)return;
-  const L=calDiv.dividendos.filter(d=>d.ex>=ba().dia).sort((a,b)=>a.ex.localeCompare(b.ex));
-  $("divtab").innerHTML=L.length?`<table><thead><tr><th>Activo</th><th>Fecha de corte</th><th>Fecha de pago</th><th class="n">USD por CEDEAR</th></tr></thead><tbody>${L.map(d=>`<tr><td>${esc(d.s)}</td><td>${fd(d.ex)}</td><td>${fd(d.pago)}</td><td class="n">${d.usd}</td></tr>`).join("")}</tbody></table><small>Para cobrar hay que tener el activo antes de la fecha de corte. El dinero se acredita en la fecha de pago, en pesos, con una retención estimada del 30 % (10 % en Brasil). Fuente: ${esc(calDiv.fuente)}</small>`:"<small>No hay dividendos próximos cargados.</small>";
+  if(!calDiv)return;const hoy=ba().dia;
+  const L=calDiv.dividendos.filter(d=>d.ex>=hoy).sort((a,b)=>a.ex.localeCompare(b.ex)||a.s.localeCompare(b.s));
+  const F=L.map(d=>{const pc=precio(d.s+"C")??precio(d.s+"D"),ret=d.ret??calDiv.retencion_por_defecto,rend=pc?d.usd*(1-ret)/pc:null;
+    return`<tr><td>${esc(d.s)}<small>${esc(d.empresa)}</small></td><td>${esc(d.frecuencia)}</td><td>${fd(d.ex)}${d.estimado?"<small>Estimada</small>":""}</td><td>${fd(d.pago)}</td><td class="n">${d.usd}</td><td class="n">${Math.round(ret*100)} %</td><td class="n">${rend!=null?(rend*100).toFixed(2)+" %":"-"}</td><td class="n">${rend!=null?$$(100000*rend):"-"}</td></tr>`}).join("");
+  $("divtab").innerHTML=`<div class="l" style="max-height:640px"><table><thead><tr><th>Activo</th><th>Periodicidad</th><th>Fecha de corte</th><th>Fecha de pago</th><th class="n">Dividendo bruto (USD por CEDEAR)</th><th class="n">Retención</th><th class="n">Rendimiento neto del pago</th><th class="n">Cobro estimado por cada $100.000 invertidos</th></tr></thead><tbody>${F}</tbody></table></div><small>Rendimiento neto = dividendo menos retención, sobre el precio actual en dólares del CEDEAR. Es una referencia para comparar activos: no incluye comisiones ni variaciones del tipo de cambio. Fuente: ${esc(calDiv.fuente)}</small>`;
 }
-fetch("https://raw.githubusercontent.com/Pablo002k/InvEco/main/data/dividendos.json?t="+Math.floor(Date.now()/600000)).then(r=>r.json()).then(j=>{calDiv=j;pintarDiv();detalle();}).catch(()=>{});
+fetch("https://raw.githubusercontent.com/Pablo002k/InvEco/main/data/dividendos.json?t="+Math.floor(Date.now()/600000)).then(r=>r.json()).then(j=>{calDiv=j;pintarDiv();detalle();pintarTodo();}).catch(()=>{});
 function pedirLibro(s){setDoc(doc(db,"libro_pedidos",s),{s,t:Date.now()}).catch(()=>{});}
 function pintarLibro(){
   const el=$("libro");el.classList.remove("hide");
@@ -324,7 +346,7 @@ async function cargar(){
   actualizado=t;habilitadoDesde=t.getTime()+ESPERA_MS;
   datos=Object.entries(j.precios).map(([s,v])=>({s,...v})).sort((a,b)=>a.s.localeCompare(b.s));
   llenar($("ftipo"),[...new Set(datos.map(d=>d.tipo))],nt);llenar($("fmon"),[...new Set(datos.map(d=>d.moneda).filter(Boolean))],x=>x);
-  pintar();detalle();pintarTodo();return true;
+  pintar();detalle();pintarTodo();pintarDiv();return true;
 }
 function reloj(){
   if(!actualizado)return;const f=habilitadoDesde-Date.now();
