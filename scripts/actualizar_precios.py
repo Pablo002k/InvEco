@@ -6,8 +6,7 @@ import urllib.parse, urllib.request, urllib.error
 from datetime import datetime, timezone
 
 BASE = "https://api.iolinversiones.com"
-TIPOS = ["acciones", "cedears", "etfs", "bonos", "letras",
-         "obligaciones_negociables", "indices", "monedas"]
+TIPOS = ["acciones", "cedears", "etfs", "bonos", "obligaciones_negociables"]
 PLAZO = "T1"       # T1 = 24hs
 INTERVALO = 300    # segundos entre actualizaciones (5 minutos)
 
@@ -162,13 +161,14 @@ def motor(precios):
     import firebase_admin
     from firebase_admin import credentials, firestore
     from zoneinfo import ZoneInfo
+    from google.cloud.firestore_v1.base_query import FieldFilter
     if not firebase_admin._apps:
         firebase_admin.initialize_app(credentials.Certificate(json.loads(clave)))
     db = firestore.client()
     ahora = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
     hoy, mins = ahora.strftime("%Y-%m-%d"), ahora.hour * 60 + ahora.minute
     abierto = ahora.weekday() < 5 and 645 <= mins < 1080
-    docs = sorted(db.collection("ordenes").where("estado", "==", "pendiente").stream(),
+    docs = sorted(db.collection("ordenes").where(filter=FieldFilter("estado", "==", "pendiente")).stream(),
                   key=lambda x: x.to_dict().get("t", 0))
     hechas = 0
     for dd in docs:
