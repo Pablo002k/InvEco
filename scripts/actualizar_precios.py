@@ -9,6 +9,7 @@ BASE = "https://api.iolinversiones.com"
 TIPOS = ["acciones", "cedears", "etfs", "bonos", "obligaciones_negociables"]
 PLAZO = "T1"       # T1 = 24hs
 INTERVALO = 300    # segundos entre actualizaciones (5 minutos)
+TOKEN = {}
 
 
 def llamar(ruta, params=None, cuerpo=None, token=None):
@@ -35,7 +36,7 @@ def traer(usuario, clave, primera):
     try:
         r = llamar("/auth/token", cuerpo={"grant_type": "password",
                                           "username": usuario, "password": clave})
-        token = r["data"]["access_token"]
+        token = TOKEN["t"] = r["data"]["access_token"]
     except Exception as e:
         raise RuntimeError(f"No se pudo iniciar sesión en IOL ({e})")
     disponibles = {t["id"] for t in llamar("/broker/assets/types", {"country": "AR"}, token=token)["data"]}
@@ -191,10 +192,48 @@ def vistas_previas(db):
     """Agrega vista previa a las novedades nuevas que tengan enlaces."""
     for dd in db.collection("novedades").stream():
         n = dd.to_dict()
-        if "previews" in n:
+        if n.get("previews") is not None:
             continue
         urls = re.findall(r"https?://[^\s<]+", n.get("texto", ""))[:3]
         dd.reference.update({"previews": [og(u) for u in urls]})
+
+
+def _db():
+    import firebase_admin
+    from firebase_admin import credentials, firestore
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(credentials.Certificate(json.loads(os.environ["FIREBASE_CLAVE"])))
+    return firestore.client()
+
+
+def libros(db, tok):
+    """Guarda el libro de ofertas real (IOL) de los activos que los alumnos están mirando."""
+    ahora = int(time.time() * 1000)
+    for dd in db.collection("libro_pedidos").stream():
+        p = dd.to_dict()
+        if ahora - p.get("t", 0) > 180000:   # hace más de 3 minutos que nadie lo mira
+            continue
+        s = p["s"]
+        try:
+            d = llamar(f"/broker/market-data/{urllib.parse.quote(s)}/depth",
+                       {"market": "BCBA", "term": PLAZO}, token=tok)["data"]
+        except Exception as e:
+            print(f"Libro de {s} no disponible: {e}")
+            continue
+        nivel = lambda L: [{"p": x["price"], "c": x["size"]}
+                           for x in sorted(L or [], key=lambda x: x.get("position", 0))[:6]]
+        db.collection("libros").document(s).set({"s": s, "t": ahora, "bids": nivel(d.get("bids")),
+                                                  "asks": nivel(d.get("asks"))})
+        time.sleep(0.3)
+
+
+def pulso():
+    if not os.environ.get("FIREBASE_CLAVE") or not TOKEN.get("t"):
+        return
+    try:
+        libros(_db(), TOKEN["t"])
+    except Exception as e:
+        print("Libros de ofertas con error:", e)
 
 
 def motor(precios):
@@ -269,7 +308,9 @@ def main():
                          "o un bloqueo de IOL a los servidores de GitHub.")
         if time.time() + INTERVALO > fin:
             break
-        time.sleep(INTERVALO)
+        for _ in range(INTERVALO // 30):
+            time.sleep(30)
+            pulso()
 
 
 main()
