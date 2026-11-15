@@ -9,7 +9,7 @@
 body{margin:0;padding:14px;max-width:1150px;margin-inline:auto}
 nav{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 button{padding:8px 13px;font-size:.9rem;cursor:pointer}button:disabled{cursor:not-allowed}
-nav button.on{font-weight:700;text-decoration:underline}
+nav button.on,.g button.on{font-weight:700;text-decoration:underline}
 input,select,textarea{padding:9px;font-size:1rem;box-sizing:border-box;width:100%}
 .g{display:grid;gap:10px}.f{grid-template-columns:2fr 1fr 1fr}.c{grid-template-columns:1fr 1.3fr;margin-top:10px}
 @media(max-width:800px){.f,.c{grid-template-columns:1fr}}
@@ -21,7 +21,7 @@ tr.k{cursor:pointer}tr.k:hover,tr.s{background:#8883}
 small{opacity:.65;display:block}
 #tv{height:380px;border:1px solid #8884}
 .card{border:1px solid #8884;padding:10px;margin:10px 0}
-.up{color:#0a7d33}.dn{color:#c0282d}.hide{display:none}
+.pv{display:flex;gap:10px;border:1px solid #8884;margin-top:8px;text-decoration:none;color:inherit}.pv img{width:150px;object-fit:cover}.pv span{padding:8px}.up{color:#0a7d33}.dn{color:#c0282d}.hide{display:none}
 </style>
 </head>
 <body>
@@ -36,7 +36,6 @@ small{opacity:.65;display:block}
 
 <div id="app" class="hide">
   <div><b id="yo"></b> · <span id="resumen"></span> · <span id="reloj"></span> <button id="sal">Salir</button></div>
-  <div id="aviso" class="card hide"></div>
   <nav id="tabs"></nav>
 
   <section id="t-mercado">
@@ -70,6 +69,12 @@ small{opacity:.65;display:block}
   </section>
 
   <section id="t-cartera" class="hide"></section>
+  <section id="t-alumnos" class="hide"><div id="alu-lista"></div><div id="alu-ficha"></div></section>
+  <section id="t-novedades" class="hide">
+    <div id="novf" class="card hide"><b>Nueva novedad</b> <small>Podés incluir enlaces a videos, noticias o publicaciones: se mostrará una vista previa.</small><br><br>
+      <textarea id="ntx2" rows="3" maxlength="1500"></textarea><br><br><button id="npub2">Publicar novedad</button></div>
+    <div id="nov-lista"></div>
+  </section>
   <section id="t-ranking" class="hide"><div id="rank"></div><div id="ficha"></div></section>
   <section id="t-notas" class="hide">
     <div class="card"><b>Mi nota de la semana</b>
@@ -97,11 +102,14 @@ const nt=t=>NOMBRES[t]||t;
 const TZ="America/Argentina/Buenos_Aires";
 const fh=t=>new Date(t).toLocaleString("es-AR",{timeZone:TZ,day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"});
 const nom=u=>u.nombre||u.usuario;
+const resp=n=>coment.filter(c=>c.notaId===n.id).sort((a,b)=>a.t-b.t).map(c=>`<div class="card" style="margin-left:18px"><small>Respuesta del docente · ${fh(c.t)}</small><br>${esc(c.texto)}${esAdmin?` <button data-del="comentarios/${c.id}">Borrar</button>`:""}</div>`).join("");
+function conservar(el,fn){const act=document.activeElement,k=x=>x.id||x.dataset.rt||x.dataset.pt||"",g=[...el.querySelectorAll("textarea,input")].map(x=>[k(x),x.value]),f=el.contains(act)?k(act):null;fn();
+  el.querySelectorAll("textarea,input").forEach(x=>{const r=g.find(([a])=>a&&a===k(x));if(r)x.value=r[1];if(f&&k(x)===f)x.focus();});}
 const TASA=d=>d.tipo==="letras"?0.003:0.0071;   // comisión + IVA (aprox.)
 function ba(){const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:TZ,weekday:"short",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date()).map(x=>[x.type,x.value]));
   const m=+p.hour*60+ +p.minute;return{dia:`${p.year}-${p.month}-${p.day}`,hora:`${p.hour}:${p.minute}:${p.second}`,abierto:!["Sat","Sun"].includes(p.weekday)&&m>=645&&m<1080};}
 function relojBA(){const b=ba();$("reloj").textContent=`Buenos Aires ${b.hora} · `+(b.abierto?"Mercado abierto":"Mercado cerrado (abre a las 10:45, de lunes a viernes)");$("pub").disabled=!b.abierto;}
-let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],aviso=null,ver=null,tab="mercado";
+let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],novs=[],ver=null,verAlu=null,tab="mercado";
 
 /* ---------- Acceso ---------- */
 const correo=u=>u+"@economia-aula.app";
@@ -125,17 +133,17 @@ onAuthStateChanged(auth,u=>{
   onSnapshot(query(collection(db,"notas"),orderBy("t","desc"),limit(200)),s=>{notas=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
   onSnapshot(collection(db,"comentarios"),s=>{coment=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
   onSnapshot(query(collection(db,"ordenes"),orderBy("t","desc"),limit(300)),s=>{ordenes=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  onSnapshot(doc(db,"config","aviso"),s=>{aviso=s.data()||null;pintarAviso();});
+  onSnapshot(query(collection(db,"novedades"),orderBy("t","desc"),limit(100)),s=>{novs=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
   armarTabs();
 });
 
 /* ---------- Pestañas ---------- */
 function armarTabs(){
-  const t=[["mercado","Mercado"],["cartera","Mi cartera"],["ranking","Ranking"],["notas","Notas semanales"]];
+  const t=esAdmin?[["mercado","Mercado"],["ranking","Ranking"],["alumnos","Alumnos"],["novedades","Novedades"]]:[["mercado","Mercado"],["cartera","Mi cartera"],["ranking","Ranking"],["notas","Mis notas semanales"],["novedades","Novedades"]];
   $("tabs").innerHTML=t.map(([k,n])=>`<button data-k="${k}" class="${k===tab?"on":""}">${n}</button>`).join("");
 }
 $("tabs").onclick=e=>{const k=e.target.dataset.k;if(!k)return;tab=k;
-  for(const x of["mercado","cartera","ranking","notas"])$("t-"+x).classList.toggle("hide",x!==k);
+  for(const x of["mercado","cartera","ranking","notas","alumnos","novedades"])$("t-"+x).classList.toggle("hide",x!==k);
   armarTabs();pintarTodo();};
 
 /* ---------- Valuación ---------- */
@@ -146,18 +154,18 @@ const cls=n=>n>=0?"up":"dn";
 
 function ficha(u){
   if(!u)return"";
-  const v=valor(u),r=pct(v);
+  const v=valor(u),r=pct(v),comT=(u.ops||[]).reduce((a,o)=>a+(o.com||0),0);
   const filas=Object.entries(u.pos||{}).map(([s,p])=>{const px=precio(s)??p.costo/p.c,val=p.c*px,res=val-p.costo;
     return`<tr><td>${esc(s)}</td><td class="n">${p.c}</td><td class="n">${$$(p.costo/p.c)}</td><td class="n">${$$(px)}</td><td class="n">${$$(val)}</td><td class="n ${cls(res)}">${$$(res)}</td></tr>`}).join("");
   const ops=[...(u.ops||[])].reverse().slice(0,15).map(o=>`<li>${fh(o.t)} · ${o.l==="C"?"Compra":"Venta"} de ${o.c} ${esc(o.s)} a ${$$(o.p)}${o.com!=null?` (comisión ${$$(o.com)})`:""}</li>`).join("");
   const TT={mercado:"a precio de mercado",limite:"límite",stop_limite:"stop límite"};
   const ords=ordenes.filter(o=>o.uid===u.id).slice(0,15).map(o=>`<li>${fh(o.t)} · ${o.lado==="C"?"Compra":"Venta"} de ${o.cant} ${esc(o.s)} (${TT[o.tipo]}${o.limite?` ${$$(o.limite)}`:""}${o.stop?`, stop ${$$(o.stop)}`:""}; ${o.vigencia==="dia"?"por el día":"hasta cancelar"}) · <b>${esc(o.estado)}</b>${o.fill?` a ${$$(o.fill.px)}`:""}${o.motivo?` · ${esc(o.motivo)}`:""} ${o.estado==="pendiente"&&u.id===user.uid?`<button data-canc="${o.id}">Cancelar</button>`:""}</li>`).join("");
-  const cm=coment.filter(c=>c.para===u.id).sort((a,b)=>b.t-a.t).map(c=>`<p><b>Comentario del docente</b> (${fh(c.t)}): ${esc(c.texto)} ${esAdmin?`<button data-del="comentarios/${c.id}">Borrar</button>`:""}</p>`).join("");
-  const nn=notas.filter(n=>n.uid===u.id).slice(0,5).map(n=>`<p><b>${esc(n.semana)}</b> (${fh(n.t)}): ${esc(n.texto)}</p>`).join("");
-  const adm=esAdmin?`<div class="card"><b>Herramientas del docente</b><br><br><textarea id="ctxt" rows="2" placeholder="Escribí un comentario visible para todos"></textarea><br><br><button data-com="${u.id}">Publicar comentario</button> <button data-reset="${u.id}">Reiniciar cartera</button></div>`:"";
-  return`<div class="card"><h3>${esc(nom(u))}</h3><p>Efectivo: <b>${$$(u.cash)}</b> · Valor total: <b>${$$(v)}</b> · Resultado: <b class="${cls(r)}">${r.toFixed(2)} %</b></p>
+  const cm=coment.filter(c=>c.para===u.id&&!c.notaId).sort((a,b)=>b.t-a.t).map(c=>`<p><b>Consejo del docente</b> (${fh(c.t)}): ${esc(c.texto)} ${esAdmin?`<button data-del="comentarios/${c.id}">Borrar</button>`:""}</p>`).join("");
+  const nn=notas.filter(n=>n.uid===u.id).slice(0,20).map(n=>`<div class="card"><b>${esc(n.semana)}</b> <small>${fh(n.t)}</small><p style="white-space:pre-wrap">${esc(n.texto)}</p>${n.puntaje!=null&&(esAdmin||n.uid===user.uid)?`<b>Evaluada: ${n.puntaje}/10</b>`:""}${resp(n)}${esAdmin?`<div><input type="number" min="0" max="10" step="0.5" data-pt="${n.id}" value="${n.puntaje??""}" style="width:90px" placeholder="Puntaje"> <button data-ev="${n.id}">Guardar puntaje</button><br><br><textarea data-rt="${n.id}" rows="2" placeholder="Respondé a esta nota"></textarea><br><br><button data-resp="${n.id}">Enviar respuesta</button></div>`:""}</div>`).join("");
+  const adm=esAdmin?`<div class="card"><b>Herramientas del docente</b><br><br><textarea id="ctxt" rows="2" placeholder="Escribí un consejo general para este alumno (lo verán todos)"></textarea><br><br><button data-com="${u.id}">Publicar consejo</button> <button data-reset="${u.id}">Reiniciar cartera</button></div>`:"";
+  return`<div class="card"><h3>${esc(nom(u))}</h3><p>Efectivo: <b>${$$(u.cash)}</b> · Valor total: <b>${$$(v)}</b> · Resultado: <b class="${cls(r)}">${r.toFixed(2)} %</b> · Comisiones pagadas: <b>${$$(comT)}</b></p>
   ${filas?`<div class="l"><table><thead><tr><th>Activo</th><th class="n">Cant.</th><th class="n">Costo prom.</th><th class="n">Precio</th><th class="n">Valor</th><th class="n">Resultado</th></tr></thead><tbody>${filas}</tbody></table></div>`:"<p>Todavía no tiene activos.</p>"}
-  <h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul><h4>Operaciones ejecutadas</h4><ul>${ops||"<li>Sin operaciones.</li>"}</ul>${cm}<h4>Notas recientes</h4>${nn||"<p>Sin notas.</p>"}${adm}</div>`;
+  <h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul><h4>Operaciones ejecutadas</h4><ul>${ops||"<li>Sin operaciones.</li>"}</ul>${cm?`<h4>Consejos del docente</h4>${cm}`:""}<h4>Notas semanales</h4>${nn||"<p>Sin notas.</p>"}${adm}</div>`;
 }
 
 function pintarTodo(){
@@ -172,10 +180,24 @@ function pintarTodo(){
       return`Efectivo ${$$(u.cash)}`+Object.entries(g).map(([t,l])=>` · ${t}: ${l.join(", ")}`).join("");};
     const r=todos.filter(u=>(u.usuario||"")!==ADMIN).map(u=>({...u,v:valor(u)})).sort((a,b)=>b.v-a.v);
     $("rank").innerHTML=`<div class="card"><b>Ranking en vivo</b> <small>Se recalcula con cada actualización de precios.</small><table><thead><tr><th>#</th><th>Usuario e inversiones</th><th class="n">Valor total</th><th class="n">Resultado</th></tr></thead><tbody>${r.map((u,i)=>`<tr class="k${u.id===ver?" s":""}" data-ver="${u.id}"><td>${i+1}</td><td>${esc(nom(u))}<small>${esc(comp(u))}</small></td><td class="n">${$$(u.v)}</td><td class="n ${cls(u.v-CAPITAL)}">${pct(u.v).toFixed(2)} %</td></tr>`).join("")}</tbody></table><small>Tocá un usuario para ver su cartera completa.</small></div>`;
-    $("ficha").innerHTML=ficha(todos.find(u=>u.id===ver));
+    conservar($("ficha"),()=>{$("ficha").innerHTML=ficha(todos.find(u=>u.id===ver));});
     if(keep&&$("ctxt")){$("ctxt").value=keep.v;if(keep.f)$("ctxt").focus();}
   }
-  if(tab==="notas"&&!document.activeElement?.dataset?.pt)$("nlista").innerHTML=notas.map(n=>`<div class="card"><b>${esc(n.usuario)}</b> · ${esc(n.semana)} · ${fh(n.t)}<p>${esc(n.texto)}</p>${n.puntaje!=null&&(esAdmin||n.uid===user.uid)?`<p><b>Evaluada: ${n.puntaje}/10</b></p>`:""}${esAdmin?`<input type="number" min="0" max="10" step="0.5" data-pt="${n.id}" value="${n.puntaje??""}" style="width:90px"> <button data-ev="${n.id}">Guardar puntaje</button> `:""}${esAdmin||n.uid===user.uid?`<button data-del="notas/${n.id}">Borrar</button>`:""}</div>`).join("")||"<p>Todavía no hay notas.</p>";
+  if(tab==="alumnos"){
+    const L=todos.filter(u=>(u.usuario||"")!==ADMIN).sort((a,b)=>nom(a).localeCompare(nom(b),"es",{sensitivity:"base"}));
+    $("alu-lista").innerHTML=`<div class="card"><b>Alumnos</b> <small>${L.length} registrados, en orden alfabético.</small><div class="g" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-top:8px">${L.map(u=>`<button data-alu="${u.id}" class="${u.id===verAlu?"on":""}">${esc(nom(u))}</button>`).join("")}</div></div>`;
+    conservar($("alu-ficha"),()=>{$("alu-ficha").innerHTML=ficha(todos.find(u=>u.id===verAlu))||"<p>Elegí un alumno para ver su registro completo.</p>";});
+  }
+  if(tab==="novedades"){
+    $("novf").classList.toggle("hide",!esAdmin);
+    const enl=x=>esc(x).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+    $("nov-lista").innerHTML=novs.map(n=>{
+      const tarj=(n.texto.match(/https?:\/\/[^\s<]+/g)||[]).slice(0,3).map(u=>{const p=(n.previews||[]).find(x=>x.url===u);
+        if(!p)return n.previews?"":"<small>Preparando la vista previa del enlace…</small>";
+        return p.titulo||p.imagen?`<a class="pv" href="${esc(u)}" target="_blank" rel="noopener">${p.imagen?`<img src="${esc(p.imagen)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:""}<span><b>${esc(p.titulo||u)}</b><small>${esc(p.sitio||"")}</small></span></a>`:"";}).join("");
+      return`<div class="card"><small>${fh(n.t)}</small><p style="white-space:pre-wrap">${enl(n.texto)}</p>${tarj}${esAdmin?`<button data-del="novedades/${n.id}">Eliminar</button>`:""}</div>`;}).join("")||"<p>Todavía no hay novedades.</p>";
+  }
+  if(tab==="notas"&&!document.activeElement?.dataset?.pt)$("nlista").innerHTML=notas.map(n=>`<div class="card"><b>${esc(n.usuario)}</b> · ${esc(n.semana)} · ${fh(n.t)}<p>${esc(n.texto)}</p>${resp(n)}${n.puntaje!=null&&(esAdmin||n.uid===user.uid)?`<p><b>Evaluada: ${n.puntaje}/10</b></p>`:""}${esAdmin?`<input type="number" min="0" max="10" step="0.5" data-pt="${n.id}" value="${n.puntaje??""}" style="width:90px"> <button data-ev="${n.id}">Guardar puntaje</button> `:""}${esAdmin||n.uid===user.uid?`<button data-del="notas/${n.id}">Borrar</button>`:""}</div>`).join("")||"<p>Todavía no hay notas.</p>";
 }
 document.body.addEventListener("click",async e=>{
   const t=e.target,tr=t.closest("tr[data-ver]");
@@ -183,28 +205,16 @@ document.body.addEventListener("click",async e=>{
   if(t.dataset.del&&confirm("¿Seguro que querés borrarlo?"))await deleteDoc(doc(db,...t.dataset.del.split("/")));
   if(t.dataset.com&&$("ctxt").value.trim()){const u=todos.find(x=>x.id===t.dataset.com);
     await addDoc(collection(db,"comentarios"),{para:u.id,texto:$("ctxt").value.trim().slice(0,600),t:Date.now()});}
-  if(t.id==="agu")await setDoc(doc(db,"config","aviso"),{texto:$("atxt").value.trim().slice(0,1500),t:Date.now()});
-  if(t.id==="abo")await setDoc(doc(db,"config","aviso"),{texto:"",t:Date.now()});
+  if(t.id==="npub2"){const x=$("ntx2").value.trim();if(x){await addDoc(collection(db,"novedades"),{texto:x.slice(0,1500),t:Date.now()});$("ntx2").value="";}}
+  if(t.dataset.alu){verAlu=t.dataset.alu;pintarTodo();}
+  if(t.dataset.resp){const ta=document.querySelector(`[data-rt="${t.dataset.resp}"]`),x=ta.value.trim(),n=notas.find(q=>q.id===t.dataset.resp);
+    if(x&&n){await addDoc(collection(db,"comentarios"),{para:n.uid,notaId:n.id,cita:(n.texto||"").slice(0,120),texto:x.slice(0,600),t:Date.now()});ta.value="";}}
   if(t.dataset.ev){const v=document.querySelector(`[data-pt="${t.dataset.ev}"]`).value;
     await updateDoc(doc(db,"notas",t.dataset.ev),{puntaje:v===""?null:Math.min(10,Math.max(0,+v))});}
   if(t.dataset.canc)await updateDoc(doc(db,"ordenes",t.dataset.canc),{estado:"cancelada"});
   if(t.dataset.reset&&confirm("Esto devuelve la cartera al capital inicial. ¿Continuar?"))
     await updateDoc(doc(db,"users",t.dataset.reset),{cash:CAPITAL,pos:{},ops:[]});
 });
-
-/* ---------- Aviso del docente ---------- */
-function pintarAviso(){
-  const a=$("aviso"),txt=aviso?.texto||"";
-  const enlazar=x=>esc(x).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
-  if(esAdmin){
-    if(document.activeElement?.id==="atxt")return;
-    a.classList.remove("hide");
-    a.innerHTML=`<b>Aviso del docente</b> <small>Lo ven todos los alumnos. Podés pegar enlaces a noticias o videos.</small><br><br><textarea id="atxt" rows="3" placeholder="Escribí una consigna, una noticia o el enlace a un video">${esc(txt)}</textarea><br><br><button id="agu">Publicar aviso</button> <button id="abo">Quitar aviso</button>`;
-  }else{
-    a.classList.toggle("hide",!txt);
-    a.innerHTML=txt?`<b>Aviso del docente</b> <small>${fh(aviso.t)}</small><p style="white-space:pre-wrap">${enlazar(txt)}</p>`:"";
-  }
-}
 
 /* ---------- Notas ---------- */
 $("npub").onclick=async()=>{
