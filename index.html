@@ -1,441 +1,468 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Simulador de inversiones</title>
-<style>
-:root{color-scheme:light dark;font-family:system-ui,sans-serif}
-body{margin:0;padding:14px;max-width:1150px;margin-inline:auto}
-nav{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-button{padding:8px 13px;font-size:.9rem;cursor:pointer}button:disabled{cursor:not-allowed}
-nav button.on,.g button.on{font-weight:700;text-decoration:underline}
-input,select,textarea{padding:9px;font-size:1rem;box-sizing:border-box;width:100%}
-.g{display:grid;gap:10px}.f{grid-template-columns:2fr 1fr 1fr}.c{grid-template-columns:1fr 1.3fr;margin-top:10px}
-@media(max-width:800px){.f,.c{grid-template-columns:1fr}}
-.l{max-height:460px;overflow:auto;border:1px solid #8884}
-table{border-collapse:collapse;width:100%;font-size:.88rem}
-th,td{padding:6px 8px;text-align:left;border-bottom:1px solid #8883}
-.n{text-align:right;font-variant-numeric:tabular-nums}
-tr.k{cursor:pointer}tr.k:hover,tr.s{background:#8883}
-small{opacity:.65;display:block}
-#tv{height:380px;border:1px solid #8884}
-.card{border:1px solid #8884;padding:10px;margin:10px 0}
-.pv{display:flex;gap:10px;border:1px solid #8884;margin-top:8px;text-decoration:none;color:inherit}.pv img{width:150px;object-fit:cover}.pv span{padding:8px}.nota{border-left:4px solid #3b82f6}.consejo{border-left:4px solid #d97706}.resp{border-left:4px solid #8886;margin-left:18px}.res{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}.res>div{border:1px solid #8884;padding:8px}.res small{display:block}.dvr,.dvh{display:grid;grid-template-columns:1.7fr 1fr 1fr 1fr .9fr .7fr 1fr 1.4fr;gap:6px;padding:8px;align-items:center}.dvr{cursor:pointer;list-style:none}.dvr::-webkit-details-marker{display:none}.dvh{font-weight:600;font-size:.85rem;border-bottom:1px solid #8884}.dv{border-bottom:1px solid #8883}.dvr .n,.dvh .n{text-align:right}.ar{display:inline-block;transition:transform .15s}details[open]>.dvr .ar{transform:rotate(90deg)}.dvb{padding:0 8px 10px 26px}.up{color:#0a7d33}.dn{color:#c0282d}.hide{display:none}
-</style>
-</head>
-<body>
-<div id="auth" class="card" style="max-width:380px;margin:40px auto">
-  <h1>Simulador de inversiones</h1>
-  <p>Ingresá con tu usuario y contraseña, o creá una cuenta nueva.</p>
-  <input id="u" placeholder="Usuario (letras y números)" autocomplete="username"><br><br>
-  <input id="p" type="password" placeholder="Contraseña (mínimo 6 caracteres)" autocomplete="current-password"><br><br>
-  <button id="ent">Ingresar</button> <button id="reg">Crear cuenta</button>
-  <p id="msg"></p>
-</div>
+"""Trae precios de IOL y los publica en la rama 'datos' del repositorio.
+Solo LEE precios: no usa ninguna función de compra o venta.
+La clave llega por variables secretas: nunca se escribe acá."""
+import html, json, os, re, shutil, subprocess, sys, tempfile, time
+import urllib.parse, urllib.request, urllib.error
+from datetime import datetime, timedelta, timezone
 
-<div id="app" class="hide">
-  <div><b id="yo"></b> · <span id="resumen"></span> · <span id="reloj"></span> <button id="sal">Salir</button></div>
-  <nav id="tabs"></nav>
+BASE = "https://api.iolinversiones.com"
+TIPOS = ["acciones", "cedears", "etfs", "bonos", "obligaciones_negociables"]
+PLAZO = "T1"       # T1 = 24hs
+INTERVALO = 300    # segundos entre actualizaciones (5 minutos)
+TOKEN = {}
 
-  <section id="t-mercado">
-    <div style="margin-bottom:8px"><button id="btn" disabled>Actualizar precios</button> <span id="estado">Cargando…</span></div>
-    <details class="card"><summary>Ayuda rápida: ¿qué estoy mirando?</summary>
-      <p><b>Pesos y dólares.</b> Muchos activos aparecen repetidos: la versión simple se cotiza en pesos y las que terminan en C o D, en dólares. Los activos en dólares se compran con dólares, que se obtienen en "Cambio de moneda": los terminados en D usan dólares MEP y los terminados en C, dólares CCL.</p>
-      <p><b>Acción:</b> una parte de una empresa. <b>CEDEAR:</b> un certificado que representa acciones de empresas del exterior y se compra en pesos. <b>ETF:</b> una canasta de activos que se compra como una sola acción.</p>
-      <p><b>Bono:</b> un préstamo que le hacés al Estado a cambio de intereses. <b>Letra:</b> un bono de corto plazo. <b>Obligación negociable:</b> un bono emitido por una empresa. Los bonos se cotizan por cada 100 de valor nominal: si el precio es de $80.000, comprar 100 nominales cuesta $80.000 y 1 nominal cuesta $800. Por ahora los bonos y las obligaciones negociables se muestran solo como referencia; se habilitarán próximamente, junto con sus pagos de intereses y devoluciones de capital. Las letras se habilitarán más adelante: momentáneamente no se pueden operar porque la plataforma que nos provee los precios presenta una falla en su lista de letras.</p>
-      <p>Para profundizar en cualquiera de estos conceptos, podés consultar fuentes especializadas o conversarlo con tu docente.</p>
-    </details>
-    <div class="g f">
-      <input id="buscar" placeholder="Buscar por símbolo o nombre (ejemplo: AAPL, SPY, AL30)">
-      <select id="ftipo"><option value="">Todos los tipos</option></select>
-      <select id="fmon"><option value="">Todas las monedas</option></select>
-    </div>
-    <div class="g c">
-      <div class="l"><table><thead><tr><th>Símbolo</th><th>Tipo</th><th class="n">Último</th><th class="n">Var. %</th></tr></thead><tbody id="filas"></tbody></table></div>
-      <div>
-        <p id="det">Elegí un activo de la lista.</p>
-        <div id="op" class="hide card"><b>Nueva orden</b>
-          <div class="g f" style="margin:8px 0"><select id="olado"><option value="C">Comprar</option><option value="V">Vender</option></select>
-            <select id="otipo"><option value="mercado">A precio de mercado</option><option value="limite">Límite</option><option value="stop_limite">Stop límite</option></select>
-            <select id="ovig"><option value="dia">Válida por el día</option><option value="cancelar">Hasta cancelar</option></select></div>
-          <div class="g f"><input id="cant" type="number" min="1" step="1" placeholder="Cantidad de unidades">
-            <input id="olim" type="number" min="0" step="0.01" placeholder="Precio límite" class="hide">
-            <input id="ostop" type="number" min="0" step="0.01" placeholder="Precio stop" class="hide"></div>
-          <p id="oest"></p><button id="pub">Publicar orden</button> <span id="omsg"></span></div>
-        <div id="libro" class="card hide"></div>
-        <div id="tv"></div>
-      </div>
-    </div>
-  </section>
 
-  <section id="t-cartera" class="hide"></section>
-  <section id="t-fx" class="hide">
-    <div class="card"><b>Cambio de moneda</b>
-      <p>En esta sección se pueden cambiar pesos por dólares y dólares por pesos. Existen dos tipos de dólar financiero: el <b>dólar MEP</b>, que queda depositado en una cuenta en Argentina y sirve para operar los activos cuyo símbolo termina en D, y el <b>dólar CCL</b> (contado con liquidación), que queda en el exterior y sirve para los activos que terminan en C.</p></div>
-    <div class="card"><b>¿Cómo se lee la cotización?</b>
-      <p>La cotización se expresa desde el punto de vista de quien ofrece los dólares, como en cualquier casa de cambio. <b>Compra</b> es el precio al que el mercado compra dólares: es lo que recibís si vendés los tuyos. <b>Venta</b> es el precio al que el mercado vende dólares: es lo que pagás si querés comprarlos. Por eso la Venta siempre es mayor que la Compra, y esa diferencia se llama <i>spread</i>.</p>
-      <p>Para comprar dólares, fijate en el valor de <b>Venta</b>. Para venderlos, fijate en el valor de <b>Compra</b>.</p>
-      <p>Los valores salen de bonos reales que cotizan en pesos y en dólares: la relación entre ambos precios es el tipo de cambio. Cada operación lleva comisión, de modo que el costo final es algo mayor que la cotización.</p></div>
-    <div class="card"><div id="fxr"></div></div>
-    <div id="fxf" class="card"><b>Operar</b> <p id="fxs"></p>
-      <div class="g f"><select id="fxt"><option value="MEP">Dólar MEP</option><option value="CCL">Dólar CCL</option></select><input id="fxn" type="number" min="1" step="1" placeholder="Cantidad de dólares"><span></span></div>
-      <br><button id="fxc">Comprar dólares</button> <button id="fxv">Vender dólares</button>
-      <p id="fxm"></p></div>
-  </section>
-  <section id="t-divs" class="hide"><div class="card"><b>Calendario de dividendos</b>
-    <p>Un dividendo es la parte de las ganancias que una empresa reparte entre sus accionistas. Para cobrarlo hay que tener el activo antes de la fecha de corte, y el dinero se acredita en la fecha de pago. En este simulador se acredita en dólares, igual que en la realidad, con una retención estimada (30 % para empresas de Estados Unidos). Para pasarlos a pesos, se pueden vender en "Cambio de moneda". Las fechas marcadas como estimadas se calculan con la periodicidad habitual de cada empresa y pueden variar.</p></div>
-    <div id="divtab"></div></section>
-  <section id="t-alumnos" class="hide"><div id="alu-lista"></div><div id="alu-ficha"></div></section>
-  <section id="t-novedades" class="hide">
-    <div id="novf" class="card hide"><b>Nueva novedad</b> <small>Podés incluir enlaces a videos, noticias o publicaciones: se mostrará una vista previa.</small><br><br>
-      <textarea id="ntx2" rows="3" maxlength="1500"></textarea><br><br><button id="npub2">Publicar novedad</button></div>
-    <div id="nov-lista"></div>
-  </section>
-  <section id="t-ranking" class="hide"><div id="rank"></div><div id="ficha"></div></section>
-  <section id="t-notas" class="hide">
-    <div class="card"><b>Mi nota de la semana</b>
-      <p>Contá qué compraste o vendiste, por qué lo hiciste y qué esperás a futuro.</p>
-      <textarea id="ntxt" rows="4" maxlength="1500"></textarea><br><br><button id="npub">Publicar nota</button> <span id="nmsg"></span></div>
-    <div id="nlista"></div>
-  </section>
-</div>
+def llamar(ruta, params=None, cuerpo=None, token=None):
+    url = BASE + ruta + ("?" + urllib.parse.urlencode(params) if params else "")
+    cab = {"Accept": "application/json", "User-Agent": "prueba-aula/1.0"}
+    datos = None
+    if cuerpo is not None:
+        datos = json.dumps(cuerpo).encode()
+        cab["Content-Type"] = "application/json"
+    if token:
+        cab["Authorization"] = "Bearer " + token
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, data=datos, headers=cab), timeout=30) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as e:
+        try:
+            detalle = json.load(e).get("error")
+        except Exception:
+            detalle = None
+        raise RuntimeError(f"HTTP {e.code} en {ruta}: {detalle}")
 
-<script src="https://s3.tradingview.com/tv.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,setDoc,updateDoc,runTransaction,collection,addDoc,deleteDoc,onSnapshot,query,orderBy,limit} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {CONFIG,ADMIN,CAPITAL} from "./config.js";
 
-const app=initializeApp(CONFIG),auth=getAuth(app),db=getFirestore(app);
-const $=id=>document.getElementById(id);
-const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const $$=n=>"$ "+Number(n).toLocaleString("es-AR",{maximumFractionDigits:2});
-const URL_PRECIOS="https://raw.githubusercontent.com/Pablo002k/InvEco/datos/precios.json";
-const ESPERA_MS=5*60*1000;
-const NOMBRES={acciones:"Acciones",cedears:"CEDEARs",etfs:"ETFs",bonos:"Bonos",letras:"Letras",obligaciones_negociables:"Obligaciones negociables",indices:"Índices",monedas:"Monedas"};
-const nt=t=>NOMBRES[t]||t;
-const TZ="America/Argentina/Buenos_Aires";
-const fh=t=>new Date(t).toLocaleString("es-AR",{timeZone:TZ,day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"});
-const nom=u=>u.nombre||u.usuario;
-const us=n=>"US$ "+Number(n).toLocaleString("es-AR",{maximumFractionDigits:2});
-const mon=(m,n)=>!m||m==="ARS"?$$(n):us(n);
-const esUSD=d=>/usd|d[oó]lar|u\$s/i.test(d.moneda||"");
-function tcOf(tipo="MEP"){const suf=tipo==="CCL"?"C":"D";
-  for(const a of ["AL30","GD30","AL35","GD35"]){const A=datos.find(d=>d.s===a),B=datos.find(d=>d.s===a+suf);
-    if(A?.ultimo&&B?.ultimo){const f=(d,k)=>d[k]||d.ultimo;return{venta:f(A,"venta")/f(B,"compra"),compra:f(A,"compra")/f(B,"venta"),mid:A.ultimo/B.ultimo,par:`${a} / ${a+suf}`};}}
-  return tipo==="CCL"&&fxMed?{venta:fxMed,compra:fxMed,mid:fxMed,par:"CEDEARs (referencia)"}:null;}
-const fxMEP=()=>tcOf("MEP")?.mid||fxMed||1,fxCCL=()=>tcOf("CCL")?.mid||fxMed||1,fxOf=m=>m==="USD"?fxMEP():m==="CCL"?fxCCL():1;
-const monDe=d=>esUSD(d)?(/C$/.test(d.s)&&datos.some(x=>x.s===d.s.slice(0,-1)&&!esUSD(x))?"CCL":"USD"):"ARS";
-const usdPx=s=>precio(s+"C")??precio(s+"D")??(fxMed&&precio(s)?precio(s)/fxMed:null);
-function calcFx(){const r=datos.filter(d=>d.tipo==="cedears").map(d=>{const c=datos.find(x=>x.s===d.s+"C");return d.ultimo&&c?.ultimo?d.ultimo/c.ultimo:null;}).filter(Boolean).sort((a,b)=>a-b);fxMed=r.length?r[Math.floor(r.length/2)]:null;}
-function pintarFx(){
-  const R=["MEP","CCL"].map(t=>{const x=tcOf(t);return`<tr><td>Dólar ${t}</td><td class="n">${x?$$(x.compra):"-"}</td><td class="n">${x?$$(x.venta):"-"}</td><td>${x?esc(x.par):"No disponible"}</td></tr>`}).join("");
-  $("fxr").innerHTML=`<table><thead><tr><th>Cotización</th><th class="n">Compra</th><th class="n">Venta</th><th>Se calcula con</th></tr></thead><tbody>${R}</tbody></table><small>Precios de ${actualizado?fh(actualizado.getTime()):"-"}. Se renuevan cada 5 minutos.</small>`;
-  const yo=user&&todos.find(u=>u.id===user.uid);if(yo&&!esAdmin)$("fxs").textContent=`Tu saldo: ${$$(yo.cash)} · ${us(yo.usd||0)} en dólares MEP · ${us(yo.ccl||0)} en dólares CCL.`;
-  estFx();}
-function estFx(){const t=tcOf($("fxt").value),n=Math.floor(+$("fxn").value)||0;$("fxm").textContent=t&&n?`Comprar ${us(n)} costaría aproximadamente ${$$(n*t.venta*1.0142)} con comisiones; venderlos te daría aproximadamente ${$$(n*t.compra*0.9858)}.`:"";}
-async function cambio(l){
-  const n=Math.floor(+$("fxn").value),m=$("fxm"),tipo=$("fxt").value,yo=todos.find(u=>u.id===user.uid);
-  if(!ba().abierto)return m.textContent="El mercado está cerrado. Se puede operar de lunes a viernes, de 10:45 a 18:00.";
-  if(!(n>0))return m.textContent="Ingresá una cantidad entera de dólares.";
-  if(!tcOf(tipo))return m.textContent="La cotización del dólar no está disponible en este momento.";
-  try{await addDoc(collection(db,"ordenes"),{uid:user.uid,usuario:nom(yo),s:"USD",tc:tipo,lado:l,tipo:"mercado",cant:n,vigencia:"dia",dia:ba().dia,estado:"pendiente",t:Date.now()});
-    m.textContent="Orden publicada. Se ejecuta en la próxima actualización de precios, cada 5 minutos como máximo.";$("fxn").value="";}
-  catch{m.textContent="No se pudo publicar la orden. Probá de nuevo.";}
-}
-const cab=(autor,tit,t)=>`<b>${esc(autor)}</b><br><small>${tit} · ${fh(t)}</small>`;
-const hilo=(id,u,herr,siempre)=>{   // respuestas debajo del mensaje, en orden cronológico
-  const it=[...coment.filter(c=>c.notaId===id).map(c=>({t:c.t,a:"Docente",x:c.texto,d:herr?"comentarios/"+c.id:""})),...resps.filter(r=>r.root===id).map(r=>({t:r.t,a:r.usuario,x:r.texto,d:herr?"respuestas/"+r.id:""}))].sort((a,b)=>a.t-b.t);
-  const dr=coment.some(c=>c.notaId===id);
-  return it.map(i=>`<div class="card resp">${cab(i.a,"Respuesta",i.t)}<p style="white-space:pre-wrap">${esc(i.x)}</p>${i.d?`<button data-del="${i.d}">Borrar</button>`:""}</div>`).join("")
-   +(herr?`<div><textarea data-rt="${id}" rows="2" placeholder="Respondé a este mensaje"></textarea><br><br><button data-resp="${id}" data-para="${u.id}">Enviar respuesta</button></div>`:"")
-   +(!esAdmin&&u.id===user.uid&&(siempre||dr)?`<div><textarea data-sr="${id}" rows="2" placeholder="Escribí tu respuesta"></textarea><br><br><button data-sresp="${id}">Responder</button></div>`:"");};
-function msgNota(n,u,herr){return`<div class="card nota">${cab(nom(u),"Nota semanal · "+esc(n.semana),n.t)}<p style="white-space:pre-wrap">${esc(n.texto)}</p>${n.puntaje!=null&&(esAdmin||n.uid===user.uid)?`<b>Evaluada: ${n.puntaje}/10</b>`:""}${herr?`<div><input type="number" min="0" max="10" step="0.5" data-pt="${n.id}" value="${n.puntaje??""}" style="width:90px" placeholder="Puntaje"> <button data-ev="${n.id}">Guardar puntaje</button></div>`:""}${hilo(n.id,u,herr,false)}</div>`;}
-function msgConsejo(c,u,herr){return`<div class="card consejo">${cab("Docente","Consejo del docente",c.t)}<p style="white-space:pre-wrap">${esc(c.texto)}</p>${herr?`<button data-del="comentarios/${c.id}">Borrar</button>`:""}${hilo(c.id,u,herr,true)}</div>`;}
-function historial(u,herr){   // los mensajes más recientes primero; las respuestas quedan dentro de su mensaje
-  const it=[...notas.filter(n=>n.uid===u.id).map(n=>({t:n.t,h:msgNota(n,u,herr)})),...coment.filter(c=>c.para===u.id&&!c.notaId).map(c=>({t:c.t,h:msgConsejo(c,u,herr)}))].sort((a,b)=>b.t-a.t);
-  return it.map(i=>i.h).join("")||"<p>Todavía no hay mensajes.</p>";}
-function conservar(el,ctx,fn){  // conserva lo que se está escribiendo mientras la pantalla se actualiza
-  const k=x=>x.id||(x.dataset.rt?"rt"+x.dataset.rt:x.dataset.pt?"pt"+x.dataset.pt:x.dataset.ed?"ed"+x.dataset.ed:x.dataset.sr?"sr"+x.dataset.sr:""),mismo=el._ctx===ctx,act=document.activeElement;
-  const g=mismo?[...el.querySelectorAll("textarea,input")].map(x=>[k(x),x.value]):[],f=mismo&&el.contains(act)?k(act):null;
-  fn();el._ctx=ctx;
-  el.querySelectorAll("textarea,input").forEach(x=>{const r=g.find(([a])=>a&&a===k(x));if(r)x.value=r[1];if(f&&k(x)===f)x.focus();});}
-const TASA=d=>d.tipo==="letras"?0.003:0.0071;   // comisión + IVA (aprox.)
-function ba(){const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:TZ,weekday:"short",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date()).map(x=>[x.type,x.value]));
-  const m=+p.hour*60+ +p.minute;return{dia:`${p.year}-${p.month}-${p.day}`,hora:`${p.hour}:${p.minute}:${p.second}`,abierto:!["Sat","Sun"].includes(p.weekday)&&m>=645&&m<1080};}
-function relojBA(){const b=ba();$("reloj").textContent=`Buenos Aires ${b.hora} · `+(b.abierto?"Mercado abierto":"Mercado cerrado (abre a las 10:45, de lunes a viernes)");$("pub").disabled=!b.abierto;}
-let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],novs=[],ver=null,verAlu=null,editNov=null,fxMed=null,resps=[],evo=[],calDiv=null,libro=null,unsubLibro=null,tab="mercado";
+def traer(usuario, clave, primera):
+    try:
+        r = llamar("/auth/token", cuerpo={"grant_type": "password",
+                                          "username": usuario, "password": clave})
+        token = TOKEN["t"] = r["data"]["access_token"]
+    except Exception as e:
+        raise RuntimeError(f"No se pudo iniciar sesión en IOL ({e})")
+    disponibles = {t["id"] for t in llamar("/broker/assets/types", {"country": "AR"}, token=token)["data"]}
+    precios, resumen = {}, {}
+    for tipo in TIPOS:
+        if tipo not in disponibles:
+            print(f"Aviso: el tipo '{tipo}' no existe, se omite.")
+            continue
+        try:
+            paneles = llamar("/broker/assets/panels", {"country": "AR", "asset_type": tipo}, token=token)["data"]
+        except Exception as e:
+            print(f"[{tipo}] no se pudieron leer los paneles: {e}")
+            continue
+        if primera:
+            print(f"[{tipo}] paneles:", ", ".join(p["id"] for p in paneles))
+        for p in paneles:
+            time.sleep(0.4)
+            try:
+                filas = llamar("/broker/market-data/screener", {"country": "AR", "asset_type": tipo,
+                               "panel": p["id"], "term": PLAZO}, token=token)["data"]
+            except Exception as e:
+                print(f"  [{tipo}/{p['id']}] falló: {e}")
+                continue
+            for f in filas:
+                i, q, b = f.get("instrument") or {}, f.get("quotes") or {}, f.get("book") or {}
+                if not i.get("symbol"):
+                    continue
+                precios[i["symbol"]] = {
+                    "nombre": i.get("name"), "tipo": tipo, "moneda": i.get("currency"),
+                    "ultimo": q.get("last"), "apertura": q.get("open"),
+                    "cierre_anterior": q.get("close"), "maximo": q.get("high"),
+                    "minimo": q.get("low"), "variacion_pct": q.get("change_percent"),
+                    "volumen": q.get("volume"),
+                    "compra": (b.get("bid") or {}).get("price"),
+                    "venta": (b.get("ask") or {}).get("price"),
+                }
+                resumen[tipo] = resumen.get(tipo, 0) + 1
+    if not precios:
+        raise RuntimeError("No llegó ningún precio")
+    print("Activos:", len(precios), resumen)
+    return {"actualizado": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "fuente": "IOL", "plazo": PLAZO, "precios": precios}
 
-/* ---------- Acceso ---------- */
-const correo=u=>u+"@economia-aula.app";
-const ERR={"auth/invalid-credential":"Usuario o contraseña incorrectos.","auth/email-already-in-use":"Ese usuario ya existe. Elegí otro.","auth/weak-password":"La contraseña debe tener al menos 6 caracteres.","auth/network-request-failed":"No hay conexión. Revisá tu internet."};
-async function acceso(nuevo){
-  const raw=$("u").value.trim(),u=raw.toLowerCase(),p=$("p").value;
-  if(!/^[a-z0-9._-]{3,20}$/.test(u))return $("msg").textContent="El usuario debe tener entre 3 y 20 caracteres: letras, números, punto, guion o guion bajo.";
-  try{
-    if(nuevo){const c=await createUserWithEmailAndPassword(auth,correo(u),p);
-      await setDoc(doc(db,"users",c.user.uid),{usuario:u,nombre:raw,cash:CAPITAL,pos:{},ops:[]});}
-    else await signInWithEmailAndPassword(auth,correo(u),p);
-  }catch(e){$("msg").textContent=ERR[e.code]||"No se pudo completar la acción. Probá de nuevo.";}
-}
-$("ent").onclick=()=>acceso(false);$("reg").onclick=()=>acceso(true);$("sal").onclick=()=>signOut(auth);
 
-onAuthStateChanged(auth,u=>{
-  user=u;$("auth").classList.toggle("hide",!!u);$("app").classList.toggle("hide",!u);
-  if(!u)return;
-  esAdmin=u.email===correo(ADMIN);$("fxf").classList.toggle("hide",esAdmin);
-  onSnapshot(collection(db,"users"),s=>{todos=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  onSnapshot(query(collection(db,"notas"),orderBy("t","desc"),limit(200)),s=>{notas=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  onSnapshot(collection(db,"comentarios"),s=>{coment=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  onSnapshot(query(collection(db,"ordenes"),orderBy("t","desc"),limit(300)),s=>{ordenes=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  onSnapshot(query(collection(db,"novedades"),orderBy("t","desc"),limit(100)),s=>{novs=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  onSnapshot(query(collection(db,"evolucion"),orderBy("t","desc"),limit(200)),s=>{evo=s.docs.map(d=>d.data()).reverse();pintarTodo();});
-  onSnapshot(query(collection(db,"respuestas"),orderBy("t","desc"),limit(500)),s=>{resps=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  armarTabs();
-});
+def publicar(salida):
+    """Sube precios.json a la rama 'datos' (un solo commit, sin historial)."""
+    tmp = tempfile.mkdtemp()
+    try:
+        with open(os.path.join(tmp, "precios.json"), "w", encoding="utf-8") as f:
+            json.dump(salida, f, ensure_ascii=False, separators=(",", ":"))
+        repo, tok = os.environ.get("GITHUB_REPOSITORY"), os.environ.get("GITHUB_TOKEN")
+        if not repo or not tok:
+            shutil.copy(os.path.join(tmp, "precios.json"), "precios.json")
+            print("Guardado en ./precios.json (modo local)")
+            return
+        def git(*a):
+            subprocess.run(["git", *a], cwd=tmp, check=True, capture_output=True)
+        git("init", "-q"); git("checkout", "-q", "-b", "datos")
+        git("config", "user.name", "github-actions[bot]")
+        git("config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com")
+        git("add", "precios.json"); git("commit", "-q", "-m", "Precios " + salida["actualizado"])
+        git("push", "-q", "--force", f"https://x-access-token:{tok}@github.com/{repo}.git", "datos")
+        print("Publicado en la rama 'datos'")
+    except subprocess.CalledProcessError:
+        raise RuntimeError("No se pudo publicar en GitHub")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
-/* ---------- Pestañas ---------- */
-function armarTabs(){
-  const t=esAdmin?[["mercado","Mercado"],["fx","Cambio de moneda"],["ranking","Ranking"],["divs","Calendario de dividendos"],["alumnos","Alumnos"],["novedades","Novedades"]]:[["mercado","Mercado"],["fx","Cambio de moneda"],["cartera","Mi cartera"],["ranking","Ranking"],["divs","Calendario de dividendos"],["notas","Mis notas semanales"],["novedades","Novedades"]];
-  $("tabs").innerHTML=t.map(([k,n])=>`<button data-k="${k}" class="${k===tab?"on":""}">${n}</button>`).join("");
-}
-$("tabs").onclick=e=>{const k=e.target.dataset.k;if(!k)return;tab=k;
-  for(const x of["mercado","cartera","ranking","notas","alumnos","novedades","divs","fx"])$("t-"+x).classList.toggle("hide",x!==k);
-  armarTabs();pintarTodo();};
 
-/* ---------- Valuación ---------- */
-const precio=s=>datos.find(d=>d.s===s)?.ultimo;
-function valor(u){let v=u.cash+(u.usd||0)*fxMEP()+(u.ccl||0)*fxCCL();for(const[s,p]of Object.entries(u.pos||{}))v+=p.c*(precio(s)??p.costo/p.c)*fxOf(p.m);return v;}
-const pct=v=>((v-CAPITAL)/CAPITAL*100);
-const cls=n=>n>=0?"up":"dn";
+RE_USD = re.compile(r"usd|d[oó]lar|u\$s", re.I)
+TASA = lambda d: 0.003 if d.get("tipo") == "letras" else 0.0071   # comisión + IVA (aprox.)
 
-function contable(u){
-  const A={},fx=fxMEP();let cmx=0;
-  for(const o of [...(u.ops||[])].sort((a,b)=>a.t-b.t)){
-    if(o.l==="CD"||o.l==="VD"){cmx+=o.com||0;continue;}
-    const a=A[o.s]=A[o.s]||{m:o.m||"ARS",c:0,costo:0,rec:0,real:0,com:0,div:0};
-    if(o.l==="C"){a.c+=o.c;a.costo+=o.c*o.p+(o.com||0);a.com+=o.com||0;}
-    else if(o.l==="V"){const cu=a.c?a.costo/a.c:0,neto=o.c*o.p-(o.com||0);a.rec+=neto;a.real+=neto-o.c*cu;a.costo-=o.c*cu;a.c-=o.c;a.com+=o.com||0;}
-    else if(o.l==="D")a.div+=o.monto||0;
-  }
-  let ten=0,nr=0,re=0,cm=cmx,dv=0;
-  const filas=Object.entries(A).map(([s,a])=>{const px=precio(s)??(a.c?a.costo/a.c:0),val=a.c*px,nore=a.c?val-a.costo:0,k=fxOf(a.m);ten+=val*k;nr+=nore*k;re+=a.real*k;cm+=a.com*k;dv+=a.div*k;return{s,...a,px,val,nore};});
-  const usd=u.usd||0,ccl=u.ccl||0;
-  return{filas,ten,nr,re,cm,dv,usd,ccl,fx,fc:fxCCL(),pat:u.cash+usd*fx+ccl*fxCCL()+ten};
-}
-function grafEvo(u){
-  const P=evo.map(e=>({t:e.t,v:e.v?.[u.id]})).filter(p=>p.v!=null);
-  if(P.length<2)return"<small>El gráfico de evolución aparecerá cuando haya al menos dos registros del patrimonio (se guardan cada 15 minutos en horario de mercado).</small>";
-  const W=600,H=170,m=30,t0=P[0].t,t1=P[P.length-1].t,vs=P.map(p=>p.v).concat(CAPITAL),mn=Math.min(...vs),mx=Math.max(...vs);
-  const X=t=>m+(W-2*m)*(t-t0)/(t1-t0||1),Y=v=>H-m-(H-2*m)*(v-mn)/(mx-mn||1);
-  return`<h4>Evolución del patrimonio</h4><svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:720px"><line x1="${m}" x2="${W-m}" y1="${Y(CAPITAL)}" y2="${Y(CAPITAL)}" stroke="#8886" stroke-dasharray="4"/><polyline fill="none" stroke="#3b82f6" stroke-width="2" points="${P.map(p=>X(p.t).toFixed(1)+","+Y(p.v).toFixed(1)).join(" ")}"/><text x="${m}" y="12" font-size="11" fill="currentColor">${$$(mx)}</text><text x="${m}" y="${H-8}" font-size="11" fill="currentColor">${$$(mn)}</text><text x="${W-m}" y="${H-8}" font-size="11" text-anchor="end" fill="currentColor">${fh(t1)}</text></svg><small>La línea punteada marca el capital inicial (${$$(CAPITAL)}).</small>`;
-}
-function estado(u){
-  const c=contable(u),res=c.pat-CAPITAL,dif=res-c.re-c.nr-c.dv,k=(t,v,cl="")=>`<div><small>${t}</small><b class="${cl}">${v}</b></div>`;
-  const F=c.filas.sort((a,b)=>a.s.localeCompare(b.s)).map(a=>`<tr><td>${esc(a.s)}</td><td class="n">${a.c}</td><td class="n">${a.c?mon(a.m,a.costo/a.c):"-"}</td><td class="n">${a.c?mon(a.m,a.px):"-"}</td><td class="n">${mon(a.m,a.val)}</td><td class="n ${cls(a.nore)}">${a.c?mon(a.m,a.nore):"-"}</td><td class="n ${cls(a.real)}">${mon(a.m,a.real)}</td><td class="n">${mon(a.m,a.rec)}</td><td class="n">${mon(a.m,a.com)}</td><td class="n">${mon(a.m,a.div)}</td></tr>`).join("");
-  const TO={C:"Compra",V:"Venta",D:"Dividendo cobrado",CD:"Compra de dólares",VD:"Venta de dólares"};
-  const L=[...(u.ops||[])].sort((a,b)=>a.t-b.t).slice(-50).map(o=>{const M=o.m||"ARS",cm=o.com||0,b=o.c*o.p,x=o.l==="CD"||o.l==="VD",n=(o.l==="C"||o.l==="CD")?b+cm:(o.l==="V"||o.l==="VD")?b-cm:o.monto;
-    return`<tr><td>${fh(o.t)}</td><td>${TO[o.l]}${x?" "+(o.tc||"MEP"):""}</td><td>${x?"Dólares":esc(o.s)}</td><td class="n">${o.c}</td><td class="n">${mon(x?"ARS":M,o.p)}</td><td class="n">${o.l==="D"?"-":mon(M,b)}</td><td class="n">${mon(M,cm)}</td><td class="n">${mon(M,n)}</td></tr>`}).join("");
-  return`<h4>Estado contable</h4><div class="res">${k("Efectivo en pesos",$$(u.cash))}${k("Dólares MEP",us(c.usd))}${k("Dólares CCL",us(c.ccl))}${k("Valor de las tenencias",$$(c.ten))}${k("Patrimonio total",$$(c.pat))}${k("Resultado total",`${$$(res)} (${(res/CAPITAL*100).toFixed(2)} %)`,cls(res))}${k("Resultado realizado",$$(c.re),cls(c.re))}${k("Resultado no realizado",$$(c.nr),cls(c.nr))}${k("Dividendos cobrados",$$(c.dv))}${k("Comisiones pagadas",$$(c.cm))}${k("Diferencia de cambio y costos de conversión",$$(dif),cls(dif))}</div>
-  <small>El resultado realizado es la ganancia o pérdida de lo que ya se vendió. El no realizado es lo que se ganaría o perdería si se vendiera hoy a precio de mercado. Los importes en dólares se convierten a pesos con el dólar actual (MEP: US$ 1 = ${$$(c.fx)}; CCL: US$ 1 = ${$$(c.fc)}). La diferencia de cambio refleja cuánto cambió el valor de los dólares y de los activos en dólares, y los costos de pasar de una moneda a otra.</small>
-  ${grafEvo(u)}
-  <h4>Detalle por activo</h4>${F?`<div class="l"><table><thead><tr><th>Activo</th><th class="n">Cantidad disponible</th><th class="n">Precio promedio de compra</th><th class="n">Precio actual</th><th class="n">Valor actual</th><th class="n">Resultado no realizado</th><th class="n">Resultado realizado</th><th class="n">Recuperado por ventas</th><th class="n">Comisiones</th><th class="n">Dividendos</th></tr></thead><tbody>${F}</tbody></table></div><small>Cada activo se muestra en su moneda de cotización.</small>`:"<p>Todavía no tiene operaciones.</p>"}
-  <h4>Libro de operaciones</h4>${L?`<div class="l"><table><thead><tr><th>Fecha y hora</th><th>Operación</th><th>Activo</th><th class="n">Cantidad</th><th class="n">Precio</th><th class="n">Importe bruto</th><th class="n">Comisión</th><th class="n">Importe neto</th></tr></thead><tbody>${L}</tbody></table></div><small>Importe neto: lo que se pagó (en una compra, con la comisión incluida) o lo que se recibió (en una venta, ya descontada la comisión).</small>`:"<p>Todavía no hay operaciones.</p>"}`;
-}
-function proxDiv(u){
-  const hoy=ba().dia,fx=s=>{const a=precio(s),b=precio(s+"C")??precio(s+"D");return a&&b?a/b:null;};
-  const R=(calDiv?.dividendos||[]).filter(d=>d.pago>=hoy).sort((a,b)=>a.pago.localeCompare(b.pago)).map(d=>{
-    const corte=Date.parse(d.ex+"T00:00:00-03:00"),q=(u.ops||[]).reduce((a,o)=>o.s===d.s&&o.t<corte&&o.l!=="D"?a+(o.l==="C"?o.c:-o.c):a,0);
-    if(q<=0)return"";
-    const f=fx(d.s),dias=Math.round((Date.parse(d.pago+"T00:00:00Z")-Date.parse(hoy+"T00:00:00Z"))/864e5),neto=q*d.usd*(1-(d.ret??calDiv.retencion_por_defecto));
-    return`<li><b>${esc(d.s)}</b>: se paga el ${fd(d.pago)} (${dias>0?`faltan ${dias} día${dias>1?"s":""}`:"se acredita hoy"}). Cobro estimado: <b>${us(neto)}</b> (se acredita en dólares) por ${q} unidades${d.estimado?" · fecha y monto estimados":""}.${d.ex>=hoy?` Para cobrarlo, hay que mantener el activo hasta la fecha de corte (${fd(d.ex)}).`:""}</li>`;}).join("");
-  return R?`<h4>Próximos dividendos de tu cartera</h4><ul>${R}</ul>`:"";
-}
-function ficha(u,herr){
-  if(!u)return"";
-  const v=valor(u),r=pct(v),comT=(u.ops||[]).reduce((a,o)=>a+(o.com||0),0);
-  const filas=Object.entries(u.pos||{}).map(([s,p])=>{const px=precio(s)??p.costo/p.c,val=p.c*px,res=val-p.costo;
-    return`<tr><td>${esc(s)}</td><td class="n">${p.c}</td><td class="n">${$$(p.costo/p.c)}</td><td class="n">${$$(px)}</td><td class="n">${$$(val)}</td><td class="n ${cls(res)}">${$$(res)}</td></tr>`}).join("");
-  const ops=[...(u.ops||[])].reverse().slice(0,15).map(o=>`<li>${fh(o.t)} · ${o.l==="C"?"Compra":"Venta"} de ${o.c} ${esc(o.s)} a ${$$(o.p)}${o.com!=null?` (comisión ${$$(o.com)})`:""}</li>`).join("");
-  const TT={mercado:"a precio de mercado",limite:"límite",stop_limite:"stop límite"};
-  const ords=ordenes.filter(o=>o.uid===u.id).slice(0,15).map(o=>`<li>${fh(o.t)} · ${{C:"Compra",V:"Venta",CD:"Compra de dólares",VD:"Venta de dólares"}[o.lado]} de ${o.cant} ${esc(o.s)} (${TT[o.tipo]}${o.limite?` ${$$(o.limite)}`:""}${o.stop?`, stop ${$$(o.stop)}`:""}; ${o.vigencia==="dia"?"por el día":"hasta cancelar"}) · <b>${esc(o.estado)}</b>${o.fill?` a ${$$(o.fill.px)}`:""}${o.motivo?` · ${esc(o.motivo)}`:""} ${o.estado==="pendiente"&&u.id===user.uid?`<button data-canc="${o.id}">Cancelar</button>`:""}</li>`).join("");
-    const adm=herr?`<div class="card"><b>Consejo general para este alumno</b><br><br><textarea id="ctxt" rows="2" placeholder="Escribí un consejo general para este alumno (lo verán todos)"></textarea><br><br><button data-com="${u.id}">Publicar consejo</button> <button data-reset="${u.id}">Reiniciar cartera</button></div>`:"";
-  return`<div class="card"><h3>${esc(nom(u))}</h3>${u.id===user.uid&&!esAdmin?proxDiv(u):""}${estado(u)}<h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul><h4>Mensajes</h4>${historial(u,herr)}${adm}</div>`;
-}
 
-function pintarTodo(){
-  if(!user)return;
-  const yo=todos.find(u=>u.id===user.uid);
-  $("yo").textContent=yo?nom(yo):"";
-  if(yo&&!esAdmin)$("resumen").textContent=`Efectivo ${$$(yo.cash)}${yo.usd?` · ${us(yo.usd)} MEP`:""}${yo.ccl?` · ${us(yo.ccl)} CCL`:""} · Total ${$$(valor(yo))} (${pct(valor(yo)).toFixed(2)} %)`;
-  if(tab==="cartera")$("t-cartera").innerHTML=ficha(yo);
-  if(tab==="ranking"){
-    const keep=$("ctxt")?{v:$("ctxt").value,f:document.activeElement===$("ctxt")}:null;
-    const comp=u=>{const g={};for(const[s,p]of Object.entries(u.pos||{})){const t=nt(datos.find(d=>d.s===s)?.tipo||"Otros");(g[t]=g[t]||[]).push(`${s} ×${p.c}`);}
-      return`Efectivo ${$$(u.cash)}${u.usd?` + ${us(u.usd)} MEP`:""}${u.ccl?` + ${us(u.ccl)} CCL`:""}`+Object.entries(g).map(([t,l])=>` · ${t}: ${l.join(", ")}`).join("");};
-    const r=todos.filter(u=>(u.usuario||"")!==ADMIN).map(u=>({...u,v:valor(u)})).sort((a,b)=>b.v-a.v);
-    $("rank").innerHTML=`<div class="card"><b>Ranking en vivo</b> <small>Se recalcula con cada actualización de precios.</small><table><thead><tr><th>#</th><th>Usuario e inversiones</th><th class="n">Valor total</th><th class="n">Resultado</th></tr></thead><tbody>${r.map((u,i)=>`<tr class="k${u.id===ver?" s":""}" data-ver="${u.id}"><td>${i+1}</td><td>${esc(nom(u))}<small>${esc(comp(u))}</small></td><td class="n">${$$(u.v)}</td><td class="n ${cls(u.v-CAPITAL)}">${pct(u.v).toFixed(2)} %</td></tr>`).join("")}</tbody></table><small>Tocá un usuario para ver su cartera completa.</small></div>`;
-    conservar($("ficha"),ver,()=>{$("ficha").innerHTML=ficha(todos.find(u=>u.id===ver),false);});
-    if(keep&&$("ctxt")){$("ctxt").value=keep.v;if(keep.f)$("ctxt").focus();}
-  }
-  if(tab==="divs")pintarDiv();
-  if(tab==="fx")pintarFx();
-  if(tab==="alumnos"){
-    const L=todos.filter(u=>(u.usuario||"")!==ADMIN).sort((a,b)=>nom(a).localeCompare(nom(b),"es",{sensitivity:"base"}));
-    $("alu-lista").innerHTML=`<div class="card"><b>Alumnos</b> <small>${L.length} registrados, en orden alfabético.</small> <button id="xls">Descargar planilla Excel</button><div class="g" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-top:8px">${L.map(u=>`<button data-alu="${u.id}" class="${u.id===verAlu?"on":""}">${esc(nom(u))}</button>`).join("")}</div></div>`;
-    conservar($("alu-ficha"),verAlu,()=>{$("alu-ficha").innerHTML=ficha(todos.find(u=>u.id===verAlu),true)||"<p>Elegí un alumno para ver su registro completo.</p>";});
-  }
-  if(tab==="novedades"){
-    $("novf").classList.toggle("hide",!esAdmin);
-    const enl=x=>esc(x).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
-    conservar($("nov-lista"),"nov",()=>{$("nov-lista").innerHTML=novs.map(n=>{
-      const tarj=(n.texto.match(/https?:\/\/[^\s<]+/g)||[]).slice(0,3).map(u=>{const p=(n.previews||[]).find(x=>x.url===u);
-        if(!p)return n.previews?"":"<small>Preparando la vista previa del enlace…</small>";
-        return p.titulo||p.imagen?`<a class="pv" href="${esc(u)}" target="_blank" rel="noopener">${p.imagen?`<img src="${esc(p.imagen)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:""}<span><b>${esc(p.titulo||u)}</b><small>${esc(p.sitio||"")}</small></span></a>`:"";}).join("");
-      if(editNov===n.id)return`<div class="card"><b>Editar novedad</b><br><br><textarea data-ed="${n.id}" rows="4" maxlength="1500">${esc(n.texto)}</textarea><br><br><button data-gedn="${n.id}">Guardar cambios</button> <button data-cedn="1">Cancelar</button></div>`;
-      return`<div class="card"><small>${fh(n.t)}${n.editado?` · <i>Editado</i>`:""}</small><p style="white-space:pre-wrap">${enl(n.texto)}</p>${tarj}${esAdmin?`<button data-edn="${n.id}">Editar</button> <button data-del="novedades/${n.id}">Eliminar</button>`:""}</div>`;}).join("")||"<p>Todavía no hay novedades.</p>";});
-  }
-  if(tab==="notas"){const yo=todos.find(u=>u.id===user.uid);$("nlista").innerHTML=yo?`<h4>Mi historial</h4>${historial(yo)}`:"";}
-}
-document.body.addEventListener("click",async e=>{
-  const t=e.target,tr=t.closest("tr[data-ver]");
-  if(tr){ver=tr.dataset.ver;pintarTodo();}
-  if(t.dataset.del&&confirm("¿Seguro que querés borrarlo?"))await deleteDoc(doc(db,...t.dataset.del.split("/")));
-  if(t.dataset.com&&$("ctxt").value.trim()){const x=$("ctxt").value.trim().slice(0,600);$("ctxt").value="";
-    await addDoc(collection(db,"comentarios"),{para:t.dataset.com,texto:x,t:Date.now()});}
-  if(t.id==="npub2"){const x=$("ntx2").value.trim();if(x){$("ntx2").value="";await addDoc(collection(db,"novedades"),{texto:x.slice(0,1500),t:Date.now()});}}
-  if(t.dataset.edn){editNov=t.dataset.edn;pintarTodo();}
-  if(t.dataset.cedn){editNov=null;pintarTodo();}
-  if(t.dataset.gedn){const id=t.dataset.gedn,x=document.querySelector(`[data-ed="${id}"]`).value.trim();
-    if(x){editNov=null;await updateDoc(doc(db,"novedades",id),{texto:x.slice(0,1500),editado:Date.now(),previews:null});}}
-  if(t.id==="xls")exportar();
-  if(t.dataset.alu){verAlu=t.dataset.alu;pintarTodo();}
-  if(t.dataset.resp){const ta=document.querySelector(`[data-rt="${t.dataset.resp}"]`),x=ta.value.trim();
-    if(x){ta.value="";await addDoc(collection(db,"comentarios"),{para:t.dataset.para,notaId:t.dataset.resp,texto:x.slice(0,600),t:Date.now()});}}
-  if(t.dataset.sresp){const ta=document.querySelector(`[data-sr="${t.dataset.sresp}"]`),x=ta.value.trim();
-    if(x){ta.value="";await addDoc(collection(db,"respuestas"),{uid:user.uid,usuario:nom(todos.find(u=>u.id===user.uid)),para:user.uid,root:t.dataset.sresp,texto:x.slice(0,600),t:Date.now()});}}
-  if(t.dataset.ev){const v=document.querySelector(`[data-pt="${t.dataset.ev}"]`).value;
-    await updateDoc(doc(db,"notas",t.dataset.ev),{puntaje:v===""?null:Math.min(10,Math.max(0,+v))});}
-  if(t.dataset.canc)await updateDoc(doc(db,"ordenes",t.dataset.canc),{estado:"cancelada"});
-  if(t.dataset.reset&&confirm("Esto devuelve la cartera al capital inicial. ¿Continuar?"))
-    await updateDoc(doc(db,"users",t.dataset.reset),{cash:CAPITAL,pos:{},ops:[]});
-});
+def operable(d):
+    return (d.get("tipo") in ("acciones", "cedears", "etfs")
+            and (d.get("ultimo") or 0) > 0)
 
-function exportar(){
-  if(typeof XLSX==="undefined")return alert("No se pudo cargar la herramienta de Excel. Revisá tu conexión e intentá de nuevo.");
-  const L=todos.filter(u=>(u.usuario||"")!==ADMIN).sort((a,b)=>nom(a).localeCompare(nom(b),"es",{sensitivity:"base"}));
-  const R=[["Alumno","Efectivo ($)","Dólares MEP (US$)","Dólares CCL (US$)","Valor de las tenencias","Patrimonio total","Resultado ($)","Resultado (%)","Resultado realizado","Resultado no realizado","Dividendos cobrados","Comisiones pagadas","Notas publicadas","Notas evaluadas","Puntaje promedio"]];
-  const O=[["Alumno","Fecha y hora","Operación","Activo","Cantidad","Precio","Comisión","Importe neto"]];
-  for(const u of L){
-    const c=contable(u),ns=notas.filter(n=>n.uid===u.id),ev=ns.filter(n=>n.puntaje!=null),res=c.pat-CAPITAL;
-    R.push([nom(u),u.cash,u.usd||0,u.ccl||0,c.ten,c.pat,res,+(res/CAPITAL*100).toFixed(2),c.re,c.nr,c.dv,c.cm,ns.length,ev.length,ev.length?+(ev.reduce((a,n)=>a+n.puntaje,0)/ev.length).toFixed(2):""]);
-    for(const o of [...(u.ops||[])].sort((a,b)=>a.t-b.t))O.push([nom(u),fh(o.t),{C:"Compra",V:"Venta",D:"Dividendo"}[o.l],o.s,o.c,o.p,o.com||0,o.l==="C"?o.c*o.p+(o.com||0):o.l==="V"?o.c*o.p-(o.com||0):o.monto]);
-  }
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(R),"Resumen");XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(O),"Operaciones");
-  XLSX.writeFile(wb,"alumnos_"+ba().dia+".xlsx");
-}
 
-/* ---------- Notas ---------- */
-$("npub").onclick=async()=>{
-  const x=$("ntxt").value.trim();if(x.length<10)return $("nmsg").textContent="Escribí al menos una o dos oraciones.";
-  const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));
-  const yo=todos.find(u=>u.id===user.uid);
-  await addDoc(collection(db,"notas"),{uid:user.uid,usuario:nom(yo),semana:"Semana del "+d.toLocaleDateString("es-AR",{day:"numeric",month:"long"}),texto:x,t:Date.now()});
-  $("ntxt").value="";$("nmsg").textContent="Nota publicada.";
-};
+PARES = [("AL30", "AL30D"), ("GD30", "GD30D"), ("AL35", "AL35D"), ("GD35", "GD35D")]
 
-/* ---------- Mercado (precios de IOL y gráfico de TradingView) ---------- */
-function llenar(sel,vals,et){const a=sel.value;sel.innerHTML=sel.options[0].outerHTML+vals.map(v=>`<option value="${esc(v)}">${esc(et(v))}</option>`).join("");sel.value=a;}
-function pintar(){
-  const q=$("buscar").value.trim().toLowerCase(),t=$("ftipo").value,m=$("fmon").value;
-  const l=datos.filter(d=>(!q||d.s.toLowerCase().includes(q)||(d.nombre||"").toLowerCase().includes(q))&&(!t||d.tipo===t)&&(!m||d.moneda===m)).slice(0,300);
-  $("filas").innerHTML=l.map(d=>`<tr class="k${d.s===elegido?" s":""}" data-s="${esc(d.s)}"><td>${esc(d.s)}<small>${esc(d.nombre)}</small></td><td>${esc(nt(d.tipo))}</td><td class="n">${d.ultimo??"-"}</td><td class="n">${d.variacion_pct??"-"}</td></tr>`).join("");
-}
-const operable=d=>["acciones","cedears","etfs"].includes(d.tipo)&&d.ultimo>0;
-function detalle(){
-  const d=datos.find(x=>x.s===elegido);if(!d)return;
-  $("det").innerHTML=`<b>${esc(d.s)}</b> · ${esc(d.nombre)} (${esc(nt(d.tipo))}, ${esc(d.moneda)})<br>Último: <b>${d.ultimo??"-"}</b> · Variación: ${d.variacion_pct??"-"} % · Compra: ${d.compra??"-"} · Venta: ${d.venta??"-"}<br>Apertura ${d.apertura??"-"} · Máximo ${d.maximo??"-"} · Mínimo ${d.minimo??"-"} · Cierre anterior ${d.cierre_anterior??"-"} · Volumen ${d.volumen??"-"}${divTxt(d.s)}`;
-  $("op").classList.toggle("hide",!operable(d)||esAdmin);estimar();
-}
-const fd=x=>x.split("-").reverse().join("/");
-const divTxt=s=>{const d=(calDiv?.dividendos||[]).filter(x=>x.s===s&&x.ex>=ba().dia).sort((a,b)=>a.ex.localeCompare(b.ex))[0];return d?`<br><b>Próximo dividendo:</b> USD ${d.usd} por unidad · corte ${fd(d.ex)} · pago ${fd(d.pago)}`:"";};
-const abiertos=new Set();
-function pintarDiv(){
-  if(!calDiv)return;const hoy=ba().dia,G={};
-  calDiv.dividendos.filter(d=>d.ex>=hoy).sort((a,b)=>a.ex.localeCompare(b.ex)).forEach(d=>(G[d.s]=G[d.s]||[]).push(d));
-  const dat=d=>{const pc=usdPx(d.s),ret=d.ret??calDiv.retencion_por_defecto,r=pc?d.usd*(1-ret)/pc:null;return{ret,r,c:r!=null?100000*r:null};};
-  const pc=x=>x!=null?(x*100).toFixed(2)+" %":"-",sin=d=>precio(d.s)?"-":"<small>Sin cotización en IOL</small>";
-  const filas=Object.values(G).sort((a,b)=>a[0].ex.localeCompare(b[0].ex)||a[0].s.localeCompare(b[0].s)).map(L=>{
-    const d=L[0],x=dat(d);
-    const det=L.map(e=>{const y=dat(e);return`<tr><td>${fd(e.ex)}</td><td>${fd(e.pago)}</td><td class="n">${e.usd}</td><td class="n">${pc(y.r)}</td><td class="n">${y.c!=null?$$(y.c):"-"}</td><td>${e.estimado?"Estimado":"Confirmado"}</td></tr>`}).join("");
-    return`<details class="dv" data-s="${esc(d.s)}"${abiertos.has(d.s)?" open":""}><summary class="dvr"><span><span class="ar">▸</span> <b>${esc(d.s)}</b><small>${esc(d.empresa)}</small></span><span>${esc(d.frecuencia)}</span><span>${fd(d.ex)}${d.estimado?"<small>Estimada</small>":""}</span><span>${fd(d.pago)}</span><span class="n">${d.usd}</span><span class="n">${Math.round(x.ret*100)} %</span><span class="n">${x.r!=null?pc(x.r):sin(d)}</span><span class="n">${x.c!=null?$$(x.c):""}</span></summary><div class="dvb"><small>Todas las próximas fechas de ${esc(d.s)} (${L.length})</small><table><thead><tr><th>Fecha de corte</th><th>Fecha de pago</th><th class="n">Dividendo bruto (USD por CEDEAR)</th><th class="n">Rendimiento neto</th><th class="n">Cobro estimado por cada $100.000</th><th>Dato</th></tr></thead><tbody>${det}</tbody></table></div></details>`;}).join("");
-  $("divtab").innerHTML=`<div class="l" style="max-height:680px"><div style="min-width:860px"><div class="dvh"><span>Activo</span><span>Periodicidad</span><span>Próxima fecha de corte</span><span>Fecha de pago</span><span class="n">Bruto (USD por CEDEAR)</span><span class="n">Retención</span><span class="n">Rendimiento neto</span><span class="n">Cobro estimado por cada $100.000</span></div>${filas}</div></div><small>Tocá un activo para ver todas sus próximas fechas. Rendimiento neto = dividendo menos retención, sobre el precio actual en dólares del CEDEAR. Es una referencia para comparar activos: no incluye comisiones ni variaciones del tipo de cambio. Fuente: ${esc(calDiv.fuente)}</small>`;
-}
-$("divtab").addEventListener("toggle",e=>{const d=e.target;if(d.dataset?.s)d.open?abiertos.add(d.dataset.s):abiertos.delete(d.dataset.s);},true);
-fetch("https://raw.githubusercontent.com/Pablo002k/InvEco/main/data/dividendos.json?t="+Math.floor(Date.now()/600000)).then(r=>r.json()).then(j=>{calDiv=j;pintarDiv();detalle();pintarTodo();}).catch(()=>{});
-function pedirLibro(s){setDoc(doc(db,"libro_pedidos",s),{s,t:Date.now()}).catch(()=>{});}
-function pintarLibro(){
-  const el=$("libro");el.classList.remove("hide");
-  if(!libro){el.innerHTML="<b>Libro de ofertas</b><br><small>Consultando el libro de ofertas real de IOL. Puede demorar unos segundos.</small>";return;}
-  const n=Math.max(libro.bids.length,libro.asks.length),c=(x)=>x?`${$$(x.p)} · ${x.c}`:"",f=Array.from({length:n},(_,i)=>`<tr><td class="n">${c(libro.bids[i])}</td><td class="n">${c(libro.asks[i])}</td></tr>`).join("");
-  el.innerHTML=`<b>Libro de ofertas de ${esc(libro.s)}</b> <small>${libro.vacio&&libro.tl?`Último libro registrado el ${fh(libro.tl)} (ahora no hay ofertas en el mercado)`:`Actualizado ${fh(libro.t)}`}</small><table><thead><tr><th class="n">Compra: precio · cantidad</th><th class="n">Venta: precio · cantidad</th></tr></thead><tbody>${f||"<tr><td colspan=2>No hay ofertas en este momento. En el mercado real las órdenes se cancelan al cierre (18:00), por eso fuera de horario el libro está vacío.</td></tr>"}</tbody></table>`;}
-function verLibro(s){unsubLibro&&unsubLibro();libro=null;pintarLibro();pedirLibro(s);
-  unsubLibro=onSnapshot(doc(db,"libros",s),x=>{libro=x.data()||null;pintarLibro();});}
-function elegir(s){elegido=s;verLibro(s);detalle();pintar();$("omsg").textContent="";$("tv").innerHTML="";
-  new TradingView.widget({container_id:"tv",symbol:"BCBA:"+s,interval:"D",locale:"es",theme:"light",autosize:true,timezone:"America/Argentina/Buenos_Aires"});}
-async function cargar(){
-  const j=await(await fetch(URL_PRECIOS+"?t="+Math.floor(Date.now()/30000))).json();
-  if(!j.actualizado)throw 0;
-  const t=new Date(j.actualizado);if(actualizado&&t.getTime()===actualizado.getTime())return false;
-  actualizado=t;habilitadoDesde=t.getTime()+ESPERA_MS;
-  datos=Object.entries(j.precios).map(([s,v])=>({s,...v})).sort((a,b)=>a.s.localeCompare(b.s));
-  calcFx();
-  llenar($("ftipo"),[...new Set(datos.map(d=>d.tipo))],nt);llenar($("fmon"),[...new Set(datos.map(d=>d.moneda).filter(Boolean))],x=>x);
-  pintar();detalle();pintarTodo();pintarDiv();pintarFx();return true;
-}
-function reloj(){
-  if(!actualizado)return;const f=habilitadoDesde-Date.now();
-  const h=actualizado.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hour12:false});
-  if(f>0){const s=Math.ceil(f/1000);$("btn").disabled=true;
-    $("estado").textContent=`${datos.length} activos · Precios de las ${h} · Próxima actualización en ${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}.`;}
-  else{$("btn").disabled=false;$("estado").textContent=`${datos.length} activos · Precios de las ${h} · Ya puede haber precios nuevos.`;}
-}
-$("btn").onclick=async()=>{$("btn").disabled=true;$("estado").textContent="Buscando precios nuevos…";
-  try{if(!(await cargar()))habilitadoDesde=Date.now()+20000;}catch{habilitadoDesde=Date.now()+20000;}};
-["buscar","ftipo","fmon"].forEach(i=>$(i).addEventListener(i==="buscar"?"input":"change",pintar));
-$("filas").onclick=e=>{const tr=e.target.closest("tr");if(tr)elegir(tr.dataset.s);};
 
-function estimar(){
-  const d=datos.find(x=>x.s===elegido);if(!d)return;
-  const n=Math.floor(+$("cant").value)||0,t=$("otipo").value,px=t==="mercado"?d.ultimo:(+$("olim").value||d.ultimo),tasa=(TASA(d)*100).toFixed(2);
-  $("oest").textContent=n?`Importe estimado: ${mon(monDe(d),n*px)} más comisión e IVA de aproximadamente ${mon(monDe(d),n*px*TASA(d))} (${tasa} %).`:`La comisión estimada es del ${tasa} % del importe, IVA incluido.`;
-}
-$("otipo").onchange=()=>{$("olim").classList.toggle("hide",$("otipo").value==="mercado");$("ostop").classList.toggle("hide",$("otipo").value!=="stop_limite");estimar();};
-["cant","olim","ostop"].forEach(i=>$(i).addEventListener("input",estimar));
-$("pub").onclick=async()=>{
-  const d=datos.find(x=>x.s===elegido),n=Math.floor(+$("cant").value),t=$("otipo").value,lim=+$("olim").value,stp=+$("ostop").value,m=$("omsg");
-  const yo=todos.find(u=>u.id===user.uid);
-  if(!ba().abierto)return m.textContent="El mercado está cerrado. Se puede operar de lunes a viernes, de 10:45 a 18:00.";
-  if(!d||!(n>0))return m.textContent="Ingresá una cantidad entera mayor que cero.";
-  if(!operable(d))return m.textContent="Por ahora solo se opera con acciones, CEDEARs y ETFs.";
-  if(t!=="mercado"&&!(lim>0))return m.textContent="Indicá un precio límite mayor que cero.";
-  if(t==="stop_limite"&&!(stp>0))return m.textContent="Indicá un precio stop mayor que cero.";
-  try{
-    await addDoc(collection(db,"ordenes"),{uid:user.uid,usuario:nom(yo),s:d.s,lado:$("olado").value,tipo:t,cant:n,
-      ...(t!=="mercado"?{limite:lim}:{}),...(t==="stop_limite"?{stop:stp,activada:false}:{}),
-      vigencia:$("ovig").value,dia:ba().dia,estado:"pendiente",t:Date.now()});
-    m.textContent="Orden publicada. Se evalúa en cada actualización de precios, cada 5 minutos como máximo.";$("cant").value="";
-  }catch{m.textContent="No se pudo publicar la orden. Probá de nuevo.";}
-};
+def mon_de(s, d, precios):
+    """Cuenta en la que se opera: ARS (pesos), USD (dólar MEP, terminados en D) o CCL (dólar cable, terminados en C)."""
+    if not RE_USD.search(d.get("moneda") or ""):
+        return "ARS"
+    base = precios.get(s[:-1])
+    return "CCL" if s.endswith("C") and base and not RE_USD.search(base.get("moneda") or "") else "USD"
 
-cargar().catch(()=>{$("estado").textContent="Todavía no hay precios. Ejecutá primero la acción en GitHub.";});
-setInterval(()=>{reloj();relojBA();},1000);relojBA();
-$("fxc").onclick=()=>cambio("CD");$("fxv").onclick=()=>cambio("VD");$("fxn").addEventListener("input",estFx);$("fxt").addEventListener("change",estFx);
-setInterval(()=>{if(elegido&&tab==="mercado")pedirLibro(elegido);},120000);
-</script>
-</body>
-</html>
+
+def tc(precios, tipo="MEP"):
+    """Dólar implícito: se compra un bono en pesos y se vende su versión en dólares (D = MEP, C = cable/CCL)."""
+    suf = "C" if tipo == "CCL" else "D"
+    for a in ("AL30", "GD30", "AL35", "GD35"):
+        pa, pb = precios.get(a), precios.get(a + suf)
+        if pa and pb and pa.get("ultimo") and pb.get("ultimo"):
+            f = lambda d, k: d.get(k) or d["ultimo"]
+            return {"compra": f(pa, "venta") / f(pb, "compra"), "venta": f(pa, "compra") / f(pb, "venta"),
+                    "mid": pa["ultimo"] / pb["ultimo"], "par": a}
+    if tipo == "CCL":
+        m = fxmed(precios)
+        return {"compra": m, "venta": m, "mid": m, "par": "CEDEARs"}
+    return None
+
+
+def fxmed(precios):
+    r = sorted(d["ultimo"] / precios[s + "C"]["ultimo"] for s, d in precios.items()
+               if d.get("tipo") == "cedears" and d.get("ultimo") and (precios.get(s + "C") or {}).get("ultimo"))
+    return r[len(r) // 2] if r else 1
+
+
+def ejecutar(db, oref, o, px, tasa, mon="ARS"):
+    from firebase_admin import firestore
+    uref = db.collection("users").document(o["uid"])
+    campo = {"ARS": "cash", "USD": "usd", "CCL": "ccl"}[mon]
+
+    @firestore.transactional
+    def paso(tx):
+        cur = oref.get(transaction=tx).to_dict()
+        if not cur or cur.get("estado") != "pendiente":
+            return False
+        u = uref.get(transaction=tx).to_dict()
+        pos, cash, n, s = dict(u.get("pos") or {}), u.get(campo, 0), o["cant"], o["s"]
+        bruto = n * px
+        com = round(bruto * tasa, 2)
+        p = pos.get(s, {"c": 0, "costo": 0})
+        if o["lado"] == "C":
+            if bruto + com > cash:
+                tx.update(oref, {"estado": "rechazada", "motivo": "Saldo insuficiente en " + {"ARS": "pesos.", "USD": "dólares MEP.", "CCL": "dólares CCL."}[mon]})
+                return False
+            cash -= bruto + com
+            pos[s] = {"c": p["c"] + n, "costo": p["costo"] + bruto + com, "m": mon}
+        else:
+            if n > p["c"]:
+                tx.update(oref, {"estado": "rechazada", "motivo": "No había cantidad suficiente para vender."})
+                return False
+            cash += bruto - com
+            resto = p["c"] - n
+            if resto:
+                pos[s] = {"c": resto, "costo": p["costo"] / p["c"] * resto, "m": mon}
+            else:
+                pos.pop(s)
+        ms = int(time.time() * 1000)
+        ops = (u.get("ops") or []) + [{"t": ms, "s": s, "l": o["lado"], "c": n, "p": px, "com": com, "m": mon}]
+        tx.update(uref, {campo: round(cash, 2), "pos": pos, "ops": ops[-1000:]})
+        tx.update(oref, {"estado": "ejecutada", "fill": {"px": px, "com": com, "t": ms}})
+        return True
+    return paso(db.transaction())
+
+
+def cambio(db, oref, o, precios):
+    """Compra o venta de dólares (MEP o CCL): dos operaciones, con comisión en cada una."""
+    tipo = o.get("tc", "MEP")
+    t = tc(precios, tipo)
+    if not t:
+        return False
+    from firebase_admin import firestore
+    uref = db.collection("users").document(o["uid"])
+    campo = "ccl" if tipo == "CCL" else "usd"
+
+    @firestore.transactional
+    def paso(tx):
+        cur = oref.get(transaction=tx).to_dict()
+        if not cur or cur.get("estado") != "pendiente":
+            return False
+        u = uref.get(transaction=tx).to_dict()
+        n, cash, usd = o["cant"], u["cash"], u.get(campo, 0)
+        if o["lado"] == "CD":
+            p = t["compra"]          # el alumno paga el precio de venta del mercado
+            ars = n * p
+            com = round(ars * 2 * 0.0071, 2)
+            if ars + com > cash:
+                tx.update(oref, {"estado": "rechazada", "motivo": "Pesos insuficientes."})
+                return False
+            cash -= ars + com
+            usd += n
+        else:
+            p = t["venta"]           # el alumno recibe el precio de compra del mercado
+            if n > usd:
+                tx.update(oref, {"estado": "rechazada", "motivo": "Dólares insuficientes."})
+                return False
+            ars = n * p
+            com = round(ars * 2 * 0.0071, 2)
+            cash += ars - com
+            usd -= n
+        ms = int(time.time() * 1000)
+        ops = (u.get("ops") or []) + [{"t": ms, "s": "USD", "l": o["lado"], "c": n, "p": round(p, 4), "com": com, "m": "ARS", "tc": tipo}]
+        tx.update(uref, {"cash": round(cash, 2), campo: round(usd, 2), "ops": ops[-1000:]})
+        tx.update(oref, {"estado": "ejecutada", "fill": {"px": round(p, 4), "com": com, "t": ms}})
+        return True
+    return paso(db.transaction())
+
+
+def og(url):
+    """Obtiene título e imagen de un enlace (vista previa)."""
+    out = {"url": url, "titulo": "", "imagen": "", "sitio": ""}
+    try:
+        m = re.search(r"(?:youtube\.com/(?:watch\?v=|shorts/|embed/)|youtu\.be/)([\w-]{11})", url)
+        if m:
+            out["imagen"] = f"https://img.youtube.com/vi/{m.group(1)}/hqdefault.jpg"
+            out["sitio"] = "YouTube"
+            req = urllib.request.Request("https://www.youtube.com/oembed?format=json&url=" + urllib.parse.quote(url, safe=""),
+                                         headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=10) as r:
+                out["titulo"] = json.load(r).get("title", "")
+            return out
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+            "Accept-Language": "es"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            h = r.read(300000).decode("utf-8", "replace")
+
+        def meta(k):
+            for pat in (r'<meta[^>]+(?:property|name)=["\']%s["\'][^>]*content=["\']([^"\']*)' % k,
+                        r'<meta[^>]+content=["\']([^"\']*)["\'][^>]*(?:property|name)=["\']%s["\']' % k):
+                f = re.search(pat, h, re.I)
+                if f:
+                    return html.unescape(f.group(1)).strip()
+            return ""
+        t = re.search(r"<title[^>]*>([^<]*)", h, re.I)
+        out["titulo"] = meta("og:title") or (html.unescape(t.group(1)).strip() if t else "")
+        out["imagen"] = meta("og:image")
+        out["sitio"] = meta("og:site_name") or urllib.parse.urlparse(url).netloc
+    except Exception as e:
+        print("Vista previa sin datos:", url[:60], type(e).__name__)
+    return out
+
+
+def vistas_previas(db):
+    """Agrega vista previa a las novedades nuevas que tengan enlaces."""
+    for dd in db.collection("novedades").stream():
+        n = dd.to_dict()
+        if n.get("previews") is not None:
+            continue
+        urls = re.findall(r"https?://[^\s<]+", n.get("texto", ""))[:3]
+        dd.reference.update({"previews": [og(u) for u in urls]})
+
+
+def _db():
+    import firebase_admin
+    from firebase_admin import credentials, firestore
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(credentials.Certificate(json.loads(os.environ["FIREBASE_CLAVE"])))
+    return firestore.client()
+
+
+def libros(db, tok):
+    """Guarda el libro de ofertas real (IOL) de los activos que los alumnos están mirando."""
+    ahora = int(time.time() * 1000)
+    for dd in db.collection("libro_pedidos").stream():
+        p = dd.to_dict()
+        if ahora - p.get("t", 0) > 180000:   # hace más de 3 minutos que nadie lo mira
+            continue
+        s = p["s"]
+        try:
+            d = llamar(f"/broker/market-data/{urllib.parse.quote(s)}/depth",
+                       {"market": "BCBA", "term": PLAZO}, token=tok)["data"]
+        except Exception as e:
+            print(f"Libro de {s} no disponible: {e}")
+            continue
+        nivel = lambda L: [{"p": x["price"], "c": x["size"]}
+                           for x in sorted(L or [], key=lambda x: x.get("position", 0))[:6]]
+        bids, asks = nivel(d.get("bids")), nivel(d.get("asks"))
+        ref = db.collection("libros").document(s)
+        if bids or asks:
+            ref.set({"s": s, "t": ahora, "tl": ahora, "vacio": False, "bids": bids, "asks": asks})
+        else:   # sin ofertas (mercado cerrado): se conserva el último libro real y se marca como vacío
+            ref.set({"s": s, "t": ahora, "vacio": True, "bids": [], "asks": []}, merge=True)
+        time.sleep(0.3)
+
+
+def pulso():
+    if not os.environ.get("FIREBASE_CLAVE") or not TOKEN.get("t"):
+        return
+    try:
+        libros(_db(), TOKEN["t"])
+    except Exception as e:
+        print("Libros de ofertas con error:", e)
+
+
+def dividendos(db, precios, hoy):
+    """Acredita los dividendos en dólares a quienes tenían el activo antes de la fecha de corte."""
+    from firebase_admin import firestore
+    try:
+        cal = json.load(open("data/dividendos.json", encoding="utf-8"))
+    except Exception as e:
+        print("Sin calendario de dividendos:", e)
+        return
+    for d in [x for x in cal.get("dividendos", []) if x["pago"] <= hoy]:
+        s = d["s"]
+        ret = d.get("ret", cal.get("retencion_por_defecto", 0.30))
+        corte = int(datetime.strptime(d["ex"], "%Y-%m-%d").replace(tzinfo=timezone(timedelta(hours=-3))).timestamp() * 1000)
+        for ud in db.collection("users").stream():
+            u = ud.to_dict()
+            if d["id"] in (u.get("divs") or []):
+                continue
+            qty = 0
+            for o in sorted(u.get("ops") or [], key=lambda x: x["t"]):
+                if o["t"] < corte and o["s"] == s and o["l"] in ("C", "V"):
+                    qty += o["c"] if o["l"] == "C" else -o["c"]
+            uref = ud.reference
+
+            @firestore.transactional
+            def pagar(tx):
+                cur = uref.get(transaction=tx).to_dict()
+                if d["id"] in (cur.get("divs") or []):
+                    return
+                upd = {"divs": (cur.get("divs") or []) + [d["id"]]}
+                if qty > 0:
+                    neto = round(qty * d["usd"] * (1 - ret), 2)
+                    upd["usd"] = round(cur.get("usd", 0) + neto, 2)
+                    upd["ops"] = ((cur.get("ops") or []) + [{"t": int(time.time() * 1000), "s": s, "l": "D", "c": qty,
+                                  "p": round(d["usd"] * (1 - ret), 4), "com": 0, "monto": neto, "m": "USD",
+                                  "usd": d["usd"], "ret": ret}])[-1000:]
+                tx.update(uref, upd)
+            pagar(db.transaction())
+            if qty > 0:
+                print(f"Dividendo {d['id']} acreditado a {u.get('usuario')}: {qty} unidades.")
+
+
+ULT = {"t": 0}
+
+
+def evolucion(db, precios):
+    """Guarda el valor de cada cartera (cada 15 minutos) para el gráfico de evolución."""
+    ahora = int(time.time() * 1000)
+    if ahora - ULT["t"] < 14 * 60 * 1000:
+        return
+    v = {}
+    mep = (tc(precios, "MEP") or {}).get("mid") or fxmed(precios)
+    ccl = (tc(precios, "CCL") or {}).get("mid") or mep
+    for dd in db.collection("users").stream():
+        u = dd.to_dict()
+        val = u.get("cash", 0) + u.get("usd", 0) * mep + u.get("ccl", 0) * ccl
+        for s, p in (u.get("pos") or {}).items():
+            px = (precios.get(s) or {}).get("ultimo") or (p["costo"] / p["c"] if p["c"] else 0)
+            val += p["c"] * px * {"USD": mep, "CCL": ccl}.get(p.get("m"), 1)
+        v[dd.id] = round(val, 2)
+    db.collection("evolucion").document(str(ahora)).set({"t": ahora, "v": v})
+    ULT["t"] = ahora
+
+
+def motor(precios):
+    """Evalúa las órdenes pendientes con los precios reales. Solo corre en horario de mercado."""
+    clave = os.environ.get("FIREBASE_CLAVE")
+    if not clave:
+        print("Motor de órdenes: falta el secreto FIREBASE_CLAVE, se omite.")
+        return
+    import firebase_admin
+    from firebase_admin import credentials, firestore
+    from zoneinfo import ZoneInfo
+    from google.cloud.firestore_v1.base_query import FieldFilter
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(credentials.Certificate(json.loads(clave)))
+    db = firestore.client()
+    try:
+        vistas_previas(db)
+    except Exception as e:
+        print("Vistas previas con error:", e)
+    ahora = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
+    hoy, mins = ahora.strftime("%Y-%m-%d"), ahora.hour * 60 + ahora.minute
+    abierto = ahora.weekday() < 5 and 645 <= mins < 1080
+    docs = sorted(db.collection("ordenes").where(filter=FieldFilter("estado", "==", "pendiente")).stream(),
+                  key=lambda x: x.to_dict().get("t", 0))
+    hechas = 0
+    for dd in docs:
+        o, oref = dd.to_dict(), dd.reference
+        if o.get("vigencia") == "dia" and (o.get("dia", "") < hoy or (o.get("dia") == hoy and mins >= 1080)):
+            oref.update({"estado": "vencida"})
+            continue
+        if o["s"] == "USD":
+            if abierto:
+                hechas += cambio(db, oref, o, precios)
+            continue
+        d = precios.get(o["s"])
+        if not abierto or not d or not (d.get("ultimo") or 0) > 0:
+            continue
+        if not operable(d):
+            oref.update({"estado": "rechazada", "motivo": "Activo no habilitado para operar."})
+            continue
+        ult = d["ultimo"]
+        compra, venta = d.get("compra") or ult, d.get("venta") or ult   # compra = oferta de compra; venta = oferta de venta
+        c = o["lado"] == "C"
+        ref = venta if c else compra
+        if o["tipo"] == "stop_limite" and not o.get("activada"):
+            if (c and ult >= o["stop"]) or (not c and ult <= o["stop"]):
+                oref.update({"activada": True})
+            else:
+                continue
+        if o["tipo"] != "mercado" and ((c and ref > o["limite"]) or (not c and ref < o["limite"])):
+            continue
+        hechas += ejecutar(db, oref, o, ref, TASA(d), mon_de(o["s"], d, precios))
+    print(f"Motor de órdenes: {len(docs)} pendientes, {hechas} ejecutadas. Mercado {'abierto' if abierto else 'cerrado'}.")
+    try:
+        dividendos(db, precios, hoy)
+        if abierto:
+            evolucion(db, precios)
+    except Exception as e:
+        print("Dividendos o evolución con error:", e)
+
+
+def main():
+    usuario, clave = os.environ.get("IOL_USUARIO"), os.environ.get("IOL_CLAVE")
+    if not usuario or not clave:
+        sys.exit("Faltan los secretos IOL_USUARIO e IOL_CLAVE en GitHub.")
+    fin = time.time() + int(os.environ.get("MINUTOS") or 0) * 60
+    ciclo = 0
+    while True:
+        ciclo += 1
+        try:
+            salida = traer(usuario, clave, ciclo == 1)
+            publicar(salida)
+            try:
+                motor(salida["precios"])
+            except Exception as e:
+                print("Motor de órdenes con error:", e)
+            print(f"Ciclo {ciclo} OK")
+        except Exception as e:
+            print(f"Ciclo {ciclo} con error: {e}")
+            if ciclo == 1:
+                sys.exit("Falló el primer intento. Puede ser usuario/clave, la verificación en dos pasos "
+                         "o un bloqueo de IOL a los servidores de GitHub.")
+        if time.time() + INTERVALO > fin:
+            break
+        for _ in range(INTERVALO // 30):
+            time.sleep(30)
+            pulso()
+
+
+main()
