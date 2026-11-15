@@ -1,0 +1,15 @@
+{
+  "fuente": "Rankia Argentina, calendario de dividendos de CEDEARs actualizado el 15/10/2026 (datos de relaciones con inversores, Nasdaq y ratios de BYMA). Montos en USD por CEDEAR, antes de retenciones.",
+  "retencion_por_defecto": 0.30,
+  "dividendos": [
+    {"id":"EQNR-2026-11-16","s":"EQNR","ex":"2026-11-16","pago":"2026-11-25","usd":0.065},
+    {"id":"BNG-2026-11-17","s":"BNG","ex":"2026-11-17","pago":"2026-12-01","usd":0.144},
+    {"id":"MSFT-2026-11-19","s":"MSFT","ex":"2026-11-19","pago":"2026-12-10","usd":0.0327},
+    {"id":"JNJ-2026-11-24","s":"JNJ","ex":"2026-11-24","pago":"2026-12-08","usd":0.0893},
+    {"id":"MCD-2026-12-01","s":"MCD","ex":"2026-12-01","pago":"2026-12-15","usd":0.0804},
+    {"id":"ITUB-2026-12-02","s":"ITUB","ex":"2026-12-02","pago":"2027-01-11","usd":0.0032,"ret":0.10},
+    {"id":"GRMN-2026-12-11","s":"GRMN","ex":"2026-12-11","pago":"2026-12-24","usd":0.35},
+    {"id":"WMT-2026-12-11","s":"WMT","ex":"2026-12-11","pago":"2027-01-04","usd":0.0138},
+    {"id":"ARCO-2026-12-23","s":"ARCO","ex":"2026-12-23","pago":"2026-12-29","usd":0.14}
+  ]
+}
