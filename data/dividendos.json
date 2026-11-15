@@ -1,15 +1,724 @@
 {
-  "fuente": "Rankia Argentina, calendario de dividendos de CEDEARs actualizado el 15/10/2026 (datos de relaciones con inversores, Nasdaq y ratios de BYMA). Montos en USD por CEDEAR, antes de retenciones.",
-  "retencion_por_defecto": 0.30,
-  "dividendos": [
-    {"id":"EQNR-2026-11-16","s":"EQNR","ex":"2026-11-16","pago":"2026-11-25","usd":0.065},
-    {"id":"BNG-2026-11-17","s":"BNG","ex":"2026-11-17","pago":"2026-12-01","usd":0.144},
-    {"id":"MSFT-2026-11-19","s":"MSFT","ex":"2026-11-19","pago":"2026-12-10","usd":0.0327},
-    {"id":"JNJ-2026-11-24","s":"JNJ","ex":"2026-11-24","pago":"2026-12-08","usd":0.0893},
-    {"id":"MCD-2026-12-01","s":"MCD","ex":"2026-12-01","pago":"2026-12-15","usd":0.0804},
-    {"id":"ITUB-2026-12-02","s":"ITUB","ex":"2026-12-02","pago":"2027-01-11","usd":0.0032,"ret":0.10},
-    {"id":"GRMN-2026-12-11","s":"GRMN","ex":"2026-12-11","pago":"2026-12-24","usd":0.35},
-    {"id":"WMT-2026-12-11","s":"WMT","ex":"2026-12-11","pago":"2027-01-04","usd":0.0138},
-    {"id":"ARCO-2026-12-23","s":"ARCO","ex":"2026-12-23","pago":"2026-12-29","usd":0.14}
-  ]
+ "fuente": "Rankia Argentina, calendario de dividendos de CEDEARs (actualizado el 15/10/2026), con datos de las compañías, Nasdaq y BYMA. Las fechas y montos marcados como estimados se proyectan con la periodicidad habitual de cada empresa y pueden cambiar.",
+ "retencion_por_defecto": 0.3,
+ "dividendos": [
+  {
+   "id": "EQNR-2026-11-16",
+   "s": "EQNR",
+   "empresa": "Equinor",
+   "frecuencia": "Trimestral",
+   "ex": "2026-11-16",
+   "pago": "2026-11-25",
+   "usd": 0.065
+  },
+  {
+   "id": "BNG-2026-11-17",
+   "s": "BNG",
+   "empresa": "Bunge",
+   "frecuencia": "Trimestral",
+   "ex": "2026-11-17",
+   "pago": "2026-12-01",
+   "usd": 0.144
+  },
+  {
+   "id": "MSFT-2026-11-19",
+   "s": "MSFT",
+   "empresa": "Microsoft",
+   "frecuencia": "Trimestral",
+   "ex": "2026-11-19",
+   "pago": "2026-12-10",
+   "usd": 0.0327
+  },
+  {
+   "id": "JNJ-2026-11-24",
+   "s": "JNJ",
+   "empresa": "Johnson & Johnson",
+   "frecuencia": "Trimestral",
+   "ex": "2026-11-24",
+   "pago": "2026-12-08",
+   "usd": 0.0893
+  },
+  {
+   "id": "KO-2026-11-27",
+   "s": "KO",
+   "empresa": "Coca-Cola",
+   "frecuencia": "Trimestral",
+   "ex": "2026-11-27",
+   "pago": "2026-12-15",
+   "usd": 0.106,
+   "estimado": true
+  },
+  {
+   "id": "MCD-2026-12-01",
+   "s": "MCD",
+   "empresa": "McDonald's",
+   "frecuencia": "Trimestral",
+   "ex": "2026-12-01",
+   "pago": "2026-12-15",
+   "usd": 0.0804
+  },
+  {
+   "id": "ITUB-2026-12-02",
+   "s": "ITUB",
+   "empresa": "Itaú Unibanco",
+   "frecuencia": "Mensual",
+   "ex": "2026-12-02",
+   "pago": "2027-01-11",
+   "usd": 0.0032,
+   "ret": 0.1
+  },
+  {
+   "id": "OXY-2026-12-10",
+   "s": "OXY",
+   "empresa": "Occidental Petroleum",
+   "frecuencia": "Trimestral",
+   "ex": "2026-12-10",
+   "pago": "2027-01-15",
+   "usd": 0.056,
+   "estimado": true
+  },
+  {
+   "id": "GRMN-2026-12-11",
+   "s": "GRMN",
+   "empresa": "Garmin",
+   "frecuencia": "Trimestral",
+   "ex": "2026-12-11",
+   "pago": "2026-12-24",
+   "usd": 0.35
+  },
+  {
+   "id": "WMT-2026-12-11",
+   "s": "WMT",
+   "empresa": "Walmart",
+   "frecuencia": "Trimestral",
+   "ex": "2026-12-11",
+   "pago": "2027-01-04",
+   "usd": 0.0138
+  },
+  {
+   "id": "TMO-2026-12-15",
+   "s": "TMO",
+   "empresa": "Thermo Fisher Scientific",
+   "frecuencia": "Trimestral",
+   "ex": "2026-12-15",
+   "pago": "2027-01-15",
+   "usd": 0.0214,
+   "estimado": true
+  },
+  {
+   "id": "MSI-2026-12-16",
+   "s": "MSI",
+   "empresa": "Motorola Solutions",
+   "frecuencia": "Trimestral",
+   "ex": "2026-12-16",
+   "pago": "2027-01-15",
+   "usd": 0.0605,
+   "estimado": true
+  },
+  {
+   "id": "ARCO-2026-12-23",
+   "s": "ARCO",
+   "empresa": "Arcos Dorados",
+   "frecuencia": "Trimestral",
+   "ex": "2026-12-23",
+   "pago": "2026-12-29",
+   "usd": 0.14
+  },
+  {
+   "id": "MDT-2026-12-25",
+   "s": "MDT",
+   "empresa": "Medtronic",
+   "frecuencia": "Trimestral",
+   "ex": "2026-12-25",
+   "pago": "2027-01-18",
+   "usd": 0.18,
+   "estimado": true
+  },
+  {
+   "id": "DE-2026-12-30",
+   "s": "DE",
+   "empresa": "Deere & Co",
+   "frecuencia": "Trimestral",
+   "ex": "2026-12-30",
+   "pago": "2027-02-09",
+   "usd": 0.0405,
+   "estimado": true
+  },
+  {
+   "id": "XROX-2026-12-30",
+   "s": "XROX",
+   "empresa": "Xerox Holdings",
+   "frecuencia": "Trimestral",
+   "ex": "2026-12-30",
+   "pago": "2027-02-01",
+   "usd": 0.025,
+   "estimado": true
+  },
+  {
+   "id": "TTE-2026-12-31",
+   "s": "TTE",
+   "empresa": "TotalEnergies",
+   "frecuencia": "Trimestral",
+   "ex": "2026-12-31",
+   "pago": "2027-01-22",
+   "usd": 0.3358,
+   "estimado": true
+  },
+  {
+   "id": "BMY-2027-01-01",
+   "s": "BMY",
+   "empresa": "Bristol-Myers Squibb",
+   "frecuencia": "Trimestral",
+   "ex": "2027-01-01",
+   "pago": "2027-02-02",
+   "usd": 0.21,
+   "estimado": true
+  },
+  {
+   "id": "CSCO-2027-01-01",
+   "s": "CSCO",
+   "empresa": "Cisco Systems",
+   "frecuencia": "Trimestral",
+   "ex": "2027-01-01",
+   "pago": "2027-01-21",
+   "usd": 0.084,
+   "estimado": true
+  },
+  {
+   "id": "ITUB-2027-01-01",
+   "s": "ITUB",
+   "empresa": "Itaú Unibanco",
+   "frecuencia": "Mensual",
+   "ex": "2027-01-01",
+   "pago": "2027-02-11",
+   "usd": 0.0032,
+   "ret": 0.1,
+   "estimado": true
+  },
+  {
+   "id": "PM-2027-01-01",
+   "s": "PM",
+   "empresa": "Philip Morris International",
+   "frecuencia": "Trimestral",
+   "ex": "2027-01-01",
+   "pago": "2027-01-26",
+   "usd": 0.0889,
+   "estimado": true
+  },
+  {
+   "id": "SYY-2027-01-01",
+   "s": "SYY",
+   "empresa": "Sysco",
+   "frecuencia": "Trimestral",
+   "ex": "2027-01-01",
+   "pago": "2027-01-25",
+   "usd": 0.0688,
+   "estimado": true
+  },
+  {
+   "id": "JPM-2027-01-06",
+   "s": "JPM",
+   "empresa": "JPMorgan Chase",
+   "frecuencia": "Trimestral",
+   "ex": "2027-01-06",
+   "pago": "2027-02-01",
+   "usd": 0.11,
+   "estimado": true
+  },
+  {
+   "id": "AAP-2027-01-08",
+   "s": "AAP",
+   "empresa": "Advance Auto Parts",
+   "frecuencia": "Trimestral",
+   "ex": "2027-01-08",
+   "pago": "2027-01-25",
+   "usd": 0.0179,
+   "estimado": true
+  },
+  {
+   "id": "MA-2027-01-08",
+   "s": "MA",
+   "empresa": "Mastercard",
+   "frecuencia": "Trimestral",
+   "ex": "2027-01-08",
+   "pago": "2027-02-09",
+   "usd": 0.0264,
+   "estimado": true
+  },
+  {
+   "id": "VZ-2027-01-08",
+   "s": "VZ",
+   "empresa": "Verizon",
+   "frecuencia": "Trimestral",
+   "ex": "2027-01-08",
+   "pago": "2027-02-02",
+   "usd": 0.1769,
+   "estimado": true
+  },
+  {
+   "id": "T-2027-01-12",
+   "s": "T",
+   "empresa": "AT&T",
+   "frecuencia": "Trimestral",
+   "ex": "2027-01-12",
+   "pago": "2027-02-02",
+   "usd": 0.0925,
+   "estimado": true
+  },
+  {
+   "id": "ABBV-2027-01-15",
+   "s": "ABBV",
+   "empresa": "AbbVie",
+   "frecuencia": "Trimestral",
+   "ex": "2027-01-15",
+   "pago": "2027-02-16",
+   "usd": 0.173,
+   "estimado": true
+  },
+  {
+   "id": "ABT-2027-01-15",
+   "s": "ABT",
+   "empresa": "Abbott Laboratories",
+   "frecuencia": "Trimestral",
+   "ex": "2027-01-15",
+   "pago": "2027-02-16",
+   "usd": 0.1575,
+   "estimado": true
+  },
+  {
+   "id": "PG-2027-01-22",
+   "s": "PG",
+   "empresa": "Procter & Gamble",
+   "frecuencia": "Trimestral",
+   "ex": "2027-01-22",
+   "pago": "2027-02-16",
+   "usd": 0.0726,
+   "estimado": true
+  },
+  {
+   "id": "ITUB-2027-02-02",
+   "s": "ITUB",
+   "empresa": "Itaú Unibanco",
+   "frecuencia": "Mensual",
+   "ex": "2027-02-02",
+   "pago": "2027-03-11",
+   "usd": 0.0032,
+   "ret": 0.1,
+   "estimado": true
+  },
+  {
+   "id": "PFE-2027-02-05",
+   "s": "PFE",
+   "empresa": "Pfizer",
+   "frecuencia": "Trimestral",
+   "ex": "2027-02-05",
+   "pago": "2027-03-08",
+   "usd": 0.1075,
+   "estimado": true
+  },
+  {
+   "id": "HON-2027-02-12",
+   "s": "HON",
+   "empresa": "Honeywell",
+   "frecuencia": "Trimestral",
+   "ex": "2027-02-12",
+   "pago": "2027-03-04",
+   "usd": 0.0875,
+   "estimado": true
+  },
+  {
+   "id": "EQNR-2027-02-16",
+   "s": "EQNR",
+   "empresa": "Equinor",
+   "frecuencia": "Trimestral",
+   "ex": "2027-02-16",
+   "pago": "2027-02-25",
+   "usd": 0.065,
+   "estimado": true
+  },
+  {
+   "id": "BNG-2027-02-17",
+   "s": "BNG",
+   "empresa": "Bunge",
+   "frecuencia": "Trimestral",
+   "ex": "2027-02-17",
+   "pago": "2027-03-01",
+   "usd": 0.144,
+   "estimado": true
+  },
+  {
+   "id": "MSFT-2027-02-19",
+   "s": "MSFT",
+   "empresa": "Microsoft",
+   "frecuencia": "Trimestral",
+   "ex": "2027-02-19",
+   "pago": "2027-03-10",
+   "usd": 0.0327,
+   "estimado": true
+  },
+  {
+   "id": "JNJ-2027-02-24",
+   "s": "JNJ",
+   "empresa": "Johnson & Johnson",
+   "frecuencia": "Trimestral",
+   "ex": "2027-02-24",
+   "pago": "2027-03-08",
+   "usd": 0.0893,
+   "estimado": true
+  },
+  {
+   "id": "KO-2027-02-26",
+   "s": "KO",
+   "empresa": "Coca-Cola",
+   "frecuencia": "Trimestral",
+   "ex": "2027-02-26",
+   "pago": "2027-03-15",
+   "usd": 0.106,
+   "estimado": true
+  },
+  {
+   "id": "MCD-2027-03-01",
+   "s": "MCD",
+   "empresa": "McDonald's",
+   "frecuencia": "Trimestral",
+   "ex": "2027-03-01",
+   "pago": "2027-03-15",
+   "usd": 0.0804,
+   "estimado": true
+  },
+  {
+   "id": "ITUB-2027-03-02",
+   "s": "ITUB",
+   "empresa": "Itaú Unibanco",
+   "frecuencia": "Mensual",
+   "ex": "2027-03-02",
+   "pago": "2027-04-12",
+   "usd": 0.0032,
+   "ret": 0.1,
+   "estimado": true
+  },
+  {
+   "id": "OXY-2027-03-10",
+   "s": "OXY",
+   "empresa": "Occidental Petroleum",
+   "frecuencia": "Trimestral",
+   "ex": "2027-03-10",
+   "pago": "2027-04-15",
+   "usd": 0.056,
+   "estimado": true
+  },
+  {
+   "id": "GRMN-2027-03-11",
+   "s": "GRMN",
+   "empresa": "Garmin",
+   "frecuencia": "Trimestral",
+   "ex": "2027-03-11",
+   "pago": "2027-03-24",
+   "usd": 0.35,
+   "estimado": true
+  },
+  {
+   "id": "WMT-2027-03-11",
+   "s": "WMT",
+   "empresa": "Walmart",
+   "frecuencia": "Trimestral",
+   "ex": "2027-03-11",
+   "pago": "2027-04-05",
+   "usd": 0.0138,
+   "estimado": true
+  },
+  {
+   "id": "TMO-2027-03-15",
+   "s": "TMO",
+   "empresa": "Thermo Fisher Scientific",
+   "frecuencia": "Trimestral",
+   "ex": "2027-03-15",
+   "pago": "2027-04-15",
+   "usd": 0.0214,
+   "estimado": true
+  },
+  {
+   "id": "MSI-2027-03-16",
+   "s": "MSI",
+   "empresa": "Motorola Solutions",
+   "frecuencia": "Trimestral",
+   "ex": "2027-03-16",
+   "pago": "2027-04-15",
+   "usd": 0.0605,
+   "estimado": true
+  },
+  {
+   "id": "ARCO-2027-03-23",
+   "s": "ARCO",
+   "empresa": "Arcos Dorados",
+   "frecuencia": "Trimestral",
+   "ex": "2027-03-23",
+   "pago": "2027-03-29",
+   "usd": 0.14,
+   "estimado": true
+  },
+  {
+   "id": "MDT-2027-03-25",
+   "s": "MDT",
+   "empresa": "Medtronic",
+   "frecuencia": "Trimestral",
+   "ex": "2027-03-25",
+   "pago": "2027-04-16",
+   "usd": 0.18,
+   "estimado": true
+  },
+  {
+   "id": "DE-2027-03-30",
+   "s": "DE",
+   "empresa": "Deere & Co",
+   "frecuencia": "Trimestral",
+   "ex": "2027-03-30",
+   "pago": "2027-05-10",
+   "usd": 0.0405,
+   "estimado": true
+  },
+  {
+   "id": "XROX-2027-03-30",
+   "s": "XROX",
+   "empresa": "Xerox Holdings",
+   "frecuencia": "Trimestral",
+   "ex": "2027-03-30",
+   "pago": "2027-04-30",
+   "usd": 0.025,
+   "estimado": true
+  },
+  {
+   "id": "TTE-2027-03-31",
+   "s": "TTE",
+   "empresa": "TotalEnergies",
+   "frecuencia": "Trimestral",
+   "ex": "2027-03-31",
+   "pago": "2027-04-22",
+   "usd": 0.3358,
+   "estimado": true
+  },
+  {
+   "id": "BMY-2027-04-02",
+   "s": "BMY",
+   "empresa": "Bristol-Myers Squibb",
+   "frecuencia": "Trimestral",
+   "ex": "2027-04-02",
+   "pago": "2027-05-03",
+   "usd": 0.21,
+   "estimado": true
+  },
+  {
+   "id": "CSCO-2027-04-02",
+   "s": "CSCO",
+   "empresa": "Cisco Systems",
+   "frecuencia": "Trimestral",
+   "ex": "2027-04-02",
+   "pago": "2027-04-21",
+   "usd": 0.084,
+   "estimado": true
+  },
+  {
+   "id": "ITUB-2027-04-02",
+   "s": "ITUB",
+   "empresa": "Itaú Unibanco",
+   "frecuencia": "Mensual",
+   "ex": "2027-04-02",
+   "pago": "2027-05-11",
+   "usd": 0.0032,
+   "ret": 0.1,
+   "estimado": true
+  },
+  {
+   "id": "PM-2027-04-02",
+   "s": "PM",
+   "empresa": "Philip Morris International",
+   "frecuencia": "Trimestral",
+   "ex": "2027-04-02",
+   "pago": "2027-04-26",
+   "usd": 0.0889,
+   "estimado": true
+  },
+  {
+   "id": "SYY-2027-04-02",
+   "s": "SYY",
+   "empresa": "Sysco",
+   "frecuencia": "Trimestral",
+   "ex": "2027-04-02",
+   "pago": "2027-04-23",
+   "usd": 0.0688,
+   "estimado": true
+  },
+  {
+   "id": "JPM-2027-04-06",
+   "s": "JPM",
+   "empresa": "JPMorgan Chase",
+   "frecuencia": "Trimestral",
+   "ex": "2027-04-06",
+   "pago": "2027-04-30",
+   "usd": 0.11,
+   "estimado": true
+  },
+  {
+   "id": "AAP-2027-04-09",
+   "s": "AAP",
+   "empresa": "Advance Auto Parts",
+   "frecuencia": "Trimestral",
+   "ex": "2027-04-09",
+   "pago": "2027-04-23",
+   "usd": 0.0179,
+   "estimado": true
+  },
+  {
+   "id": "MA-2027-04-09",
+   "s": "MA",
+   "empresa": "Mastercard",
+   "frecuencia": "Trimestral",
+   "ex": "2027-04-09",
+   "pago": "2027-05-10",
+   "usd": 0.0264,
+   "estimado": true
+  },
+  {
+   "id": "VZ-2027-04-09",
+   "s": "VZ",
+   "empresa": "Verizon",
+   "frecuencia": "Trimestral",
+   "ex": "2027-04-09",
+   "pago": "2027-05-03",
+   "usd": 0.1769,
+   "estimado": true
+  },
+  {
+   "id": "T-2027-04-12",
+   "s": "T",
+   "empresa": "AT&T",
+   "frecuencia": "Trimestral",
+   "ex": "2027-04-12",
+   "pago": "2027-05-03",
+   "usd": 0.0925,
+   "estimado": true
+  },
+  {
+   "id": "ABBV-2027-04-15",
+   "s": "ABBV",
+   "empresa": "AbbVie",
+   "frecuencia": "Trimestral",
+   "ex": "2027-04-15",
+   "pago": "2027-05-17",
+   "usd": 0.173,
+   "estimado": true
+  },
+  {
+   "id": "ABT-2027-04-15",
+   "s": "ABT",
+   "empresa": "Abbott Laboratories",
+   "frecuencia": "Trimestral",
+   "ex": "2027-04-15",
+   "pago": "2027-05-17",
+   "usd": 0.1575,
+   "estimado": true
+  },
+  {
+   "id": "DEO-2027-04-16",
+   "s": "DEO",
+   "empresa": "Diageo",
+   "frecuencia": "Semestral",
+   "ex": "2027-04-16",
+   "pago": "2027-06-03",
+   "usd": 0.2,
+   "ret": 0.0,
+   "estimado": true
+  },
+  {
+   "id": "PG-2027-04-23",
+   "s": "PG",
+   "empresa": "Procter & Gamble",
+   "frecuencia": "Trimestral",
+   "ex": "2027-04-23",
+   "pago": "2027-05-17",
+   "usd": 0.0726,
+   "estimado": true
+  },
+  {
+   "id": "ITUB-2027-04-30",
+   "s": "ITUB",
+   "empresa": "Itaú Unibanco",
+   "frecuencia": "Mensual",
+   "ex": "2027-04-30",
+   "pago": "2027-06-11",
+   "usd": 0.0032,
+   "ret": 0.1,
+   "estimado": true
+  },
+  {
+   "id": "PFE-2027-05-06",
+   "s": "PFE",
+   "empresa": "Pfizer",
+   "frecuencia": "Trimestral",
+   "ex": "2027-05-06",
+   "pago": "2027-06-07",
+   "usd": 0.1075,
+   "estimado": true
+  },
+  {
+   "id": "HON-2027-05-13",
+   "s": "HON",
+   "empresa": "Honeywell",
+   "frecuencia": "Trimestral",
+   "ex": "2027-05-13",
+   "pago": "2027-06-04",
+   "usd": 0.0875,
+   "estimado": true
+  },
+  {
+   "id": "EQNR-2027-05-14",
+   "s": "EQNR",
+   "empresa": "Equinor",
+   "frecuencia": "Trimestral",
+   "ex": "2027-05-14",
+   "pago": "2027-05-25",
+   "usd": 0.065,
+   "estimado": true
+  },
+  {
+   "id": "BNG-2027-05-17",
+   "s": "BNG",
+   "empresa": "Bunge",
+   "frecuencia": "Trimestral",
+   "ex": "2027-05-17",
+   "pago": "2027-06-01",
+   "usd": 0.144,
+   "estimado": true
+  },
+  {
+   "id": "MSFT-2027-05-19",
+   "s": "MSFT",
+   "empresa": "Microsoft",
+   "frecuencia": "Trimestral",
+   "ex": "2027-05-19",
+   "pago": "2027-06-10",
+   "usd": 0.0327,
+   "estimado": true
+  },
+  {
+   "id": "JNJ-2027-05-24",
+   "s": "JNJ",
+   "empresa": "Johnson & Johnson",
+   "frecuencia": "Trimestral",
+   "ex": "2027-05-24",
+   "pago": "2027-06-08",
+   "usd": 0.0893,
+   "estimado": true
+  },
+  {
+   "id": "KO-2027-05-27",
+   "s": "KO",
+   "empresa": "Coca-Cola",
+   "frecuencia": "Trimestral",
+   "ex": "2027-05-27",
+   "pago": "2027-06-15",
+   "usd": 0.106,
+   "estimado": true
+  }
+ ]
 }
