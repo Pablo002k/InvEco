@@ -147,7 +147,7 @@ def fxmed(precios):
     return r[len(r) // 2] if r else 1
 
 
-def ejecutar(db, oref, o, px, tasa, mon="ARS"):
+def ejecutar(db, oref, o, px, tasa, mon="ARS", k=1):
     from firebase_admin import firestore
     uref = db.collection("users").document(o["uid"])
     campo = {"ARS": "cash", "USD": "usd", "CCL": "ccl"}[mon]
@@ -159,7 +159,7 @@ def ejecutar(db, oref, o, px, tasa, mon="ARS"):
             return False
         u = uref.get(transaction=tx).to_dict()
         pos, cash, n, s = dict(u.get("pos") or {}), u.get(campo, 0), o["cant"], o["s"]
-        bruto = n * px
+        bruto = n * px * k
         com = round(bruto * tasa, 2)
         p = pos.get(s, {"c": 0, "costo": 0})
         if o["lado"] == "C":
@@ -167,7 +167,7 @@ def ejecutar(db, oref, o, px, tasa, mon="ARS"):
                 tx.update(oref, {"estado": "rechazada", "motivo": "Saldo insuficiente en " + {"ARS": "pesos.", "USD": "dólares MEP.", "CCL": "dólares CCL."}[mon]})
                 return False
             cash -= bruto + com
-            pos[s] = {"c": p["c"] + n, "costo": p["costo"] + bruto + com, "m": mon}
+            pos[s] = {"c": p["c"] + n, "costo": p["costo"] + bruto + com, "m": mon, "k": k}
         else:
             if n > p["c"]:
                 tx.update(oref, {"estado": "rechazada", "motivo": "No había cantidad suficiente para vender."})
@@ -175,11 +175,11 @@ def ejecutar(db, oref, o, px, tasa, mon="ARS"):
             cash += bruto - com
             resto = p["c"] - n
             if resto:
-                pos[s] = {"c": resto, "costo": p["costo"] / p["c"] * resto, "m": mon}
+                pos[s] = {"c": resto, "costo": p["costo"] / p["c"] * resto, "m": mon, "k": k}
             else:
                 pos.pop(s)
         ms = int(time.time() * 1000)
-        ops = (u.get("ops") or []) + [{"t": ms, "s": s, "l": o["lado"], "c": n, "p": px, "com": com, "m": mon}]
+        ops = (u.get("ops") or []) + [{"t": ms, "s": s, "l": o["lado"], "c": n, "p": px, "com": com, "m": mon, "k": k}]
         tx.update(uref, {campo: round(cash, 2), "pos": pos, "ops": ops[-1000:]})
         tx.update(oref, {"estado": "ejecutada", "fill": {"px": px, "com": com, "t": ms}})
         return True
@@ -371,11 +371,78 @@ def evolucion(db, precios):
         u = dd.to_dict()
         val = u.get("cash", 0) + u.get("usd", 0) * mep + u.get("ccl", 0) * ccl
         for s, p in (u.get("pos") or {}).items():
-            px = (precios.get(s) or {}).get("ultimo") or (p["costo"] / p["c"] if p["c"] else 0)
-            val += p["c"] * px * {"USD": mep, "CCL": ccl}.get(p.get("m"), 1)
+            ult = (precios.get(s) or {}).get("ultimo")
+            unit = ult * p.get("k", 1) if ult else (p["costo"] / p["c"] if p["c"] else 0)
+            val += p["c"] * unit * {"USD": mep, "CCL": ccl}.get(p.get("m"), 1)
         v[dd.id] = round(val, 2)
     db.collection("evolucion").document(str(ahora)).set({"t": ahora, "v": v})
     ULT["t"] = ahora
+
+
+BONOS = {}
+
+
+def cargar_bonos():
+    try:
+        BONOS.clear()
+        BONOS.update(json.load(open("data/bonos.json", encoding="utf-8"))["bonos"])
+    except Exception as e:
+        print("Sin calendario de bonos:", e)
+
+
+def base_bono(s):
+    if s in BONOS:
+        return s
+    return s[:-1] if s[:-1] in BONOS and s[-1:] in ("C", "D") else None
+
+
+def operable_s(s, d):
+    if d.get("tipo") == "bonos":
+        return bool(base_bono(s)) and (d.get("ultimo") or 0) > 0
+    return operable(d)
+
+
+def pagos_bonos(db, hoy):
+    """Acredita rentas y amortizaciones (en dólares) a quienes tenían el bono antes de la fecha de pago."""
+    from firebase_admin import firestore
+    for b, info in BONOS.items():
+        campo = "ccl" if info["pago"] == "ccl" else "usd"
+        for fl in info["flujos"]:
+            if fl["f"] > hoy:
+                continue
+            pid = f"{b}-{fl['f']}"
+            corte = int(datetime.strptime(fl["f"], "%Y-%m-%d").replace(tzinfo=timezone(timedelta(hours=-3))).timestamp() * 1000)
+            for ud in db.collection("users").stream():
+                u = ud.to_dict()
+                if pid in (u.get("divs") or []):
+                    continue
+                qty = {}
+                for o in sorted(u.get("ops") or [], key=lambda x: x["t"]):
+                    if o["t"] < corte and o["l"] in ("C", "V") and base_bono(o["s"]) == b:
+                        qty[o["s"]] = qty.get(o["s"], 0) + (o["c"] if o["l"] == "C" else -o["c"])
+                uref = ud.reference
+
+                @firestore.transactional
+                def pagar(tx):
+                    cur = uref.get(transaction=tx).to_dict()
+                    if pid in (cur.get("divs") or []):
+                        return
+                    upd, total, nuevas = {"divs": (cur.get("divs") or []) + [pid]}, 0, []
+                    ms = int(time.time() * 1000)
+                    for s, q in qty.items():
+                        if q <= 0:
+                            continue
+                        for det, pct in (("Renta de bono", fl["r"]), ("Amortización de bono", fl["a"])):
+                            if pct > 0:
+                                monto = round(q * pct / 100, 2)
+                                total += monto
+                                nuevas.append({"t": ms, "s": s, "l": "D", "c": q, "p": round(pct / 100, 6), "com": 0,
+                                               "monto": monto, "m": "USD" if campo == "usd" else "CCL", "det": det})
+                    if nuevas:
+                        upd[campo] = round(cur.get(campo, 0) + total, 2)
+                        upd["ops"] = ((cur.get("ops") or []) + nuevas)[-1000:]
+                    tx.update(uref, upd)
+                pagar(db.transaction())
 
 
 def motor(precios):
@@ -391,6 +458,7 @@ def motor(precios):
     if not firebase_admin._apps:
         firebase_admin.initialize_app(credentials.Certificate(json.loads(clave)))
     db = firestore.client()
+    cargar_bonos()
     try:
         vistas_previas(db)
     except Exception as e:
@@ -413,7 +481,7 @@ def motor(precios):
         d = precios.get(o["s"])
         if not abierto or not d or not (d.get("ultimo") or 0) > 0:
             continue
-        if not operable(d):
+        if not operable_s(o["s"], d):
             oref.update({"estado": "rechazada", "motivo": "Activo no habilitado para operar."})
             continue
         ult = d["ultimo"]
@@ -427,10 +495,11 @@ def motor(precios):
                 continue
         if o["tipo"] != "mercado" and ((c and ref > o["limite"]) or (not c and ref < o["limite"])):
             continue
-        hechas += ejecutar(db, oref, o, ref, TASA(d), mon_de(o["s"], d, precios))
+        hechas += ejecutar(db, oref, o, ref, TASA(d), mon_de(o["s"], d, precios), 0.01 if d.get("tipo") == "bonos" else 1)
     print(f"Motor de órdenes: {len(docs)} pendientes, {hechas} ejecutadas. Mercado {'abierto' if abierto else 'cerrado'}.")
     try:
         dividendos(db, precios, hoy)
+        pagos_bonos(db, hoy)
         if abierto:
             evolucion(db, precios)
     except Exception as e:
