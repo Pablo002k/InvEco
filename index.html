@@ -21,7 +21,7 @@ tr.k{cursor:pointer}tr.k:hover,tr.s{background:#8883}
 small{opacity:.65;display:block}
 #tv{height:380px;border:1px solid #8884}
 .card{border:1px solid #8884;padding:10px;margin:10px 0}
-.pv{display:flex;gap:10px;border:1px solid #8884;margin-top:8px;text-decoration:none;color:inherit}.pv img{width:150px;object-fit:cover}.pv span{padding:8px}.nota{border-left:4px solid #3b82f6}.consejo{border-left:4px solid #d97706}.resp{border-left:4px solid #8886;margin-left:18px}.res{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}.res>div{border:1px solid #8884;padding:8px}.res small{display:block}.dvr,.dvh{display:grid;grid-template-columns:1.7fr 1fr 1fr 1fr .9fr .7fr 1fr 1.4fr;gap:6px;padding:8px;align-items:center}.dvr{cursor:pointer;list-style:none}.dvr::-webkit-details-marker{display:none}.dvh{font-weight:600;font-size:.85rem;border-bottom:1px solid #8884}.dv{border-bottom:1px solid #8883}.dvr .n,.dvh .n{text-align:right}.ar{display:inline-block;transition:transform .15s}details[open]>.dvr .ar{transform:rotate(90deg)}.dvb{padding:0 8px 10px 26px}.up{color:#0a7d33}.dn{color:#c0282d}.hide{display:none}
+.pv{display:flex;gap:10px;border:1px solid #8884;margin-top:8px;text-decoration:none;color:inherit}.pv img{width:150px;object-fit:cover}.pv span{padding:8px}.nota{border-left:4px solid #3b82f6}.consejo{border-left:4px solid #d97706}.resp{border-left:4px solid #8886;margin-left:18px}.res{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}.res>div{border:1px solid #8884;padding:8px}.res small{display:block}.dvr,.dvh{display:grid;grid-template-columns:1.7fr 1fr 1fr 1fr .9fr .7fr 1fr 1.4fr;gap:6px;padding:8px;align-items:center}.dvr{cursor:pointer;list-style:none}.dvr::-webkit-details-marker{display:none}.dvh{font-weight:600;font-size:.85rem;border-bottom:1px solid #8884}.dv{border-bottom:1px solid #8883}.dvr .n,.dvh .n{text-align:right}.ar{display:inline-block;transition:transform .15s}details[open]>.dvr .ar{transform:rotate(90deg)}.dvb{padding:0 8px 10px 26px}textarea{resize:none;min-height:84px;max-height:220px;overflow-y:auto;line-height:1.4}.up{color:#0a7d33}.dn{color:#c0282d}.hide{display:none}
 </style>
 </head>
 <body>
@@ -43,7 +43,7 @@ small{opacity:.65;display:block}
     <details class="card"><summary>Ayuda rápida: ¿qué estoy mirando?</summary>
       <p><b>Pesos y dólares.</b> Muchos activos aparecen repetidos: la versión simple se cotiza en pesos y las que terminan en C o D, en dólares. Los activos en dólares se compran con dólares, que se obtienen en "Cambio de moneda": los terminados en D usan dólares MEP y los terminados en C, dólares CCL.</p>
       <p><b>Acción:</b> una parte de una empresa. <b>CEDEAR:</b> un certificado que representa acciones de empresas del exterior y se compra en pesos. <b>ETF:</b> una canasta de activos que se compra como una sola acción.</p>
-      <p><b>Bono:</b> un préstamo que le hacés al Estado a cambio de intereses. <b>Letra:</b> un bono de corto plazo. <b>Obligación negociable:</b> un bono emitido por una empresa. Los bonos se cotizan por cada 100 de valor nominal: si el precio es de $80.000, comprar 100 nominales cuesta $80.000 y 1 nominal cuesta $800. Por ahora los bonos y las obligaciones negociables se muestran solo como referencia; se habilitarán próximamente, junto con sus pagos de intereses y devoluciones de capital. Las letras se habilitarán más adelante: momentáneamente no se pueden operar porque la plataforma que nos provee los precios presenta una falla en su lista de letras.</p>
+      <p><b>Bono:</b> un préstamo que le hacés al Estado a cambio de intereses. <b>Letra:</b> un bono de corto plazo. <b>Obligación negociable:</b> un bono emitido por una empresa. Los bonos se cotizan por cada 100 de valor nominal: si el precio es de $80.000, comprar 100 nominales cuesta $80.000 y 1 nominal cuesta $800. Ya se pueden operar los bonos AL30, GD30, AL35 y GD35 (sus pagos de intereses y devoluciones de capital figuran en el Calendario de bonos); los demás bonos y las obligaciones negociables se muestran como referencia y se irán habilitando. Las letras se habilitarán más adelante: momentáneamente no se pueden operar porque la plataforma que nos provee los precios presenta una falla en su lista de letras.</p>
       <p>Para profundizar en cualquiera de estos conceptos, podés consultar fuentes especializadas o conversarlo con tu docente.</p>
     </details>
     <div class="g f">
@@ -70,6 +70,14 @@ small{opacity:.65;display:block}
   </section>
 
   <section id="t-cartera" class="hide"></section>
+  <section id="t-bonos" class="hide">
+    <div class="card"><b>Calendario de bonos</b>
+      <p>Un bono es un préstamo que se le hace al Estado (o a una empresa). A cambio, el emisor se compromete a pagar dos cosas: la <b>renta</b> (o cupón), que son los intereses, y la <b>amortización</b>, que es la devolución del capital prestado, en cuotas o al final.</p>
+      <p>Los montos se expresan como porcentaje del <b>valor nominal</b> (VN): el monto original del bono. Los precios se cotizan por cada 100 nominales: si un bono cotiza a $80.000, comprar 100 nominales cuesta $80.000 y 1 nominal cuesta $800.</p>
+      <p>Se dice que los intereses se <i>devengan</i> cuando se van acumulando día a día, aunque todavía no se hayan pagado; el cobro llega recién en la fecha de pago. En este simulador se cobra a quien tenía el bono antes de esa fecha, y se acredita en dólares: los Bonar (AL) en dólares MEP y los Global (GD) en dólares CCL.</p>
+      <p>Una amortización es capital que vuelve a tus manos, no una ganancia: por eso, después de cada una, el precio del bono baja en proporción.</p></div>
+    <div id="bontab"></div>
+  </section>
   <section id="t-fx" class="hide">
     <div class="card"><b>Cambio de moneda</b>
       <p>En esta sección se pueden cambiar pesos por dólares y dólares por pesos. Existen dos tipos de dólar financiero: el <b>dólar MEP</b>, que queda depositado en una cuenta en Argentina y sirve para operar los activos cuyo símbolo termina en D, y el <b>dólar CCL</b> (contado con liquidación), que queda en el exterior y sirve para los activos que terminan en C.</p></div>
@@ -147,19 +155,23 @@ async function cambio(l){
   catch{m.textContent="No se pudo publicar la orden. Probá de nuevo.";}
 }
 const cab=(autor,tit,t)=>`<b>${esc(autor)}</b><br><small>${tit} · ${fh(t)}</small>`;
-const hilo=(id,u,herr,siempre)=>{   // respuestas debajo del mensaje, en orden cronológico
+const hilo=(id,u,herr,siempre,puede)=>{   // respuestas debajo del mensaje, en orden cronológico
   const it=[...coment.filter(c=>c.notaId===id).map(c=>({t:c.t,a:"Docente",x:c.texto,d:herr?"comentarios/"+c.id:""})),...resps.filter(r=>r.root===id).map(r=>({t:r.t,a:r.usuario,x:r.texto,d:herr?"respuestas/"+r.id:""}))].sort((a,b)=>a.t-b.t);
   const dr=coment.some(c=>c.notaId===id);
   return it.map(i=>`<div class="card resp">${cab(i.a,"Respuesta",i.t)}<p style="white-space:pre-wrap">${esc(i.x)}</p>${i.d?`<button data-del="${i.d}">Borrar</button>`:""}</div>`).join("")
    +(herr?`<div><textarea data-rt="${id}" rows="2" placeholder="Respondé a este mensaje"></textarea><br><br><button data-resp="${id}" data-para="${u.id}">Enviar respuesta</button></div>`:"")
-   +(!esAdmin&&u.id===user.uid&&(siempre||dr)?`<div><textarea data-sr="${id}" rows="2" placeholder="Escribí tu respuesta"></textarea><br><br><button data-sresp="${id}">Responder</button></div>`:"");};
-function msgNota(n,u,herr){return`<div class="card nota">${cab(nom(u),"Nota semanal · "+esc(n.semana),n.t)}<p style="white-space:pre-wrap">${esc(n.texto)}</p>${n.puntaje!=null&&(esAdmin||n.uid===user.uid)?`<b>Evaluada: ${n.puntaje}/10</b>`:""}${herr?`<div><input type="number" min="0" max="10" step="0.5" data-pt="${n.id}" value="${n.puntaje??""}" style="width:90px" placeholder="Puntaje"> <button data-ev="${n.id}">Guardar puntaje</button></div>`:""}${hilo(n.id,u,herr,false)}</div>`;}
-function msgConsejo(c,u,herr){return`<div class="card consejo">${cab("Docente","Consejo del docente",c.t)}<p style="white-space:pre-wrap">${esc(c.texto)}</p>${herr?`<button data-del="comentarios/${c.id}">Borrar</button>`:""}${hilo(c.id,u,herr,true)}</div>`;}
-function historial(u,herr){   // los mensajes más recientes primero; las respuestas quedan dentro de su mensaje
-  const it=[...notas.filter(n=>n.uid===u.id).map(n=>({t:n.t,h:msgNota(n,u,herr)})),...coment.filter(c=>c.para===u.id&&!c.notaId).map(c=>({t:c.t,h:msgConsejo(c,u,herr)}))].sort((a,b)=>b.t-a.t);
+   +(puede&&!esAdmin&&u.id===user.uid&&(siempre||dr)?`<div><textarea data-sr="${id}" rows="2" placeholder="Escribí tu respuesta"></textarea><br><br><button data-sresp="${id}">Responder</button></div>`:"");};
+function msgNota(n,u,herr,puede){return`<div class="card nota">${cab(nom(u),"Nota semanal · "+esc(n.semana),n.t)}<p style="white-space:pre-wrap">${esc(n.texto)}</p>${n.puntaje!=null&&(esAdmin||n.uid===user.uid)?`<b>Evaluada: ${n.puntaje}/10</b>`:""}${herr?`<div><input type="number" min="0" max="10" step="0.5" data-pt="${n.id}" value="${n.puntaje??""}" style="width:90px" placeholder="Puntaje"> <button data-ev="${n.id}">Guardar puntaje</button></div>`:""}${hilo(n.id,u,herr,false,puede)}</div>`;}
+function msgConsejo(c,u,herr,puede){return`<div class="card consejo">${cab("Docente","Consejo del docente",c.t)}<p style="white-space:pre-wrap">${esc(c.texto)}</p>${herr?`<button data-del="comentarios/${c.id}">Borrar</button>`:""}${hilo(c.id,u,herr,true,puede)}</div>`;}
+function historial(u,herr,puede){   // los mensajes más recientes primero; las respuestas quedan dentro de su mensaje
+  const it=[...notas.filter(n=>n.uid===u.id).map(n=>({t:n.t,h:msgNota(n,u,herr,puede)})),...coment.filter(c=>c.para===u.id&&!c.notaId).map(c=>({t:c.t,h:msgConsejo(c,u,herr,puede)}))].sort((a,b)=>b.t-a.t);
   return it.map(i=>i.h).join("")||"<p>Todavía no hay mensajes.</p>";}
+const hiloNov=n=>{
+  const it=[...coment.filter(c=>c.notaId===n.id).map(c=>({t:c.t,a:"Docente",x:c.texto,d:esAdmin?"comentarios/"+c.id:""})),...resps.filter(r=>r.root===n.id).map(r=>({t:r.t,a:r.usuario,x:r.texto,d:esAdmin?"respuestas/"+r.id:""}))].sort((a,b)=>a.t-b.t);
+  return it.map(i=>`<div class="card resp">${cab(i.a,"Respuesta",i.t)}<p style="white-space:pre-wrap">${esc(i.x)}</p>${i.d?`<button data-del="${i.d}">Borrar</button>`:""}</div>`).join("")
+   +`<div><textarea data-nr="${n.id}" rows="2" placeholder="Escribí tu respuesta"></textarea><br><br><button data-nresp="${n.id}">Responder</button></div>`;};
 function conservar(el,ctx,fn){  // conserva lo que se está escribiendo mientras la pantalla se actualiza
-  const k=x=>x.id||(x.dataset.rt?"rt"+x.dataset.rt:x.dataset.pt?"pt"+x.dataset.pt:x.dataset.ed?"ed"+x.dataset.ed:x.dataset.sr?"sr"+x.dataset.sr:""),mismo=el._ctx===ctx,act=document.activeElement;
+  const k=x=>x.id||(x.dataset.rt?"rt"+x.dataset.rt:x.dataset.pt?"pt"+x.dataset.pt:x.dataset.ed?"ed"+x.dataset.ed:x.dataset.sr?"sr"+x.dataset.sr:x.dataset.nr?"nr"+x.dataset.nr:""),mismo=el._ctx===ctx,act=document.activeElement;
   const g=mismo?[...el.querySelectorAll("textarea,input")].map(x=>[k(x),x.value]):[],f=mismo&&el.contains(act)?k(act):null;
   fn();el._ctx=ctx;
   el.querySelectorAll("textarea,input").forEach(x=>{const r=g.find(([a])=>a&&a===k(x));if(r)x.value=r[1];if(f&&k(x)===f)x.focus();});}
@@ -167,7 +179,7 @@ const TASA=d=>d.tipo==="letras"?0.003:0.0071;   // comisión + IVA (aprox.)
 function ba(){const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:TZ,weekday:"short",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date()).map(x=>[x.type,x.value]));
   const m=+p.hour*60+ +p.minute;return{dia:`${p.year}-${p.month}-${p.day}`,hora:`${p.hour}:${p.minute}:${p.second}`,abierto:!["Sat","Sun"].includes(p.weekday)&&m>=645&&m<1080};}
 function relojBA(){const b=ba();$("reloj").textContent=`Buenos Aires ${b.hora} · `+(b.abierto?"Mercado abierto":"Mercado cerrado (abre a las 10:45, de lunes a viernes)");$("pub").disabled=!b.abierto;}
-let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],novs=[],ver=null,verAlu=null,editNov=null,fxMed=null,resps=[],evo=[],calDiv=null,libro=null,unsubLibro=null,tab="mercado";
+let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],novs=[],ver=null,verAlu=null,editNov=null,calBon=null,fxMed=null,resps=[],evo=[],calDiv=null,libro=null,unsubLibro=null,tab="mercado";
 
 /* ---------- Acceso ---------- */
 const correo=u=>u+"@economia-aula.app";
@@ -199,16 +211,16 @@ onAuthStateChanged(auth,u=>{
 
 /* ---------- Pestañas ---------- */
 function armarTabs(){
-  const t=esAdmin?[["mercado","Mercado"],["fx","Cambio de moneda"],["ranking","Ranking"],["divs","Calendario de dividendos"],["alumnos","Alumnos"],["novedades","Novedades"]]:[["mercado","Mercado"],["fx","Cambio de moneda"],["cartera","Mi cartera"],["ranking","Ranking"],["divs","Calendario de dividendos"],["notas","Mis notas semanales"],["novedades","Novedades"]];
+  const t=esAdmin?[["mercado","Mercado"],["fx","Cambio de moneda"],["ranking","Ranking"],["divs","Calendario de dividendos"],["bonos","Calendario de bonos"],["alumnos","Alumnos"],["novedades","Novedades"]]:[["mercado","Mercado"],["fx","Cambio de moneda"],["cartera","Mi cartera"],["ranking","Ranking"],["divs","Calendario de dividendos"],["bonos","Calendario de bonos"],["notas","Mis notas semanales"],["novedades","Novedades"]];
   $("tabs").innerHTML=t.map(([k,n])=>`<button data-k="${k}" class="${k===tab?"on":""}">${n}</button>`).join("");
 }
 $("tabs").onclick=e=>{const k=e.target.dataset.k;if(!k)return;tab=k;
-  for(const x of["mercado","cartera","ranking","notas","alumnos","novedades","divs","fx"])$("t-"+x).classList.toggle("hide",x!==k);
+  for(const x of["mercado","cartera","ranking","notas","alumnos","novedades","divs","fx","bonos"])$("t-"+x).classList.toggle("hide",x!==k);
   armarTabs();pintarTodo();};
 
 /* ---------- Valuación ---------- */
-const precio=s=>datos.find(d=>d.s===s)?.ultimo;
-function valor(u){let v=u.cash+(u.usd||0)*fxMEP()+(u.ccl||0)*fxCCL();for(const[s,p]of Object.entries(u.pos||{}))v+=p.c*(precio(s)??p.costo/p.c)*fxOf(p.m);return v;}
+const precio=s=>{const v=datos.find(d=>d.s===s)?.ultimo;return v>0?v:undefined;};
+function valor(u){let v=u.cash+(u.usd||0)*fxMEP()+(u.ccl||0)*fxCCL();for(const[s,p]of Object.entries(u.pos||{})){const q=precio(s);v+=p.c*(q!=null?q*(p.k||1):p.costo/p.c)*fxOf(p.m);}return v;}
 const pct=v=>((v-CAPITAL)/CAPITAL*100);
 const cls=n=>n>=0?"up":"dn";
 
@@ -216,13 +228,13 @@ function contable(u){
   const A={},fx=fxMEP();let cmx=0;
   for(const o of [...(u.ops||[])].sort((a,b)=>a.t-b.t)){
     if(o.l==="CD"||o.l==="VD"){cmx+=o.com||0;continue;}
-    const a=A[o.s]=A[o.s]||{m:o.m||"ARS",c:0,costo:0,rec:0,real:0,com:0,div:0};
-    if(o.l==="C"){a.c+=o.c;a.costo+=o.c*o.p+(o.com||0);a.com+=o.com||0;}
-    else if(o.l==="V"){const cu=a.c?a.costo/a.c:0,neto=o.c*o.p-(o.com||0);a.rec+=neto;a.real+=neto-o.c*cu;a.costo-=o.c*cu;a.c-=o.c;a.com+=o.com||0;}
+    const a=A[o.s]=A[o.s]||{m:o.m||"ARS",k:o.k||1,c:0,costo:0,rec:0,real:0,com:0,div:0};
+    if(o.l==="C"){a.c+=o.c;a.costo+=o.c*o.p*(o.k||1)+(o.com||0);a.com+=o.com||0;}
+    else if(o.l==="V"){const cu=a.c?a.costo/a.c:0,neto=o.c*o.p*(o.k||1)-(o.com||0);a.rec+=neto;a.real+=neto-o.c*cu;a.costo-=o.c*cu;a.c-=o.c;a.com+=o.com||0;}
     else if(o.l==="D")a.div+=o.monto||0;
   }
   let ten=0,nr=0,re=0,cm=cmx,dv=0;
-  const filas=Object.entries(A).map(([s,a])=>{const px=precio(s)??(a.c?a.costo/a.c:0),val=a.c*px,nore=a.c?val-a.costo:0,k=fxOf(a.m);ten+=val*k;nr+=nore*k;re+=a.real*k;cm+=a.com*k;dv+=a.div*k;return{s,...a,px,val,nore};});
+  const filas=Object.entries(A).map(([s,a])=>{const px=precio(s)??(a.c?a.costo/a.c:0),val=a.c*px*(a.k||1),nore=a.c?val-a.costo:0,k=fxOf(a.m);ten+=val*k;nr+=nore*k;re+=a.real*k;cm+=a.com*k;dv+=a.div*k;return{s,...a,px,val,nore};});
   const usd=u.usd||0,ccl=u.ccl||0;
   return{filas,ten,nr,re,cm,dv,usd,ccl,fx,fc:fxCCL(),pat:u.cash+usd*fx+ccl*fxCCL()+ten};
 }
@@ -235,12 +247,12 @@ function grafEvo(u){
 }
 function estado(u){
   const c=contable(u),res=c.pat-CAPITAL,dif=res-c.re-c.nr-c.dv,k=(t,v,cl="")=>`<div><small>${t}</small><b class="${cl}">${v}</b></div>`;
-  const F=c.filas.sort((a,b)=>a.s.localeCompare(b.s)).map(a=>`<tr><td>${esc(a.s)}</td><td class="n">${a.c}</td><td class="n">${a.c?mon(a.m,a.costo/a.c):"-"}</td><td class="n">${a.c?mon(a.m,a.px):"-"}</td><td class="n">${mon(a.m,a.val)}</td><td class="n ${cls(a.nore)}">${a.c?mon(a.m,a.nore):"-"}</td><td class="n ${cls(a.real)}">${mon(a.m,a.real)}</td><td class="n">${mon(a.m,a.rec)}</td><td class="n">${mon(a.m,a.com)}</td><td class="n">${mon(a.m,a.div)}</td></tr>`).join("");
+  const F=c.filas.sort((a,b)=>a.s.localeCompare(b.s)).map(a=>`<tr><td>${esc(a.s)}</td><td class="n">${a.c}</td><td class="n">${a.c?mon(a.m,a.costo/a.c/(a.k||1)):"-"}</td><td class="n">${a.c?mon(a.m,a.px):"-"}</td><td class="n">${mon(a.m,a.val)}</td><td class="n ${cls(a.nore)}">${a.c?mon(a.m,a.nore):"-"}</td><td class="n ${cls(a.real)}">${mon(a.m,a.real)}</td><td class="n">${mon(a.m,a.rec)}</td><td class="n">${mon(a.m,a.com)}</td><td class="n">${mon(a.m,a.div)}</td></tr>`).join("");
   const TO={C:"Compra",V:"Venta",D:"Dividendo cobrado",CD:"Compra de dólares",VD:"Venta de dólares"};
-  const L=[...(u.ops||[])].sort((a,b)=>a.t-b.t).slice(-50).map(o=>{const M=o.m||"ARS",cm=o.com||0,b=o.c*o.p,x=o.l==="CD"||o.l==="VD",n=(o.l==="C"||o.l==="CD")?b+cm:(o.l==="V"||o.l==="VD")?b-cm:o.monto;
-    return`<tr><td>${fh(o.t)}</td><td>${TO[o.l]}${x?" "+(o.tc||"MEP"):""}</td><td>${x?"Dólares":esc(o.s)}</td><td class="n">${o.c}</td><td class="n">${mon(x?"ARS":M,o.p)}</td><td class="n">${o.l==="D"?"-":mon(M,b)}</td><td class="n">${mon(M,cm)}</td><td class="n">${mon(M,n)}</td></tr>`}).join("");
-  return`<h4>Estado contable</h4><div class="res">${k("Efectivo en pesos",$$(u.cash))}${k("Dólares MEP",us(c.usd))}${k("Dólares CCL",us(c.ccl))}${k("Valor de las tenencias",$$(c.ten))}${k("Patrimonio total",$$(c.pat))}${k("Resultado total",`${$$(res)} (${(res/CAPITAL*100).toFixed(2)} %)`,cls(res))}${k("Resultado realizado",$$(c.re),cls(c.re))}${k("Resultado no realizado",$$(c.nr),cls(c.nr))}${k("Dividendos cobrados",$$(c.dv))}${k("Comisiones pagadas",$$(c.cm))}${k("Diferencia de cambio y costos de conversión",$$(dif),cls(dif))}</div>
-  <small>El resultado realizado es la ganancia o pérdida de lo que ya se vendió. El no realizado es lo que se ganaría o perdería si se vendiera hoy a precio de mercado. Los importes en dólares se convierten a pesos con el dólar actual (MEP: US$ 1 = ${$$(c.fx)}; CCL: US$ 1 = ${$$(c.fc)}). La diferencia de cambio refleja cuánto cambió el valor de los dólares y de los activos en dólares, y los costos de pasar de una moneda a otra.</small>
+  const L=[...(u.ops||[])].sort((a,b)=>a.t-b.t).slice(-50).map(o=>{const M=o.m||"ARS",cm=o.com||0,b=o.c*o.p*(o.k||1),x=o.l==="CD"||o.l==="VD",n=(o.l==="C"||o.l==="CD")?b+cm:(o.l==="V"||o.l==="VD")?b-cm:o.monto;
+    return`<tr><td>${fh(o.t)}</td><td>${o.l==="D"&&o.det?o.det:TO[o.l]}${x?" "+(o.tc||"MEP"):""}</td><td>${x?"Dólares":esc(o.s)}</td><td class="n">${o.c}</td><td class="n">${mon(x?"ARS":M,o.p)}</td><td class="n">${o.l==="D"?"-":mon(M,b)}</td><td class="n">${mon(M,cm)}</td><td class="n">${mon(M,n)}</td></tr>`}).join("");
+  return`<h4>Estado contable</h4><div class="res">${k("Efectivo en pesos",$$(u.cash))}${k("Dólares MEP",us(c.usd))}${k("Dólares CCL",us(c.ccl))}${k("Valor de las tenencias",$$(c.ten))}${k("Patrimonio total",$$(c.pat))}${k("Resultado total",`${$$(res)} (${(res/CAPITAL*100).toFixed(2)} %)`,cls(res))}${k("Resultado realizado",$$(c.re),cls(c.re))}${k("Resultado no realizado",$$(c.nr),cls(c.nr))}${k("Dividendos y pagos de bonos cobrados",$$(c.dv))}${k("Comisiones pagadas",$$(c.cm))}${k("Diferencia de cambio y costos de conversión",$$(dif),cls(dif))}</div>
+  <small>El resultado realizado es la ganancia o pérdida de lo que ya se vendió. El no realizado es lo que se ganaría o perdería si se vendiera hoy a precio de mercado. Los importes en dólares se convierten a pesos con el dólar actual (MEP: US$ 1 = ${$$(c.fx)}; CCL: US$ 1 = ${$$(c.fc)}). Los pagos de bonos incluyen intereses y devoluciones de capital. La diferencia de cambio refleja cuánto cambió el valor de los dólares y de los activos en dólares, y los costos de pasar de una moneda a otra.</small>
   ${grafEvo(u)}
   <h4>Detalle por activo</h4>${F?`<div class="l"><table><thead><tr><th>Activo</th><th class="n">Cantidad disponible</th><th class="n">Precio promedio de compra</th><th class="n">Precio actual</th><th class="n">Valor actual</th><th class="n">Resultado no realizado</th><th class="n">Resultado realizado</th><th class="n">Recuperado por ventas</th><th class="n">Comisiones</th><th class="n">Dividendos</th></tr></thead><tbody>${F}</tbody></table></div><small>Cada activo se muestra en su moneda de cotización.</small>`:"<p>Todavía no tiene operaciones.</p>"}
   <h4>Libro de operaciones</h4>${L?`<div class="l"><table><thead><tr><th>Fecha y hora</th><th>Operación</th><th>Activo</th><th class="n">Cantidad</th><th class="n">Precio</th><th class="n">Importe bruto</th><th class="n">Comisión</th><th class="n">Importe neto</th></tr></thead><tbody>${L}</tbody></table></div><small>Importe neto: lo que se pagó (en una compra, con la comisión incluida) o lo que se recibió (en una venta, ya descontada la comisión).</small>`:"<p>Todavía no hay operaciones.</p>"}`;
@@ -283,6 +295,7 @@ function pintarTodo(){
   }
   if(tab==="divs")pintarDiv();
   if(tab==="fx")pintarFx();
+  if(tab==="bonos")pintarBon();
   if(tab==="alumnos"){
     const L=todos.filter(u=>(u.usuario||"")!==ADMIN).sort((a,b)=>nom(a).localeCompare(nom(b),"es",{sensitivity:"base"}));
     $("alu-lista").innerHTML=`<div class="card"><b>Alumnos</b> <small>${L.length} registrados, en orden alfabético.</small> <button id="xls">Descargar planilla Excel</button><div class="g" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-top:8px">${L.map(u=>`<button data-alu="${u.id}" class="${u.id===verAlu?"on":""}">${esc(nom(u))}</button>`).join("")}</div></div>`;
@@ -296,9 +309,9 @@ function pintarTodo(){
         if(!p)return n.previews?"":"<small>Preparando la vista previa del enlace…</small>";
         return p.titulo||p.imagen?`<a class="pv" href="${esc(u)}" target="_blank" rel="noopener">${p.imagen?`<img src="${esc(p.imagen)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:""}<span><b>${esc(p.titulo||u)}</b><small>${esc(p.sitio||"")}</small></span></a>`:"";}).join("");
       if(editNov===n.id)return`<div class="card"><b>Editar novedad</b><br><br><textarea data-ed="${n.id}" rows="4" maxlength="1500">${esc(n.texto)}</textarea><br><br><button data-gedn="${n.id}">Guardar cambios</button> <button data-cedn="1">Cancelar</button></div>`;
-      return`<div class="card"><small>${fh(n.t)}${n.editado?` · <i>Editado</i>`:""}</small><p style="white-space:pre-wrap">${enl(n.texto)}</p>${tarj}${esAdmin?`<button data-edn="${n.id}">Editar</button> <button data-del="novedades/${n.id}">Eliminar</button>`:""}</div>`;}).join("")||"<p>Todavía no hay novedades.</p>";});
+      return`<div class="card"><small>${fh(n.t)}${n.editado?` · <i>Editado</i>`:""}</small><p style="white-space:pre-wrap">${enl(n.texto)}</p>${tarj}${hiloNov(n)}${esAdmin?`<button data-edn="${n.id}">Editar</button> <button data-del="novedades/${n.id}">Eliminar</button>`:""}</div>`;}).join("")||"<p>Todavía no hay novedades.</p>";});
   }
-  if(tab==="notas"){const yo=todos.find(u=>u.id===user.uid);$("nlista").innerHTML=yo?`<h4>Mi historial</h4>${historial(yo)}`:"";}
+  if(tab==="notas"){const yo=todos.find(u=>u.id===user.uid);$("nlista").innerHTML=yo?`<h4>Mi historial</h4>${historial(yo,false,true)}`:"";}
 }
 document.body.addEventListener("click",async e=>{
   const t=e.target,tr=t.closest("tr[data-ver]");
@@ -307,6 +320,10 @@ document.body.addEventListener("click",async e=>{
   if(t.dataset.com&&$("ctxt").value.trim()){const x=$("ctxt").value.trim().slice(0,600);$("ctxt").value="";
     await addDoc(collection(db,"comentarios"),{para:t.dataset.com,texto:x,t:Date.now()});}
   if(t.id==="npub2"){const x=$("ntx2").value.trim();if(x){$("ntx2").value="";await addDoc(collection(db,"novedades"),{texto:x.slice(0,1500),t:Date.now()});}}
+  if(t.dataset.nresp){const ta=document.querySelector(`[data-nr="${t.dataset.nresp}"]`),x=ta.value.trim();
+    if(x){ta.value="";
+      if(esAdmin)await addDoc(collection(db,"comentarios"),{para:"novedad",notaId:t.dataset.nresp,texto:x.slice(0,600),t:Date.now()});
+      else await addDoc(collection(db,"respuestas"),{uid:user.uid,usuario:nom(todos.find(u=>u.id===user.uid)),para:user.uid,root:t.dataset.nresp,texto:x.slice(0,600),t:Date.now()});}}
   if(t.dataset.edn){editNov=t.dataset.edn;pintarTodo();}
   if(t.dataset.cedn){editNov=null;pintarTodo();}
   if(t.dataset.gedn){const id=t.dataset.gedn,x=document.querySelector(`[data-ed="${id}"]`).value.trim();
@@ -353,16 +370,33 @@ function llenar(sel,vals,et){const a=sel.value;sel.innerHTML=sel.options[0].oute
 function pintar(){
   const q=$("buscar").value.trim().toLowerCase(),t=$("ftipo").value,m=$("fmon").value;
   const l=datos.filter(d=>(!q||d.s.toLowerCase().includes(q)||(d.nombre||"").toLowerCase().includes(q))&&(!t||d.tipo===t)&&(!m||d.moneda===m)).slice(0,300);
-  $("filas").innerHTML=l.map(d=>`<tr class="k${d.s===elegido?" s":""}" data-s="${esc(d.s)}"><td>${esc(d.s)}<small>${esc(d.nombre)}</small></td><td>${esc(nt(d.tipo))}</td><td class="n">${d.ultimo??"-"}</td><td class="n">${d.variacion_pct??"-"}</td></tr>`).join("");
+  $("filas").innerHTML=l.map(d=>`<tr class="k${d.s===elegido?" s":""}" data-s="${esc(d.s)}"><td>${esc(d.s)}<small>${esc(d.nombre)}</small></td><td>${esc(nt(d.tipo))}</td><td class="n">${d.ultimo>0?d.ultimo:"-"}</td><td class="n">${d.ultimo>0&&d.variacion_pct!=null?d.variacion_pct:"-"}</td></tr>`).join("");
 }
-const operable=d=>["acciones","cedears","etfs"].includes(d.tipo)&&d.ultimo>0;
+const operable=d=>(["acciones","cedears","etfs"].includes(d.tipo)||(d.tipo==="bonos"&&esBonoOp(d.s)))&&d.ultimo>0;
 function detalle(){
   const d=datos.find(x=>x.s===elegido);if(!d)return;
-  $("det").innerHTML=`<b>${esc(d.s)}</b> · ${esc(d.nombre)} (${esc(nt(d.tipo))}, ${esc(d.moneda)})<br>Último: <b>${d.ultimo??"-"}</b> · Variación: ${d.variacion_pct??"-"} % · Compra: ${d.compra??"-"} · Venta: ${d.venta??"-"}<br>Apertura ${d.apertura??"-"} · Máximo ${d.maximo??"-"} · Mínimo ${d.minimo??"-"} · Cierre anterior ${d.cierre_anterior??"-"} · Volumen ${d.volumen??"-"}${divTxt(d.s)}`;
-  $("op").classList.toggle("hide",!operable(d)||esAdmin);estimar();
+  $("det").innerHTML=`<b>${esc(d.s)}</b> · ${esc(d.nombre)} (${esc(nt(d.tipo))}, ${esc(d.moneda)})<br>Último: <b>${d.ultimo??"-"}</b> · Variación: ${d.variacion_pct??"-"} % · Compra: ${d.compra??"-"} · Venta: ${d.venta??"-"}<br>Apertura ${d.apertura??"-"} · Máximo ${d.maximo??"-"} · Mínimo ${d.minimo??"-"} · Cierre anterior ${d.cierre_anterior??"-"} · Volumen ${d.volumen??"-"}${divTxt(d.s)}${d.tipo==="bonos"&&!operable(d)?"<br><small>Este bono todavía no tiene calendario de pagos cargado, por eso se muestra solo como referencia.</small>":d.tipo==="obligaciones_negociables"?"<br><small>Las obligaciones negociables se habilitarán próximamente.</small>":d.tipo==="letras"?"<br><small>Las letras no se pueden operar momentáneamente.</small>":""}`;
+  $("op").classList.toggle("hide",!operable(d)||esAdmin);$("cant").placeholder=d.tipo==="bonos"?"Cantidad de nominales":"Cantidad de unidades";estimar();
 }
 const fd=x=>x.split("-").reverse().join("/");
 const divTxt=s=>{const d=(calDiv?.dividendos||[]).filter(x=>x.s===s&&x.ex>=ba().dia).sort((a,b)=>a.ex.localeCompare(b.ex))[0];return d?`<br><b>Próximo dividendo:</b> USD ${d.usd} por unidad · corte ${fd(d.ex)} · pago ${fd(d.pago)}`:"";};
+const bk=s=>calBon&&!calBon.bonos[s]&&calBon.bonos[s.slice(0,-1)]&&"CD".includes(s.slice(-1))?s.slice(0,-1):s;
+const esBonoOp=s=>!!calBon?.bonos[bk(s)];
+const kOf=d=>d.tipo==="bonos"?0.01:1;
+const abBon=new Set();
+function pintarBon(){
+  if(!calBon)return;const hoy=ba().dia;
+  const filas=Object.entries(calBon.bonos).map(([b,i])=>{
+    const L=i.flujos.filter(f=>f.f>=hoy);if(!L.length)return"";
+    const px=precio(b),fx=i.pago==="ccl"?fxCCL():fxMEP();
+    const cob=f=>{const t=f.r+f.a,u=px?100000/(px/100)*t/100:null;return u!=null?`${us(u)} <small>(≈ ${$$(u*fx)})</small>`:"-";};
+    const fila=f=>`<td>${fd(f.f)}</td><td class="n">${f.r.toFixed(2)} %</td><td class="n">${f.a?f.a.toFixed(2)+" %":"-"}</td><td class="n">${(f.r+f.a).toFixed(2)} %</td><td class="n">${f.res.toFixed(0)} %</td><td class="n">${cob(f)}</td>`;
+    const f0=L[0];
+    return`<details class="dv" data-b="${esc(b)}"${abBon.has(b)?" open":""}><summary class="dvr" style="grid-template-columns:1.6fr 1fr 1fr 1fr 1fr 1.6fr"><span><span class="ar">▸</span> <b>${esc(b)}</b><small>${esc(i.nombre)}</small></span><span>${fd(f0.f)}</span><span class="n">${f0.r.toFixed(2)} %</span><span class="n">${f0.a?f0.a.toFixed(2)+" %":"-"}</span><span class="n">${(f0.r+f0.a).toFixed(2)} %</span><span class="n">${cob(f0)}</span></summary><div class="dvb"><small>Todos los pagos que faltan de ${esc(b)} (${L.length}), por cada 100 nominales. Se cobra en dólares ${i.pago==="ccl"?"CCL":"MEP"}.</small><table><thead><tr><th>Fecha de pago</th><th class="n">Renta</th><th class="n">Amortización</th><th class="n">Total</th><th class="n">Capital que queda</th><th class="n">Cobro estimado por cada $100.000</th></tr></thead><tbody>${L.map(f=>`<tr>${fila(f)}</tr>`).join("")}</tbody></table></div></details>`;}).join("");
+  $("bontab").innerHTML=`<div class="l" style="max-height:680px"><div style="min-width:760px"><div class="dvh" style="grid-template-columns:1.6fr 1fr 1fr 1fr 1fr 1.6fr"><span>Bono</span><span>Próximo pago</span><span class="n">Renta</span><span class="n">Amortización</span><span class="n">Total</span><span class="n">Cobro estimado por cada $100.000</span></div>${filas}</div></div><small>Tocá un bono para ver todos sus pagos. El cobro estimado se calcula con el precio actual del bono en pesos y se expresa en dólares (entre paréntesis, su equivalente en pesos). Son referencias: los pagos reales pueden variar. Fuente: ${esc(calBon.fuente)} Por ahora están cargados AL30, GD30, AL35 y GD35 (y sus versiones terminadas en C y D).</small>`;
+}
+$("bontab").addEventListener("toggle",e=>{const d=e.target;if(d.dataset?.b)d.open?abBon.add(d.dataset.b):abBon.delete(d.dataset.b);},true);
+fetch("https://raw.githubusercontent.com/Pablo002k/InvEco/main/data/bonos.json?t="+Math.floor(Date.now()/600000)).then(r=>r.json()).then(j=>{calBon=j;pintarBon();detalle();pintarTodo();}).catch(()=>{});
 const abiertos=new Set();
 function pintarDiv(){
   if(!calDiv)return;const hoy=ba().dia,G={};
@@ -412,7 +446,7 @@ $("filas").onclick=e=>{const tr=e.target.closest("tr");if(tr)elegir(tr.dataset.s
 function estimar(){
   const d=datos.find(x=>x.s===elegido);if(!d)return;
   const n=Math.floor(+$("cant").value)||0,t=$("otipo").value,px=t==="mercado"?d.ultimo:(+$("olim").value||d.ultimo),tasa=(TASA(d)*100).toFixed(2);
-  $("oest").textContent=n?`Importe estimado: ${mon(monDe(d),n*px)} más comisión e IVA de aproximadamente ${mon(monDe(d),n*px*TASA(d))} (${tasa} %).`:`La comisión estimada es del ${tasa} % del importe, IVA incluido.`;
+  $("oest").textContent=n?`Importe estimado: ${mon(monDe(d),n*px*kOf(d))} más comisión e IVA de aproximadamente ${mon(monDe(d),n*px*kOf(d)*TASA(d))} (${tasa} %).`:`La comisión estimada es del ${tasa} % del importe, IVA incluido.`;
 }
 $("otipo").onchange=()=>{$("olim").classList.toggle("hide",$("otipo").value==="mercado");$("ostop").classList.toggle("hide",$("otipo").value!=="stop_limite");estimar();};
 ["cant","olim","ostop"].forEach(i=>$(i).addEventListener("input",estimar));
@@ -421,7 +455,7 @@ $("pub").onclick=async()=>{
   const yo=todos.find(u=>u.id===user.uid);
   if(!ba().abierto)return m.textContent="El mercado está cerrado. Se puede operar de lunes a viernes, de 10:45 a 18:00.";
   if(!d||!(n>0))return m.textContent="Ingresá una cantidad entera mayor que cero.";
-  if(!operable(d))return m.textContent="Por ahora solo se opera con acciones, CEDEARs y ETFs.";
+  if(!operable(d))return m.textContent="Por ahora solo se opera con acciones, CEDEARs, ETFs y los bonos que tienen calendario de pagos cargado.";
   if(t!=="mercado"&&!(lim>0))return m.textContent="Indicá un precio límite mayor que cero.";
   if(t==="stop_limite"&&!(stp>0))return m.textContent="Indicá un precio stop mayor que cero.";
   try{
@@ -432,6 +466,10 @@ $("pub").onclick=async()=>{
   }catch{m.textContent="No se pudo publicar la orden. Probá de nuevo.";}
 };
 
+const ajustar=t=>{t.style.height="auto";t.style.height=Math.min(Math.max(t.scrollHeight,84),220)+"px";};
+document.addEventListener("input",e=>{if(e.target.tagName==="TEXTAREA")ajustar(e.target);});
+new MutationObserver(()=>document.querySelectorAll("textarea").forEach(t=>{if(t.value&&t.scrollHeight>t.clientHeight)ajustar(t);})).observe(document.body,{childList:true,subtree:true});
+document.addEventListener("click",()=>setTimeout(()=>document.querySelectorAll("textarea").forEach(t=>{if(!t.value)t.style.height="";}),400));
 cargar().catch(()=>{$("estado").textContent="Todavía no hay precios. Ejecutá primero la acción en GitHub.";});
 setInterval(()=>{reloj();relojBA();},1000);relojBA();
 $("fxc").onclick=()=>cambio("CD");$("fxv").onclick=()=>cambio("VD");$("fxn").addEventListener("input",estFx);$("fxt").addEventListener("change",estFx);
