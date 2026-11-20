@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 BASE = "https://api.iolinversiones.com"
 TIPOS = ["acciones", "cedears", "etfs", "bonos", "obligaciones_negociables"]
 PLAZO = "T1"       # T1 = 24hs
-INTERVALO = 300    # segundos entre actualizaciones (5 minutos)
+INTERVALO = 60     # segundos entre actualizaciones (1 minuto)
 TOKEN = {}
 
 
@@ -284,8 +284,9 @@ def _db():
 
 def libros(db, tok):
     """Guarda el libro de ofertas real (IOL) de los activos que los alumnos están mirando."""
+    from google.cloud.firestore_v1.base_query import FieldFilter
     ahora = int(time.time() * 1000)
-    for dd in db.collection("libro_pedidos").stream():
+    for dd in db.collection("libro_pedidos").where(filter=FieldFilter("t", ">", ahora - 180000)).stream():
         p = dd.to_dict()
         if ahora - p.get("t", 0) > 180000:   # hace más de 3 minutos que nadie lo mira
             continue
@@ -316,7 +317,7 @@ def pulso():
         print("Libros de ofertas con error:", e)
 
 
-def dividendos(db, precios, hoy):
+def dividendos(db, precios, hoy, usuarios):
     """Acredita los dividendos en dólares a quienes tenían el activo antes de la fecha de corte."""
     from firebase_admin import firestore
     try:
@@ -328,7 +329,7 @@ def dividendos(db, precios, hoy):
         s = d["s"]
         ret = d.get("ret", cal.get("retencion_por_defecto", 0.30))
         corte = int(datetime.strptime(d["ex"], "%Y-%m-%d").replace(tzinfo=timezone(timedelta(hours=-3))).timestamp() * 1000)
-        for ud in db.collection("users").stream():
+        for ud in usuarios:
             u = ud.to_dict()
             if d["id"] in (u.get("divs") or []):
                 continue
@@ -336,6 +337,8 @@ def dividendos(db, precios, hoy):
             for o in sorted(u.get("ops") or [], key=lambda x: x["t"]):
                 if o["t"] < corte and o["s"] == s and o["l"] in ("C", "V"):
                     qty += o["c"] if o["l"] == "C" else -o["c"]
+            if qty <= 0:
+                continue
             uref = ud.reference
 
             @firestore.transactional
@@ -359,7 +362,7 @@ def dividendos(db, precios, hoy):
 ULT = {"t": 0}
 
 
-def evolucion(db, precios):
+def evolucion(db, precios, usuarios):
     """Guarda el valor de cada cartera (cada 15 minutos) para el gráfico de evolución."""
     ahora = int(time.time() * 1000)
     if ahora - ULT["t"] < 14 * 60 * 1000:
@@ -367,7 +370,7 @@ def evolucion(db, precios):
     v = {}
     mep = (tc(precios, "MEP") or {}).get("mid") or fxmed(precios)
     ccl = (tc(precios, "CCL") or {}).get("mid") or mep
-    for dd in db.collection("users").stream():
+    for dd in usuarios:
         u = dd.to_dict()
         val = u.get("cash", 0) + u.get("usd", 0) * mep + u.get("ccl", 0) * ccl
         for s, p in (u.get("pos") or {}).items():
@@ -402,7 +405,7 @@ def operable_s(s, d):
     return operable(d)
 
 
-def pagos_bonos(db, hoy):
+def pagos_bonos(db, hoy, usuarios):
     """Acredita rentas y amortizaciones (en dólares) a quienes tenían el bono antes de la fecha de pago."""
     from firebase_admin import firestore
     for b, info in BONOS.items():
@@ -412,7 +415,7 @@ def pagos_bonos(db, hoy):
                 continue
             pid = f"{b}-{fl['f']}"
             corte = int(datetime.strptime(fl["f"], "%Y-%m-%d").replace(tzinfo=timezone(timedelta(hours=-3))).timestamp() * 1000)
-            for ud in db.collection("users").stream():
+            for ud in usuarios:
                 u = ud.to_dict()
                 if pid in (u.get("divs") or []):
                     continue
@@ -420,6 +423,8 @@ def pagos_bonos(db, hoy):
                 for o in sorted(u.get("ops") or [], key=lambda x: x["t"]):
                     if o["t"] < corte and o["l"] in ("C", "V") and base_bono(o["s"]) == b:
                         qty[o["s"]] = qty.get(o["s"], 0) + (o["c"] if o["l"] == "C" else -o["c"])
+                if not any(q > 0 for q in qty.values()):
+                    continue
                 uref = ud.reference
 
                 @firestore.transactional
@@ -443,6 +448,21 @@ def pagos_bonos(db, hoy):
                         upd["ops"] = ((cur.get("ops") or []) + nuevas)[-1000:]
                     tx.update(uref, upd)
                 pagar(db.transaction())
+
+
+LIMP = {"t": 0}
+
+
+def limpiar(db):
+    """Borra datos viejos (cada hora): evolución de más de 30 días y pedidos de libro de más de un día."""
+    ahora = int(time.time() * 1000)
+    if ahora - LIMP["t"] < 3600000:
+        return
+    LIMP["t"] = ahora
+    from google.cloud.firestore_v1.base_query import FieldFilter
+    for col, edad in (("evolucion", 30 * 86400000), ("libro_pedidos", 86400000)):
+        for dd in db.collection(col).where(filter=FieldFilter("t", "<", ahora - edad)).limit(200).stream():
+            dd.reference.delete()
 
 
 def motor(precios):
@@ -498,10 +518,12 @@ def motor(precios):
         hechas += ejecutar(db, oref, o, ref, TASA(d), mon_de(o["s"], d, precios), 0.01 if d.get("tipo") == "bonos" else 1)
     print(f"Motor de órdenes: {len(docs)} pendientes, {hechas} ejecutadas. Mercado {'abierto' if abierto else 'cerrado'}.")
     try:
-        dividendos(db, precios, hoy)
-        pagos_bonos(db, hoy)
+        usuarios = list(db.collection("users").stream())   # una sola lectura por vuelta
+        dividendos(db, precios, hoy, usuarios)
+        pagos_bonos(db, hoy, usuarios)
         if abierto:
-            evolucion(db, precios)
+            evolucion(db, precios, usuarios)
+        limpiar(db)
     except Exception as e:
         print("Dividendos o evolución con error:", e)
 
