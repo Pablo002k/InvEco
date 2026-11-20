@@ -35,11 +35,12 @@ small{opacity:.65;display:block}
 </div>
 
 <div id="app" class="hide">
-  <div><b id="yo"></b> · <span id="resumen"></span> · <span id="reloj"></span> <button id="sal">Salir</button></div>
+  <div><b id="yo"></b> · <span id="resumen"></span> <button id="sal">Salir</button></div>
   <nav id="tabs"></nav>
 
   <section id="t-mercado">
-    <div style="margin-bottom:8px"><button id="btn" disabled>Actualizar precios</button> <span id="estado">Cargando…</span></div>
+    <p class="reloj"></p>
+    <div style="margin-bottom:8px"><button id="btn">Actualizar ahora</button> <span id="estado">Cargando…</span></div>
     <details class="card"><summary>Ayuda rápida: ¿qué estoy mirando?</summary>
       <p><b>Pesos y dólares.</b> Muchos activos aparecen repetidos: la versión simple se cotiza en pesos y las que terminan en C o D, en dólares. Los activos en dólares se compran con dólares, que se obtienen en "Cambio de moneda": los terminados en D usan dólares MEP y los terminados en C, dólares CCL.</p>
       <p><b>Acción:</b> una parte de una empresa. <b>CEDEAR:</b> un certificado que representa acciones de empresas del exterior y se compra en pesos. <b>ETF:</b> una canasta de activos que se compra como una sola acción.</p>
@@ -75,10 +76,11 @@ small{opacity:.65;display:block}
       <p>Un bono es un préstamo que se le hace al Estado (o a una empresa). A cambio, el emisor se compromete a pagar dos cosas: la <b>renta</b> (o cupón), que son los intereses, y la <b>amortización</b>, que es la devolución del capital prestado, en cuotas o al final.</p>
       <p>Los montos se expresan como porcentaje del <b>valor nominal</b> (VN): el monto original del bono. Los precios se cotizan por cada 100 nominales: si un bono cotiza a $80.000, comprar 100 nominales cuesta $80.000 y 1 nominal cuesta $800.</p>
       <p>Se dice que los intereses se <i>devengan</i> cuando se van acumulando día a día, aunque todavía no se hayan pagado; el cobro llega recién en la fecha de pago. En este simulador se cobra a quien tenía el bono antes de esa fecha, y se acredita en dólares: los Bonar (AL) en dólares MEP y los Global (GD) en dólares CCL.</p>
-      <p>Una amortización es capital que vuelve a tus manos, no una ganancia: por eso, después de cada una, el precio del bono baja en proporción.</p></div>
+      <p>Una amortización es capital que vuelve a tus manos, no una ganancia: por eso, después de cada una, el precio del bono baja en proporción.</p><p><i>Este calendario se está ampliando: próximamente se incorporarán las fechas de más bonos y de obligaciones negociables.</i></p></div>
     <div id="bontab"></div>
   </section>
   <section id="t-fx" class="hide">
+    <p class="reloj"></p>
     <div class="card"><b>Cambio de moneda</b>
       <p>En esta sección se pueden cambiar pesos por dólares y dólares por pesos. Existen dos tipos de dólar financiero: el <b>dólar MEP</b>, que queda depositado en una cuenta en Argentina y sirve para operar los activos cuyo símbolo termina en D, y el <b>dólar CCL</b> (contado con liquidación), que queda en el exterior y sirve para los activos que terminan en C.</p></div>
     <div class="card"><b>¿Cómo se lee la cotización?</b>
@@ -92,7 +94,7 @@ small{opacity:.65;display:block}
       <p id="fxm"></p></div>
   </section>
   <section id="t-divs" class="hide"><div class="card"><b>Calendario de dividendos</b>
-    <p>Un dividendo es la parte de las ganancias que una empresa reparte entre sus accionistas. Para cobrarlo hay que tener el activo antes de la fecha de corte, y el dinero se acredita en la fecha de pago. En este simulador se acredita en dólares, igual que en la realidad, con una retención estimada (30 % para empresas de Estados Unidos). Para pasarlos a pesos, se pueden vender en "Cambio de moneda". Las fechas marcadas como estimadas se calculan con la periodicidad habitual de cada empresa y pueden variar.</p></div>
+    <p>Un dividendo es la parte de las ganancias que una empresa reparte entre sus accionistas. Para cobrarlo hay que tener el activo antes de la fecha de corte, y el dinero se acredita en la fecha de pago. En este simulador se acredita en dólares, igual que en la realidad, con una retención estimada (30 % para empresas de Estados Unidos). Para pasarlos a pesos, se pueden vender en "Cambio de moneda". Las fechas marcadas como estimadas se calculan con la periodicidad habitual de cada empresa y pueden variar.</p><p><i>Este calendario se está ampliando: próximamente se cargarán las fechas de más empresas.</i></p></div>
     <div id="divtab"></div></section>
   <section id="t-alumnos" class="hide"><div id="alu-lista"></div><div id="alu-ficha"></div></section>
   <section id="t-novedades" class="hide">
@@ -141,7 +143,7 @@ const usdPx=s=>precio(s+"C")??precio(s+"D")??(fxMed&&precio(s)?precio(s)/fxMed:n
 function calcFx(){const r=datos.filter(d=>d.tipo==="cedears").map(d=>{const c=datos.find(x=>x.s===d.s+"C");return d.ultimo&&c?.ultimo?d.ultimo/c.ultimo:null;}).filter(Boolean).sort((a,b)=>a-b);fxMed=r.length?r[Math.floor(r.length/2)]:null;}
 function pintarFx(){
   const R=["MEP","CCL"].map(t=>{const x=tcOf(t);return`<tr><td>Dólar ${t}</td><td class="n">${x?$$(x.compra):"-"}</td><td class="n">${x?$$(x.venta):"-"}</td><td>${x?esc(x.par):"No disponible"}</td></tr>`}).join("");
-  $("fxr").innerHTML=`<table><thead><tr><th>Cotización</th><th class="n">Compra</th><th class="n">Venta</th><th>Se calcula con</th></tr></thead><tbody>${R}</tbody></table><small>Precios de ${actualizado?fh(actualizado.getTime()):"-"}. Se renuevan cada 5 minutos.</small>`;
+  $("fxr").innerHTML=`<table><thead><tr><th>Cotización</th><th class="n">Compra</th><th class="n">Venta</th><th>Se calcula con</th></tr></thead><tbody>${R}</tbody></table><small>Precios de ${actualizado?fh(actualizado.getTime()):"-"}. Se renuevan cada minuto.</small>`;
   const yo=user&&todos.find(u=>u.id===user.uid);if(yo&&!esAdmin)$("fxs").textContent=`Tu saldo: ${$$(yo.cash)} · ${us(yo.usd||0)} en dólares MEP · ${us(yo.ccl||0)} en dólares CCL.`;
   estFx();}
 function estFx(){const t=tcOf($("fxt").value),n=Math.floor(+$("fxn").value)||0;$("fxm").textContent=t&&n?`Comprar ${us(n)} costaría aproximadamente ${$$(n*t.venta*1.0142)} con comisiones; venderlos te daría aproximadamente ${$$(n*t.compra*0.9858)}.`:"";}
@@ -151,7 +153,7 @@ async function cambio(l){
   if(!(n>0))return m.textContent="Ingresá una cantidad entera de dólares.";
   if(!tcOf(tipo))return m.textContent="La cotización del dólar no está disponible en este momento.";
   try{await addDoc(collection(db,"ordenes"),{uid:user.uid,usuario:nom(yo),s:"USD",tc:tipo,lado:l,tipo:"mercado",cant:n,vigencia:"dia",dia:ba().dia,estado:"pendiente",t:Date.now()});
-    m.textContent="Orden publicada. Se ejecuta en la próxima actualización de precios, cada 5 minutos como máximo.";$("fxn").value="";}
+    m.textContent="Orden publicada. Se ejecuta en la próxima actualización de precios, aproximadamente cada minuto.";$("fxn").value="";}
   catch{m.textContent="No se pudo publicar la orden. Probá de nuevo.";}
 }
 const cab=(autor,tit,t)=>`<b>${esc(autor)}</b><br><small>${tit} · ${fh(t)}</small>`;
@@ -178,7 +180,7 @@ function conservar(el,ctx,fn){  // conserva lo que se está escribiendo mientras
 const TASA=d=>d.tipo==="letras"?0.003:0.0071;   // comisión + IVA (aprox.)
 function ba(){const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:TZ,weekday:"short",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date()).map(x=>[x.type,x.value]));
   const m=+p.hour*60+ +p.minute;return{dia:`${p.year}-${p.month}-${p.day}`,hora:`${p.hour}:${p.minute}:${p.second}`,abierto:!["Sat","Sun"].includes(p.weekday)&&m>=645&&m<1080};}
-function relojBA(){const b=ba();$("reloj").textContent=`Buenos Aires ${b.hora} · `+(b.abierto?"Mercado abierto":"Mercado cerrado (abre a las 10:45, de lunes a viernes)");$("pub").disabled=!b.abierto;}
+function relojBA(){const b=ba(),t=`Buenos Aires ${b.hora} · `+(b.abierto?"Mercado abierto":"Mercado cerrado (abre a las 10:45, de lunes a viernes)");document.querySelectorAll(".reloj").forEach(e=>e.textContent=t);$("pub").disabled=!b.abierto;$("fxc").disabled=$("fxv").disabled=!b.abierto;}
 let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],novs=[],ver=null,verAlu=null,editNov=null,calBon=null,fxMed=null,resps=[],evo=[],calDiv=null,libro=null,unsubLibro=null,tab="mercado";
 
 /* ---------- Acceso ---------- */
@@ -240,6 +242,7 @@ function contable(u){
 }
 function grafEvo(u){
   const P=evo.map(e=>({t:e.t,v:e.v?.[u.id]})).filter(p=>p.v!=null);
+  if(datos.length)P.push({t:Date.now(),v:valor(u)});
   if(P.length<2)return"<small>El gráfico de evolución aparecerá cuando haya al menos dos registros del patrimonio (se guardan cada 15 minutos en horario de mercado).</small>";
   const W=600,H=170,m=30,t0=P[0].t,t1=P[P.length-1].t,vs=P.map(p=>p.v).concat(CAPITAL),mn=Math.min(...vs),mx=Math.max(...vs);
   const X=t=>m+(W-2*m)*(t-t0)/(t1-t0||1),Y=v=>H-m-(H-2*m)*(v-mn)/(mx-mn||1);
@@ -257,16 +260,28 @@ function estado(u){
   <h4>Detalle por activo</h4>${F?`<div class="l"><table><thead><tr><th>Activo</th><th class="n">Cantidad disponible</th><th class="n">Precio promedio de compra</th><th class="n">Precio actual</th><th class="n">Valor actual</th><th class="n">Resultado no realizado</th><th class="n">Resultado realizado</th><th class="n">Recuperado por ventas</th><th class="n">Comisiones</th><th class="n">Dividendos</th></tr></thead><tbody>${F}</tbody></table></div><small>Cada activo se muestra en su moneda de cotización.</small>`:"<p>Todavía no tiene operaciones.</p>"}
   <h4>Libro de operaciones</h4>${L?`<div class="l"><table><thead><tr><th>Fecha y hora</th><th>Operación</th><th>Activo</th><th class="n">Cantidad</th><th class="n">Precio</th><th class="n">Importe bruto</th><th class="n">Comisión</th><th class="n">Importe neto</th></tr></thead><tbody>${L}</tbody></table></div><small>Importe neto: lo que se pagó (en una compra, con la comisión incluida) o lo que se recibió (en una venta, ya descontada la comisión).</small>`:"<p>Todavía no hay operaciones.</p>"}`;
 }
+const abPx=new Set();
 function proxDiv(u){
-  const hoy=ba().dia,fx=s=>{const a=precio(s),b=precio(s+"C")??precio(s+"D");return a&&b?a/b:null;};
-  const R=(calDiv?.dividendos||[]).filter(d=>d.pago>=hoy).sort((a,b)=>a.pago.localeCompare(b.pago)).map(d=>{
-    const corte=Date.parse(d.ex+"T00:00:00-03:00"),q=(u.ops||[]).reduce((a,o)=>o.s===d.s&&o.t<corte&&o.l!=="D"?a+(o.l==="C"?o.c:-o.c):a,0);
-    if(q<=0)return"";
-    const f=fx(d.s),dias=Math.round((Date.parse(d.pago+"T00:00:00Z")-Date.parse(hoy+"T00:00:00Z"))/864e5),neto=q*d.usd*(1-(d.ret??calDiv.retencion_por_defecto));
-    return`<li><b>${esc(d.s)}</b>: se paga el ${fd(d.pago)} (${dias>0?`faltan ${dias} día${dias>1?"s":""}`:"se acredita hoy"}). Cobro estimado: <b>${us(neto)}</b> (se acredita en dólares) por ${q} unidades${d.estimado?" · fecha y monto estimados":""}.${d.ex>=hoy?` Para cobrarlo, hay que mantener el activo hasta la fecha de corte (${fd(d.ex)}).`:""}</li>`;}).join("");
-  return R?`<h4>Próximos dividendos de tu cartera</h4><ul>${R}</ul>`:"";
+  const hoy=ba().dia,G={};
+  const dias=f=>Math.round((Date.parse(f+"T00:00:00Z")-Date.parse(hoy+"T00:00:00Z"))/864e5);
+  const cuando=f=>{const d=dias(f);return d>0?`faltan ${d} día${d>1?"s":""}`:"se acredita hoy";};
+  const tenia=(pred,corte)=>(u.ops||[]).reduce((a,o)=>pred(o.s)&&o.t<corte&&(o.l==="C"||o.l==="V")?a+(o.l==="C"?o.c:-o.c):a,0);
+  for(const d of calDiv?.dividendos||[]){
+    if(d.pago<hoy)continue;
+    const q=tenia(x=>x===d.s,Date.parse(d.ex+"T00:00:00-03:00"));if(q<=0)continue;
+    (G[d.s]=G[d.s]||[]).push({f:d.pago,u:q*d.usd*(1-(d.ret??calDiv.retencion_por_defecto)),det:`Dividendo por ${q} unidad${q>1?"es":""}${d.ex>=hoy?`. Para cobrarlo hay que mantener el activo hasta la fecha de corte (${fd(d.ex)})`:""}${d.estimado?". Fecha y monto estimados":""}`});
+  }
+  for(const[b,i]of Object.entries(calBon?.bonos||{}))for(const f of i.flujos){
+    if(f.f<hoy)continue;
+    const q=tenia(x=>bk(x)===b,Date.parse(f.f+"T00:00:00-03:00"));if(q<=0)continue;
+    (G[b]=G[b]||[]).push({f:f.f,u:q*(f.r+f.a)/100,det:`Renta de US$ ${(q*f.r/100).toFixed(2)}${f.a?` y devolución de capital de US$ ${(q*f.a/100).toFixed(2)}`:""} por ${q} nominal${q>1?"es":""}`});
+  }
+  const R=Object.entries(G).map(([s,L])=>{L.sort((a,b)=>a.f.localeCompare(b.f));const p=L[0];
+    return`<details class="dv" data-p="${esc(s)}"${abPx.has(s)?" open":""}><summary class="dvr" style="grid-template-columns:1fr 2.4fr 1.2fr"><span><span class="ar">▸</span> <b>${esc(s)}</b></span><span>Próximo cobro: ${fd(p.f)} (${cuando(p.f)})</span><span class="n">${us(p.u)}</span></summary><div class="dvb"><ul>${L.map(x=>`<li>${fd(x.f)} (${cuando(x.f)}): <b>${us(x.u)}</b>. ${esc(x.det)}.</li>`).join("")}</ul></div></details>`;}).join("");
+  return R?`<h4>Próximos cobros de tu cartera</h4><div class="card" style="padding:0">${R}</div><small>Importes estimados, que se acreditan en dólares. Tocá un activo para ver todos sus cobros.</small>`:"";
 }
-function ficha(u,herr){
+document.body.addEventListener("toggle",e=>{const d=e.target;if(d.dataset?.p)d.open?abPx.add(d.dataset.p):abPx.delete(d.dataset.p);},true);
+function ficha(u,herr,sinMsg){
   if(!u)return"";
   const v=valor(u),r=pct(v),comT=(u.ops||[]).reduce((a,o)=>a+(o.com||0),0);
   const filas=Object.entries(u.pos||{}).map(([s,p])=>{const px=precio(s)??p.costo/p.c,val=p.c*px,res=val-p.costo;
@@ -275,7 +290,7 @@ function ficha(u,herr){
   const TT={mercado:"a precio de mercado",limite:"límite",stop_limite:"stop límite"};
   const ords=ordenes.filter(o=>o.uid===u.id).slice(0,15).map(o=>`<li>${fh(o.t)} · ${{C:"Compra",V:"Venta",CD:"Compra de dólares",VD:"Venta de dólares"}[o.lado]} de ${o.cant} ${esc(o.s)} (${TT[o.tipo]}${o.limite?` ${$$(o.limite)}`:""}${o.stop?`, stop ${$$(o.stop)}`:""}; ${o.vigencia==="dia"?"por el día":"hasta cancelar"}) · <b>${esc(o.estado)}</b>${o.fill?` a ${$$(o.fill.px)}`:""}${o.motivo?` · ${esc(o.motivo)}`:""} ${o.estado==="pendiente"&&u.id===user.uid?`<button data-canc="${o.id}">Cancelar</button>`:""}</li>`).join("");
     const adm=herr?`<div class="card"><b>Consejo general para este alumno</b><br><br><textarea id="ctxt" rows="2" placeholder="Escribí un consejo general para este alumno (lo verán todos)"></textarea><br><br><button data-com="${u.id}">Publicar consejo</button> <button data-reset="${u.id}">Reiniciar cartera</button></div>`:"";
-  return`<div class="card"><h3>${esc(nom(u))}</h3>${u.id===user.uid&&!esAdmin?proxDiv(u):""}${estado(u)}<h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul><h4>Mensajes</h4>${historial(u,herr)}${adm}</div>`;
+  return`<div class="card"><h3>${esc(nom(u))}</h3>${u.id===user.uid&&!esAdmin?proxDiv(u):""}${estado(u)}<h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul>${sinMsg?"":`<h4>Mensajes</h4>${historial(u,herr)}`}${adm}</div>`;
 }
 
 function pintarTodo(){
@@ -283,7 +298,7 @@ function pintarTodo(){
   const yo=todos.find(u=>u.id===user.uid);
   $("yo").textContent=yo?nom(yo):"";
   if(yo&&!esAdmin)$("resumen").textContent=`Efectivo ${$$(yo.cash)}${yo.usd?` · ${us(yo.usd)} MEP`:""}${yo.ccl?` · ${us(yo.ccl)} CCL`:""} · Total ${$$(valor(yo))} (${pct(valor(yo)).toFixed(2)} %)`;
-  if(tab==="cartera")$("t-cartera").innerHTML=ficha(yo);
+  if(tab==="cartera")$("t-cartera").innerHTML=ficha(yo,false,true);
   if(tab==="ranking"){
     const keep=$("ctxt")?{v:$("ctxt").value,f:document.activeElement===$("ctxt")}:null;
     const comp=u=>{const g={};for(const[s,p]of Object.entries(u.pos||{})){const t=nt(datos.find(d=>d.s===s)?.tipo||"Otros");(g[t]=g[t]||[]).push(`${s} ×${p.c}`);}
@@ -432,11 +447,10 @@ async function cargar(){
   pintar();detalle();pintarTodo();pintarDiv();pintarFx();return true;
 }
 function reloj(){
-  if(!actualizado)return;const f=habilitadoDesde-Date.now();
+  if(!actualizado)return;
   const h=actualizado.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hour12:false});
-  if(f>0){const s=Math.ceil(f/1000);$("btn").disabled=true;
-    $("estado").textContent=`${datos.length} activos · Precios de las ${h} · Próxima actualización en ${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}.`;}
-  else{$("btn").disabled=false;$("estado").textContent=`${datos.length} activos · Precios de las ${h} · Ya puede haber precios nuevos.`;}
+  $("btn").disabled=false;
+  $("estado").textContent=`${datos.length} activos · Precios de las ${h} · Se actualizan solos cada minuto.`;
 }
 $("btn").onclick=async()=>{$("btn").disabled=true;$("estado").textContent="Buscando precios nuevos…";
   try{if(!(await cargar()))habilitadoDesde=Date.now()+20000;}catch{habilitadoDesde=Date.now()+20000;}};
@@ -462,7 +476,7 @@ $("pub").onclick=async()=>{
     await addDoc(collection(db,"ordenes"),{uid:user.uid,usuario:nom(yo),s:d.s,lado:$("olado").value,tipo:t,cant:n,
       ...(t!=="mercado"?{limite:lim}:{}),...(t==="stop_limite"?{stop:stp,activada:false}:{}),
       vigencia:$("ovig").value,dia:ba().dia,estado:"pendiente",t:Date.now()});
-    m.textContent="Orden publicada. Se evalúa en cada actualización de precios, cada 5 minutos como máximo.";$("cant").value="";
+    m.textContent="Orden publicada. Se evalúa en cada actualización de precios, aproximadamente cada minuto.";$("cant").value="";
   }catch{m.textContent="No se pudo publicar la orden. Probá de nuevo.";}
 };
 
@@ -470,6 +484,7 @@ const ajustar=t=>{t.style.height="auto";t.style.height=Math.min(Math.max(t.scrol
 document.addEventListener("input",e=>{if(e.target.tagName==="TEXTAREA")ajustar(e.target);});
 new MutationObserver(()=>document.querySelectorAll("textarea").forEach(t=>{if(t.value&&t.scrollHeight>t.clientHeight)ajustar(t);})).observe(document.body,{childList:true,subtree:true});
 document.addEventListener("click",()=>setTimeout(()=>document.querySelectorAll("textarea").forEach(t=>{if(!t.value)t.style.height="";}),400));
+setInterval(()=>{if(!document.hidden)cargar().catch(()=>{});},60000);
 cargar().catch(()=>{$("estado").textContent="Todavía no hay precios. Ejecutá primero la acción en GitHub.";});
 setInterval(()=>{reloj();relojBA();},1000);relojBA();
 $("fxc").onclick=()=>cambio("CD");$("fxv").onclick=()=>cambio("VD");$("fxn").addEventListener("input",estFx);$("fxt").addEventListener("change",estFx);
