@@ -470,7 +470,7 @@ def limpiar(db):
         dd.reference.delete()
 
 
-def motor(precios):
+def motor(precios, actualizado=None):
     """Evalúa las órdenes pendientes con los precios reales. Solo corre en horario de mercado."""
     clave = os.environ.get("FIREBASE_CLAVE")
     if not clave:
@@ -490,6 +490,8 @@ def motor(precios):
         print("Vistas previas con error:", e)
     ahora = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
     hoy, mins = ahora.strftime("%Y-%m-%d"), ahora.hour * 60 + ahora.minute
+    if actualizado:   # avisa a todas las páginas que hay precios nuevos
+        db.collection("estado").document("precios").set({"actualizado": actualizado, "t": int(time.time() * 1000)})
     abierto = ahora.weekday() < 5 and 645 <= mins < 1080
     docs = sorted(db.collection("ordenes").where(filter=FieldFilter("estado", "==", "pendiente")).stream(),
                   key=lambda x: x.to_dict().get("t", 0))
@@ -541,11 +543,12 @@ def main():
     ciclo = 0
     while True:
         ciclo += 1
+        inicio = time.time()
         try:
             salida = traer(usuario, clave, ciclo == 1)
             publicar(salida)
             try:
-                motor(salida["precios"])
+                motor(salida["precios"], salida["actualizado"])
             except Exception as e:
                 print("Motor de órdenes con error:", e)
             print(f"Ciclo {ciclo} OK")
@@ -556,8 +559,8 @@ def main():
                          "o un bloqueo de IOL a los servidores de GitHub.")
         if time.time() + INTERVALO > fin:
             break
-        for _ in range(INTERVALO // 30):
-            time.sleep(30)
+        while time.time() < inicio + INTERVALO:   # el ciclo completo dura un minuto, contando el tiempo de trabajo
+            time.sleep(max(1, min(30, inicio + INTERVALO - time.time())))
             pulso()
 
 
