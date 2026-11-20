@@ -1,6 +1,6 @@
 {
- "fuente": "Cronogramas publicados por Rava Bursátil, Allaria y Eco Valores (consultados en noviembre de 2026). Montos por cada 100 nominales originales. Las fechas se ajustan al siguiente día hábil (el 9 de julio es feriado).",
- "nota": "Los bonos Bonar (AL) pagan en dólares MEP y los Global (GD), en dólares CCL.",
+ "fuente": "Cronogramas publicados por Rava Bursátil, Allaria y Eco Valores (bonos soberanos) y avisos de emisión de Banco Macro y Edenor (ONs), consultados en noviembre de 2026. Montos por cada 100 nominales originales. Las fechas se ajustan al siguiente día hábil.",
+ "nota": "Los Bonar (AL) pagan en dólares MEP; los Global (GD) y las ONs internacionales, en dólares CCL.",
  "bonos": {
   "AL30": {
    "nombre": "Bonar 2030 (ley argentina)",
@@ -335,6 +335,102 @@
      "r": 0.25,
      "a": 10,
      "res": 0
+    }
+   ]
+  },
+  "BACG": {
+   "nombre": "ON Banco Macro Clase G 8 % (vence 23/06/2029)",
+   "pago": "ccl",
+   "flujos": [
+    {
+     "f": "2026-12-23",
+     "r": 4.0,
+     "a": 0,
+     "res": 100
+    },
+    {
+     "f": "2027-06-23",
+     "r": 4.0,
+     "a": 0,
+     "res": 100
+    },
+    {
+     "f": "2027-12-23",
+     "r": 4.0,
+     "a": 0,
+     "res": 100
+    },
+    {
+     "f": "2028-06-23",
+     "r": 4.0,
+     "a": 0,
+     "res": 100
+    },
+    {
+     "f": "2028-12-26",
+     "r": 4.0,
+     "a": 0,
+     "res": 100
+    },
+    {
+     "f": "2029-06-25",
+     "r": 4.0,
+     "a": 100,
+     "res": 0
+    }
+   ]
+  },
+  "DNC7": {
+   "nombre": "ON Edenor Clase 7 9,75 % (vence 24/10/2030)",
+   "pago": "ccl",
+   "flujos": [
+    {
+     "f": "2027-04-26",
+     "r": 4.875,
+     "a": 0,
+     "res": 100.0
+    },
+    {
+     "f": "2027-10-25",
+     "r": 4.875,
+     "a": 0,
+     "res": 100.0
+    },
+    {
+     "f": "2028-04-24",
+     "r": 4.875,
+     "a": 0,
+     "res": 100.0
+    },
+    {
+     "f": "2028-10-24",
+     "r": 4.875,
+     "a": 33.33,
+     "res": 66.67
+    },
+    {
+     "f": "2029-04-24",
+     "r": 3.2502,
+     "a": 0,
+     "res": 66.67
+    },
+    {
+     "f": "2029-10-24",
+     "r": 3.2502,
+     "a": 33.33,
+     "res": 33.34
+    },
+    {
+     "f": "2030-04-24",
+     "r": 1.6253,
+     "a": 0,
+     "res": 33.34
+    },
+    {
+     "f": "2030-10-24",
+     "r": 1.6253,
+     "a": 33.34,
+     "res": 0.0
     }
    ]
   }
