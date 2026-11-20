@@ -6,6 +6,9 @@ on:
       minutos:
         description: "Cuántos minutos seguirá actualizando (0 = una sola vez)"
         default: "180"
+  schedule:
+    # Lunes a viernes, durante el horario del mercado (10:07 a 17:37 en Buenos Aires = 13:07 a 20:37 UTC).
+    - cron: "7,37 13-20 * * 1-5"
 
 permissions:
   contents: write
@@ -31,4 +34,4 @@ jobs:
           IOL_CLAVE: ${{ secrets.IOL_CLAVE }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           FIREBASE_CLAVE: ${{ secrets.FIREBASE_CLAVE }}
-          MINUTOS: ${{ inputs.minutos }}
+          MINUTOS: ${{ inputs.minutos || '35' }}
