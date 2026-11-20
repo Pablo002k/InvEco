@@ -122,8 +122,7 @@ def mon_de(s, d, precios):
     """Cuenta en la que se opera: ARS (pesos), USD (dólar MEP, terminados en D) o CCL (dólar cable, terminados en C)."""
     if not RE_USD.search(d.get("moneda") or ""):
         return "ARS"
-    base = precios.get(s[:-1])
-    return "CCL" if s.endswith("C") and base and not RE_USD.search(base.get("moneda") or "") else "USD"
+    return "CCL" if s.endswith("C") else "USD"
 
 
 def tc(precios, tipo="MEP"):
@@ -363,13 +362,15 @@ ULT = {"t": 0}
 
 
 def evolucion(db, precios, usuarios):
-    """Guarda el valor de cada cartera (cada 15 minutos) para el gráfico de evolución."""
+    """Guarda el patrimonio de cada alumno (cada 5 minutos) en un documento por día, para el gráfico."""
     ahora = int(time.time() * 1000)
-    if ahora - ULT["t"] < 14 * 60 * 1000:
+    if ahora - ULT["t"] < 270000:
         return
-    v = {}
+    from zoneinfo import ZoneInfo
+    ba = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
     mep = (tc(precios, "MEP") or {}).get("mid") or fxmed(precios)
     ccl = (tc(precios, "CCL") or {}).get("mid") or mep
+    v = {}
     for dd in usuarios:
         u = dd.to_dict()
         val = u.get("cash", 0) + u.get("usd", 0) * mep + u.get("ccl", 0) * ccl
@@ -378,7 +379,8 @@ def evolucion(db, precios, usuarios):
             unit = ult * p.get("k", 1) if ult else (p["costo"] / p["c"] if p["c"] else 0)
             val += p["c"] * unit * {"USD": mep, "CCL": ccl}.get(p.get("m"), 1)
         v[dd.id] = round(val, 2)
-    db.collection("evolucion").document(str(ahora)).set({"t": ahora, "v": v})
+    dia = ba.strftime("%Y-%m-%d")
+    db.collection("evolucion_dia").document(dia).set({"d": dia, "h" + ba.strftime("%H%M"): v}, merge=True)
     ULT["t"] = ahora
 
 
@@ -396,11 +398,11 @@ def cargar_bonos():
 def base_bono(s):
     if s in BONOS:
         return s
-    return s[:-1] if s[:-1] in BONOS and s[-1:] in ("C", "D") else None
+    return s[:-1] if s[:-1] in BONOS and s[-1:] in ("C", "D", "O") else None
 
 
 def operable_s(s, d):
-    if d.get("tipo") == "bonos":
+    if d.get("tipo") in ("bonos", "obligaciones_negociables"):
         return bool(base_bono(s)) and (d.get("ultimo") or 0) > 0
     return operable(d)
 
@@ -463,6 +465,9 @@ def limpiar(db):
     for col, edad in (("evolucion", 30 * 86400000), ("libro_pedidos", 86400000)):
         for dd in db.collection(col).where(filter=FieldFilter("t", "<", ahora - edad)).limit(200).stream():
             dd.reference.delete()
+    d0 = (datetime.now(timezone.utc) - timedelta(days=60)).strftime("%Y-%m-%d")
+    for dd in db.collection("evolucion_dia").where(filter=FieldFilter("d", "<", d0)).limit(50).stream():
+        dd.reference.delete()
 
 
 def motor(precios):
@@ -515,13 +520,13 @@ def motor(precios):
                 continue
         if o["tipo"] != "mercado" and ((c and ref > o["limite"]) or (not c and ref < o["limite"])):
             continue
-        hechas += ejecutar(db, oref, o, ref, TASA(d), mon_de(o["s"], d, precios), 0.01 if d.get("tipo") == "bonos" else 1)
+        hechas += ejecutar(db, oref, o, ref, TASA(d), mon_de(o["s"], d, precios), 0.01 if d.get("tipo") in ("bonos", "obligaciones_negociables") else 1)
     print(f"Motor de órdenes: {len(docs)} pendientes, {hechas} ejecutadas. Mercado {'abierto' if abierto else 'cerrado'}.")
     try:
         usuarios = list(db.collection("users").stream())   # una sola lectura por vuelta
         dividendos(db, precios, hoy, usuarios)
         pagos_bonos(db, hoy, usuarios)
-        if abierto:
+        if abierto or (ahora.weekday() < 5 and 1080 <= mins < 1095):
             evolucion(db, precios, usuarios)
         limpiar(db)
     except Exception as e:
