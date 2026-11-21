@@ -22,6 +22,7 @@ small{opacity:.65;display:block}
 #tv{height:380px;border:1px solid #8884}
 .card{border:1px solid #8884;padding:10px;margin:10px 0}
 .pv{display:flex;gap:10px;border:1px solid #8884;margin-top:8px;text-decoration:none;color:inherit}.pv img{width:150px;object-fit:cover}.pv span{padding:8px}.nota{border-left:4px solid #3b82f6}.consejo{border-left:4px solid #d97706}.resp{border-left:4px solid #8886;margin-left:18px}.res{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}.res>div{border:1px solid #8884;padding:8px}.res small{display:block}.dvr,.dvh{display:grid;grid-template-columns:1.7fr 1fr 1fr 1fr .9fr .7fr 1fr 1.4fr;gap:6px;padding:8px;align-items:center}.dvr{cursor:pointer;list-style:none}.dvr::-webkit-details-marker{display:none}.dvh{font-weight:600;font-size:.85rem;border-bottom:1px solid #8884}.dv{border-bottom:1px solid #8883}.dvr .n,.dvh .n{text-align:right}.ar{display:inline-block;transition:transform .15s}details[open]>.dvr .ar{transform:rotate(90deg)}.dvb{padding:0 8px 10px 26px}textarea{resize:none;min-height:84px;max-height:220px;overflow-y:auto;line-height:1.4}.up{color:#0a7d33}.dn{color:#c0282d}.hide{display:none}
+.evo{display:grid;grid-template-columns:1.7fr 1fr;gap:12px;align-items:start}@media(max-width:800px){.evo{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -40,7 +41,7 @@ small{opacity:.65;display:block}
 
   <section id="t-mercado">
     <p class="reloj"></p>
-    <div style="margin-bottom:8px"><button id="btn">Actualizar ahora</button> <span id="estado">Cargando…</span></div>
+    <div style="margin-bottom:8px"><button id="btn">Actualizar ahora</button> <button id="btnTodos" class="hide">Actualizar para todos</button> <span id="estado">Cargando…</span></div>
     <details class="card"><summary>Ayuda rápida: ¿qué estoy mirando?</summary>
       <p><b>Pesos y dólares.</b> Muchos activos aparecen repetidos: la versión simple se cotiza en pesos y las que terminan en C o D, en dólares. Los activos en dólares se compran con dólares, que se obtienen en "Cambio de moneda": los terminados en D usan dólares MEP y los terminados en C, dólares CCL.</p>
       <p><b>Acción:</b> una parte de una empresa. <b>CEDEAR:</b> un certificado que representa acciones de empresas del exterior y se compra en pesos. <b>ETF:</b> una canasta de activos que se compra como una sola acción.</p>
@@ -145,7 +146,7 @@ function calcFx(){const r=datos.filter(d=>d.tipo==="cedears").map(d=>{const c=da
 function pintarFx(){
   const R=["MEP","CCL"].map(t=>{const x=tcOf(t);return`<tr><td>Dólar ${t}</td><td class="n">${x?$$(x.compra):"-"}</td><td class="n">${x?$$(x.venta):"-"}</td><td>${x?esc(x.par):"No disponible"}</td></tr>`}).join("");
   $("fxr").innerHTML=`<table><thead><tr><th>Cotización</th><th class="n">Compra</th><th class="n">Venta</th><th>Se calcula con</th></tr></thead><tbody>${R}</tbody></table><small>Precios de ${actualizado?fh(actualizado.getTime()):"-"}. Se renuevan cada minuto.</small>`;
-  const yo=user&&todos.find(u=>u.id===user.uid);if(yo&&!esAdmin)$("fxs").textContent=`Tu saldo: ${$$(yo.cash)} · ${us(yo.usd||0)} en dólares MEP · ${us(yo.ccl||0)} en dólares CCL.`;
+  const yo=user&&todos.find(u=>u.id===user.uid);if(yo)$("fxs").textContent=`Tu saldo: ${$$(yo.cash)} · ${us(yo.usd||0)} en dólares MEP · ${us(yo.ccl||0)} en dólares CCL.`;
   estFx();}
 function estFx(){const t=tcOf($("fxt").value),n=Math.floor(+$("fxn").value)||0;$("fxm").textContent=t&&n?`Comprar ${us(n)} costaría aproximadamente ${$$(n*t.venta*1.0142)} con comisiones; venderlos te daría aproximadamente ${$$(n*t.compra*0.9858)}.`:"";}
 async function cambio(l){
@@ -187,35 +188,53 @@ let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDes
 /* ---------- Acceso ---------- */
 const correo=u=>u+"@economia-aula.app";
 const ERR={"auth/invalid-credential":"Usuario o contraseña incorrectos.","auth/email-already-in-use":"Ese usuario ya existe. Elegí otro.","auth/weak-password":"La contraseña debe tener al menos 6 caracteres.","auth/network-request-failed":"No hay conexión. Revisá tu internet."};
+let registrando=false;
+async function asegurarCartera(u){   // si la cuenta existe pero no tiene cartera (alta interrumpida), se la crea
+  try{const r=doc(db,"users",u.uid);
+    if(!(await getDoc(r)).exists()){const n=u.email.split("@")[0];await setDoc(r,{usuario:n,nombre:n,cash:CAPITAL,pos:{},ops:[]});}
+  }catch(e){console.warn("No se pudo verificar la cartera:",e.code);}
+}
 async function acceso(nuevo){
   const raw=$("u").value.trim(),u=raw.toLowerCase(),p=$("p").value;
   if(!/^[a-z0-9._-]{3,20}$/.test(u))return $("msg").textContent="El usuario debe tener entre 3 y 20 caracteres: letras, números, punto, guion o guion bajo.";
   try{
-    if(nuevo){const c=await createUserWithEmailAndPassword(auth,correo(u),p);
+    if(nuevo){registrando=true;const c=await createUserWithEmailAndPassword(auth,correo(u),p);
       await setDoc(doc(db,"users",c.user.uid),{usuario:u,nombre:raw,cash:CAPITAL,pos:{},ops:[]});}
     else await signInWithEmailAndPassword(auth,correo(u),p);
   }catch(e){$("msg").textContent=ERR[e.code]||"No se pudo completar la acción. Probá de nuevo.";}
+  finally{registrando=false;if(nuevo&&auth.currentUser)asegurarCartera(auth.currentUser);}
 }
 $("ent").onclick=()=>acceso(false);$("reg").onclick=()=>acceso(true);$("sal").onclick=()=>signOut(auth);
 
+let unsubs=[];
+const escuchar=(ref,fn)=>unsubs.push(onSnapshot(ref,fn,e=>console.warn("Firestore:",e.code)));
+function limpiarSesion(){   // cierra las conexiones y borra lo que quedó de la sesión anterior
+  unsubs.forEach(f=>f());unsubs=[];if(unsubLibro){unsubLibro();unsubLibro=null;}
+  todos=[];notas=[];coment=[];ordenes=[];novs=[];resps=[];evo=[];ver=null;verAlu=null;editNov=null;elegido=null;libro=null;
+  $("tv").innerHTML="";$("det").textContent="Elegí un activo de la lista.";$("op").classList.add("hide");$("libro").classList.add("hide");$("resumen").textContent="";
+}
 onAuthStateChanged(auth,u=>{
+  limpiarSesion();
   user=u;$("auth").classList.toggle("hide",!!u);$("app").classList.toggle("hide",!u);
-  if(!u)return;
-  esAdmin=u.email===correo(ADMIN);$("fxf").classList.toggle("hide",esAdmin);
-  onSnapshot(collection(db,"users"),s=>{todos=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  onSnapshot(query(collection(db,"notas"),orderBy("t","desc"),limit(200)),s=>{notas=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  onSnapshot(collection(db,"comentarios"),s=>{coment=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  onSnapshot(query(collection(db,"ordenes"),orderBy("t","desc"),limit(300)),s=>{ordenes=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  onSnapshot(query(collection(db,"novedades"),orderBy("t","desc"),limit(100)),s=>{novs=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  onSnapshot(query(collection(db,"evolucion_dia"),orderBy("d","desc"),limit(21)),s=>{
+  if(!u){$("p").value="";$("msg").textContent="";return;}
+  if(!registrando)asegurarCartera(u);
+  esAdmin=u.email===correo(ADMIN);$("btnTodos").classList.toggle("hide",!esAdmin);
+  escuchar(collection(db,"users"),s=>{todos=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
+  escuchar(query(collection(db,"notas"),orderBy("t","desc"),limit(200)),s=>{notas=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
+  escuchar(collection(db,"comentarios"),s=>{coment=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
+  escuchar(query(collection(db,"ordenes"),orderBy("t","desc"),limit(300)),s=>{ordenes=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
+  escuchar(query(collection(db,"novedades"),orderBy("t","desc"),limit(100)),s=>{novs=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
+  escuchar(query(collection(db,"evolucion_dia"),orderBy("d","desc"),limit(21)),s=>{
     evo=s.docs.flatMap(d=>{const x=d.data();return Object.entries(x).filter(([k])=>/^h\d{4}$/.test(k)).map(([k,v])=>({t:Date.parse(`${x.d}T${k.slice(1,3)}:${k.slice(3)}:00-03:00`),v}));}).sort((a,b)=>a.t-b.t);pintarTodo();});
-  onSnapshot(query(collection(db,"respuestas"),orderBy("t","desc"),limit(500)),s=>{resps=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  armarTabs();
+  escuchar(query(collection(db,"respuestas"),orderBy("t","desc"),limit(500)),s=>{resps=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
+  escuchar(doc(db,"estado","precios"),s=>{const x=s.data();if(x?.actualizado)sincronizar(x.actualizado);});
+  escuchar(doc(db,"estado","forzar"),s=>{if(s.data()?.t)cargar().catch(()=>{});});
+  irA("mercado");
 });
 
 /* ---------- Pestañas ---------- */
 function armarTabs(){
-  const t=esAdmin?[["mercado","Mercado"],["fx","Cambio de moneda"],["ranking","Ranking"],["divs","Calendario de dividendos"],["bonos","Calendario de bonos y ONs"],["alumnos","Alumnos"],["novedades","Novedades"]]:[["mercado","Mercado"],["fx","Cambio de moneda"],["cartera","Mi cartera"],["ranking","Ranking"],["divs","Calendario de dividendos"],["bonos","Calendario de bonos y ONs"],["notas","Mis notas semanales"],["novedades","Novedades"]];
+  const t=esAdmin?[["mercado","Mercado"],["fx","Cambio de moneda"],["cartera","Mi cartera"],["ranking","Ranking"],["divs","Calendario de dividendos"],["bonos","Calendario de bonos y ONs"],["alumnos","Alumnos"],["novedades","Novedades"]]:[["mercado","Mercado"],["fx","Cambio de moneda"],["cartera","Mi cartera"],["ranking","Ranking"],["divs","Calendario de dividendos"],["bonos","Calendario de bonos y ONs"],["notas","Mis notas semanales"],["novedades","Novedades"]];
   $("tabs").innerHTML=t.map(([k,n])=>`<button data-k="${k}" class="${k===tab?"on":""}">${n}</button>`).join("");
 }
 $("tabs").onclick=e=>{const k=e.target.dataset.k;if(!k)return;tab=k;
@@ -252,9 +271,13 @@ function grafEvo(u){
   P=[...B.values()].sort((a,b)=>a.t-b.t).slice(-80);
   const btn=`<div class="tf">${[["10m","10 minutos"],["1h","1 hora"],["1d","1 día"],["1s","1 semana"]].map(([k,n])=>`<button data-tf="${k}" class="${k===evoRes?"on":""}">${n}</button>`).join(" ")}</div>`;
   if(P.length<2)return`<h4>Evolución del patrimonio</h4>${btn}<small>Todavía no hay suficientes registros para este intervalo. El patrimonio se guarda cada 5 minutos mientras el mercado está abierto.</small>`;
-  const W=600,H=170,m=30,t0=P[0].t,t1=P[P.length-1].t,vs=P.map(p=>p.v).concat(CAPITAL),mn=Math.min(...vs),mx=Math.max(...vs);
-  const X=t=>m+(W-2*m)*(t-t0)/(t1-t0||1),Y=v=>H-m-(H-2*m)*(v-mn)/(mx-mn||1);
-  return`<h4>Evolución del patrimonio</h4>${btn}<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:720px"><line x1="${m}" x2="${W-m}" y1="${Y(CAPITAL)}" y2="${Y(CAPITAL)}" stroke="#8886" stroke-dasharray="4"/><polyline fill="none" stroke="#3b82f6" stroke-width="2" points="${P.map(p=>X(p.t).toFixed(1)+","+Y(p.v).toFixed(1)).join(" ")}"/><text x="${m}" y="12" font-size="11" fill="currentColor">${$$(mx)}</text><text x="${m}" y="${H-8}" font-size="11" fill="currentColor">${fh(t0)}</text><text x="${W-m}" y="${H-8}" font-size="11" text-anchor="end" fill="currentColor">${fh(t1)}</text></svg><small>Cada punto muestra el último valor de un intervalo de ${{"10m":"10 minutos","1h":"1 hora","1d":"1 día","1s":"1 semana"}[evoRes]}. La línea punteada marca el capital inicial (${$$(CAPITAL)}).</small>`;
+  const W=640,H=220,ml=82,mr=14,mt=14,mb=32,t0=P[0].t,t1=P[P.length-1].t,vs=P.map(p=>p.v).concat(CAPITAL),mn=Math.min(...vs),mx=Math.max(...vs);
+  const X=t=>ml+(W-ml-mr)*(t-t0)/(t1-t0||1),Y=v=>H-mb-(H-mt-mb)*(v-mn)/(mx-mn||1);
+  const fl=t=>new Date(t).toLocaleString("es-AR",{timeZone:TZ,day:"2-digit",month:"2-digit",...(evoRes==="1d"||evoRes==="1s"?{}:{hour:"2-digit",minute:"2-digit",hourCycle:"h23"})});
+  const reja=[0,1,2,3,4].map(i=>mn+(mx-mn)*i/4).map(v=>`<line x1="${ml}" x2="${W-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#8883"/><text x="${ml-6}" y="${Y(v)+4}" font-size="11" text-anchor="end" fill="currentColor">${$$(v)}</text>`).join("");
+  const ejeX=[0,1,2,3].map(i=>t0+(t1-t0)*i/3).map((t,i)=>`<text x="${X(t)}" y="${H-10}" font-size="10" text-anchor="${i===0?"start":i===3?"end":"middle"}" fill="currentColor">${fl(t)}</text>`).join("");
+  const filas=[...P].reverse().map((p,i,a)=>{const d=a[i+1]?p.v-a[i+1].v:null;return`<tr><td>${fl(p.t)}</td><td class="n">${$$(p.v)}</td><td class="n ${d==null?"":cls(d)}">${d==null?"-":(d>=0?"+":"")+$$(d)}</td></tr>`;}).join("");
+  return`<h4>Evolución del patrimonio</h4>${btn}<div class="evo"><svg viewBox="0 0 ${W} ${H}" style="width:100%">${reja}${ejeX}<line x1="${ml}" x2="${W-mr}" y1="${Y(CAPITAL)}" y2="${Y(CAPITAL)}" stroke="#8886" stroke-dasharray="4"/><polyline fill="none" stroke="#3b82f6" stroke-width="2" points="${P.map(p=>X(p.t).toFixed(1)+","+Y(p.v).toFixed(1)).join(" ")}"/></svg><div class="l" style="max-height:${H}px"><table><thead><tr><th>Momento</th><th class="n">Patrimonio</th><th class="n">Variación</th></tr></thead><tbody>${filas}</tbody></table></div></div><small>Cada punto es el último valor de un intervalo de ${{"10m":"10 minutos","1h":"1 hora","1d":"1 día","1s":"1 semana"}[evoRes]}. La línea punteada marca el capital inicial (${$$(CAPITAL)}). La tabla muestra los mismos puntos, del más reciente al más antiguo.</small>`;
 }
 function estado(u){
   const c=contable(u),res=c.pat-CAPITAL,dif=res-c.re-c.nr-c.dv,k=(t,v,cl="")=>`<div><small>${t}</small><b class="${cl}">${v}</b></div>`;
@@ -298,14 +321,14 @@ function ficha(u,herr,sinMsg){
   const TT={mercado:"a precio de mercado",limite:"límite",stop_limite:"stop límite"};
   const ords=ordenes.filter(o=>o.uid===u.id).slice(0,15).map(o=>`<li>${fh(o.t)} · ${{C:"Compra",V:"Venta",CD:"Compra de dólares",VD:"Venta de dólares"}[o.lado]} de ${o.cant} ${esc(o.s)} (${TT[o.tipo]}${o.limite?` ${$$(o.limite)}`:""}${o.stop?`, stop ${$$(o.stop)}`:""}; ${o.vigencia==="dia"?"por el día":"hasta cancelar"}) · <b>${esc(o.estado)}</b>${o.fill?` a ${$$(o.fill.px)}`:""}${o.motivo?` · ${esc(o.motivo)}`:""} ${o.estado==="pendiente"&&u.id===user.uid?`<button data-canc="${o.id}">Cancelar</button>`:""}</li>`).join("");
     const adm=herr?`<div class="card"><b>Consejo general para este alumno</b><br><br><textarea id="ctxt" rows="2" placeholder="Escribí un consejo general para este alumno (lo verán todos)"></textarea><br><br><button data-com="${u.id}">Publicar consejo</button> <button data-reset="${u.id}">Reiniciar cartera</button></div>`:"";
-  return`<div class="card"><h3>${esc(nom(u))}</h3>${u.id===user.uid&&!esAdmin?proxDiv(u):""}${estado(u)}<h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul>${sinMsg?"":`<h4>Mensajes</h4>${historial(u,herr)}`}${adm}</div>`;
+  return`<div class="card"><h3>${esc(nom(u))}</h3>${u.id===user.uid?proxDiv(u):""}${estado(u)}<h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul>${sinMsg?"":`<h4>Mensajes</h4>${historial(u,herr)}`}${adm}</div>`;
 }
 
 function pintarTodo(){
   if(!user)return;
   const yo=todos.find(u=>u.id===user.uid);
   $("yo").textContent=yo?nom(yo):"";
-  if(yo&&!esAdmin)$("resumen").textContent=`Efectivo ${$$(yo.cash)}${yo.usd?` · ${us(yo.usd)} MEP`:""}${yo.ccl?` · ${us(yo.ccl)} CCL`:""} · Total ${$$(valor(yo))} (${pct(valor(yo)).toFixed(2)} %)`;
+  if(yo)$("resumen").textContent=`Efectivo ${$$(yo.cash)}${yo.usd?` · ${us(yo.usd)} MEP`:""}${yo.ccl?` · ${us(yo.ccl)} CCL`:""} · Total ${$$(valor(yo))} (${pct(valor(yo)).toFixed(2)} %)`;
   if(tab==="cartera")$("t-cartera").innerHTML=ficha(yo,false,true);
   if(tab==="ranking"){
     const keep=$("ctxt")?{v:$("ctxt").value,f:document.activeElement===$("ctxt")}:null;
@@ -400,7 +423,7 @@ const operable=d=>(["acciones","cedears","etfs"].includes(d.tipo)||((d.tipo==="b
 function detalle(){
   const d=datos.find(x=>x.s===elegido);if(!d)return;
   $("det").innerHTML=`<b>${esc(d.s)}</b> · ${esc(d.nombre)} (${esc(nt(d.tipo))}, ${esc(d.moneda)})<br>Último: <b>${d.ultimo??"-"}</b> · Variación: ${d.variacion_pct??"-"} % · Compra: ${d.compra??"-"} · Venta: ${d.venta??"-"}<br>Apertura ${d.apertura??"-"} · Máximo ${d.maximo??"-"} · Mínimo ${d.minimo??"-"} · Cierre anterior ${d.cierre_anterior??"-"} · Volumen ${d.volumen??"-"}${divTxt(d.s)}${(d.tipo==="bonos"||d.tipo==="obligaciones_negociables")&&!operable(d)?"<br><small>Este título todavía no tiene calendario de pagos cargado, por eso se muestra solo como referencia.</small>":d.tipo==="letras"?"<br><small>Las letras no se pueden operar momentáneamente.</small>":""}`;
-  $("op").classList.toggle("hide",!operable(d)||esAdmin);$("cant").placeholder=d.tipo==="bonos"?"Cantidad de nominales":"Cantidad de unidades";estimar();
+  $("op").classList.toggle("hide",!operable(d));$("cant").placeholder=d.tipo==="bonos"?"Cantidad de nominales":"Cantidad de unidades";estimar();
 }
 const fd=x=>x.split("-").reverse().join("/");
 const divTxt=s=>{const d=(calDiv?.dividendos||[]).filter(x=>x.s===s&&x.ex>=ba().dia).sort((a,b)=>a.ex.localeCompare(b.ex))[0];return d?`<br><b>Próximo dividendo:</b> USD ${d.usd} por unidad · corte ${fd(d.ex)} · pago ${fd(d.pago)}`:"";};
@@ -462,6 +485,12 @@ function reloj(){
   $("btn").disabled=false;
   $("estado").textContent=`${datos.length} activos · Datos de las ${h} · Última verificación a las ${ultCheck?ultCheck.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}):"-"} · Se verifican solos cada minuto.`;
 }
+let reint=null;
+function sincronizar(act){   // el servidor avisa que publicó precios nuevos: todos los usuarios los buscan a la vez
+  const meta=Date.parse(act);let n=0;clearInterval(reint);
+  const f=async()=>{try{await cargar();}catch{}if((actualizado&&actualizado.getTime()>=meta)||++n>=16)clearInterval(reint);};
+  f();reint=setInterval(f,15000);
+}
 $("btn").onclick=async()=>{$("btn").disabled=true;$("estado").textContent="Buscando precios nuevos…";
   try{if(!(await cargar()))habilitadoDesde=Date.now()+20000;}catch{habilitadoDesde=Date.now()+20000;}};
 ["buscar","ftipo","fmon"].forEach(i=>$(i).addEventListener(i==="buscar"?"input":"change",pintar));
@@ -497,6 +526,7 @@ document.addEventListener("click",()=>setTimeout(()=>document.querySelectorAll("
 setInterval(()=>{if(!document.hidden)cargar().catch(()=>{});},60000);
 cargar().catch(()=>{$("estado").textContent="Todavía no hay precios. Ejecutá primero la acción en GitHub.";});
 setInterval(()=>{reloj();relojBA();},1000);relojBA();
+$("btnTodos").onclick=()=>setDoc(doc(db,"estado","forzar"),{t:Date.now()});
 $("fxc").onclick=()=>cambio("CD");$("fxv").onclick=()=>cambio("VD");$("fxn").addEventListener("input",estFx);$("fxt").addEventListener("change",estFx);
 setInterval(()=>{if(elegido&&tab==="mercado")pedirLibro(elegido);},120000);
 </script>
