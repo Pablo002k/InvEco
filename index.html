@@ -37,6 +37,8 @@ small{opacity:.65;display:block}
 
 <div id="app" class="hide">
   <div><b id="yo"></b> · <span id="resumen"></span> <button id="sal">Salir</button></div>
+  <nav id="princ"><button data-sec="real" class="on">Simulador de mercado</button> <button data-sec="demo">Demo</button></nav>
+  <div id="demoBar" class="card hide"></div>
   <nav id="tabs"></nav>
 
   <section id="t-mercado">
@@ -118,7 +120,7 @@ small{opacity:.65;display:block}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,updateDoc,runTransaction,collection,addDoc,deleteDoc,onSnapshot,query,orderBy,limit} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,getDoc,setDoc,updateDoc,runTransaction,collection,addDoc,deleteDoc,onSnapshot,query,orderBy,limit,getDocs,writeBatch} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {CONFIG,ADMIN,CAPITAL} from "./config.js";
 
 const app=initializeApp(CONFIG),auth=getAuth(app),db=getFirestore(app);
@@ -154,7 +156,7 @@ async function cambio(l){
   if(!ba().abierto)return m.textContent="El mercado está cerrado. Se puede operar de lunes a viernes, de 10:45 a 18:00.";
   if(!(n>0))return m.textContent="Ingresá una cantidad entera de dólares.";
   if(!tcOf(tipo))return m.textContent="La cotización del dólar no está disponible en este momento.";
-  try{await addDoc(collection(db,"ordenes"),{uid:user.uid,usuario:nom(yo),s:"USD",tc:tipo,lado:l,tipo:"mercado",cant:n,vigencia:"dia",dia:ba().dia,estado:"pendiente",t:Date.now()});
+  try{await addDoc(collection(db,C("ordenes")),{uid:user.uid,usuario:nom(yo),s:"USD",tc:tipo,lado:l,tipo:"mercado",cant:n,vigencia:"dia",dia:ba().dia,estado:"pendiente",t:Date.now()});
     m.textContent="Orden publicada. Se ejecuta en la próxima actualización de precios, aproximadamente cada minuto.";$("fxn").value="";}
   catch{m.textContent="No se pudo publicar la orden. Probá de nuevo.";}
 }
@@ -181,9 +183,150 @@ function conservar(el,ctx,fn){  // conserva lo que se está escribiendo mientras
   el.querySelectorAll("textarea,input").forEach(x=>{const r=g.find(([a])=>a&&a===k(x));if(r)x.value=r[1];if(f&&k(x)===f)x.focus();});}
 const TASA=d=>d.tipo==="letras"?0.003:0.0071;   // comisión + IVA (aprox.)
 function ba(){const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:TZ,weekday:"short",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date()).map(x=>[x.type,x.value]));
-  const m=+p.hour*60+ +p.minute;return{dia:`${p.year}-${p.month}-${p.day}`,hora:`${p.hour}:${p.minute}:${p.second}`,abierto:!["Sat","Sun"].includes(p.weekday)&&m>=645&&m<1080};}
-function relojBA(){const b=ba(),t=`Buenos Aires ${b.hora} · `+(b.abierto?"Mercado abierto":"Mercado cerrado (abre a las 10:45, de lunes a viernes)");document.querySelectorAll(".reloj").forEach(e=>e.textContent=t);$("pub").disabled=!b.abierto;$("fxc").disabled=$("fxv").disabled=!b.abierto;}
+  const m=+p.hour*60+ +p.minute;return{dia:`${p.year}-${p.month}-${p.day}`,hora:`${p.hour}:${p.minute}:${p.second}`,abierto:demoActiva||(!["Sat","Sun"].includes(p.weekday)&&m>=645&&m<1080)};}
+function relojBA(){const b=ba(),t=`Buenos Aires ${b.hora} · `+(demoActiva?"Demo: mercado simulado, abierto todo el día":b.abierto?"Mercado abierto":"Mercado cerrado (abre a las 10:45, de lunes a viernes)");document.querySelectorAll(".reloj").forEach(e=>e.textContent=t);$("pub").disabled=!b.abierto;$("fxc").disabled=$("fxv").disabled=!b.abierto;}
 let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],novs=[],ver=null,verAlu=null,editNov=null,ultCheck=null,calBon=null,fxMed=null,resps=[],evo=[],calDiv=null,libro=null,unsubLibro=null,tab="mercado";
+/* ---------- DEMO (version de prueba con datos temporales) ---------- */
+let demoActiva=false,demoCfg=null,demoPx=null,datosReal=[],demoOcupado=false,demoNota="";
+const C=n=>demoActiva?"prueba_"+n:n;
+const tSim=p=>(demoCfg?.inicio||0)+p*600000;
+const tAhora=()=>demoActiva&&demoPx&&demoCfg?tSim(demoPx.paso||0):Date.now();
+const enDemoSS=()=>{try{return sessionStorage.getItem("enDemo")==="1";}catch{return false;}};
+const prs=t=>Object.fromEntries((t||"").split(";").filter(Boolean).map(x=>{const i=x.lastIndexOf(":");return[x.slice(0,i),+x.slice(i+1)];}));
+const rd=x=>+x.toPrecision(5);
+const famDe=(s,S)=>s.length>1&&"CDO".includes(s.slice(-1))&&S.has(s.slice(0,-1))?s.slice(0,-1):s;
+const valoresAlumnos=()=>Object.fromEntries(todos.filter(u=>(u.usuario||"")!==ADMIN).map(u=>[u.id,Math.round(valor(u)*100)/100]));
+function dNota(t){demoNota=t;pintarPrinc();if(t)setTimeout(()=>{if(demoNota===t){demoNota="";pintarPrinc();}},10000);}
+function pintarPrinc(){
+  document.querySelectorAll("#princ button").forEach(b=>b.classList.toggle("on",(b.dataset.sec==="demo")===demoActiva));
+  const B=$("demoBar");let h="";
+  if(demoActiva){
+    h=`<b>Demo activa.</b> Simulación con datos temporales: no afecta las cuentas reales. Avances de 10 minutos: ${demoPx?.paso||0}. Hora simulada: ${demoCfg?fh(tAhora()):"-"}.`;
+    if(esAdmin)h+=` <button id="dAv">Avanzar 10 minutos</button> <button id="dFin">Terminar demo</button>`;
+  }else if(demoCfg?.activo){
+    h=`Hay una demo activa. <button id="dEnt">Entrar a la Demo</button>${esAdmin?` <button id="dFin">Terminar demo</button>`:""}`;
+  }
+  if(demoNota)h+=(h?"<br>":"")+esc(demoNota);
+  if(B._h!==h){B.innerHTML=h;B._h=h;}
+  B.classList.toggle("hide",!h);
+}
+function repintarDatos(){calcFx();pintar();detalle();pintarTodo();pintarDiv();pintarFx();}
+function aplicarDemo(){   // arma los precios de la demo a partir de los reales + el estado de la demo
+  if(!demoActiva)return;
+  if(!demoPx){datos=datosReal;calcFx();return;}
+  const B=prs(demoPx.base),N=prs(demoPx.now);
+  datos=datosReal.map(d=>{const b=B[d.s],n=N[d.s];
+    return b>0&&n>0?{...d,ultimo:n,apertura:b,cierre_anterior:b,maximo:Math.max(b,n),minimo:Math.min(b,n),variacion_pct:+((n/b-1)*100).toFixed(2),compra:rd(n*0.998),venta:rd(n*1.002)}:d;});
+  calcFx();
+}
+function moverPrecios(px){   // cada familia de activos varia +-3 %; los activos en pesos ademas siguen al dolar (+-1 %)
+  const N=prs(px.now),S=new Set(Object.keys(N)),F={},g=1+(Math.random()*0.02-0.01),out=[];
+  for(const d of datosReal){const p=N[d.s];if(!(p>0))continue;
+    const f=famDe(d.s,S);if(F[f]==null)F[f]=1+(Math.random()*0.06-0.03);
+    out.push(d.s+":"+rd(p*F[f]*(esUSD(d)?1:g)));}
+  return{base:px.base,now:out.join(";"),paso:(px.paso||0)+1,t:Date.now()};
+}
+function suscribir(){
+  escuchar(collection(db,C("users")),s=>{todos=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
+  escuchar(query(collection(db,C("notas")),orderBy("t","desc"),limit(200)),s=>{notas=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
+  escuchar(collection(db,C("comentarios")),s=>{coment=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
+  escuchar(query(collection(db,C("ordenes")),orderBy("t","desc"),limit(300)),s=>{ordenes=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
+  escuchar(query(collection(db,C("novedades")),orderBy("t","desc"),limit(100)),s=>{novs=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
+  if(demoActiva){
+    escuchar(query(collection(db,"prueba_evo"),orderBy("t","asc")),s=>{evo=s.docs.map(d=>({t:d.data().t,v:d.data().v}));pintarTodo();});
+    escuchar(doc(db,"prueba_precios","actual"),s=>{demoPx=s.data()||null;aplicarDemo();repintarDatos();});
+  }else{
+    escuchar(query(collection(db,"evolucion_dia"),orderBy("d","desc"),limit(21)),s=>{
+      evo=s.docs.flatMap(d=>{const x=d.data();return Object.entries(x).filter(([k])=>/^h\d{4}$/.test(k)).map(([k,v])=>({t:Date.parse(`${x.d}T${k.slice(1,3)}:${k.slice(3)}:00-03:00`),v}));}).sort((a,b)=>a.t-b.t);pintarTodo();});
+  }
+  escuchar(query(collection(db,C("respuestas")),orderBy("t","desc"),limit(500)),s=>{resps=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
+  escuchar(doc(db,"estado","precios"),s=>{const x=s.data();if(x?.actualizado)sincronizar(x.actualizado);});
+  escuchar(doc(db,"estado","forzar"),s=>{if(s.data()?.t)cargar().catch(()=>{});});
+  escuchar(doc(db,"prueba_config","demo"),s=>{
+    demoCfg=s.data()||null;
+    if(demoActiva&&!demoCfg?.activo)return salirDemo("La demo terminó. Volviste al simulador real.");
+    if(!demoActiva&&demoCfg?.activo&&enDemoSS())entrarDemo();
+    pintarTodo();});
+}
+async function borrarDemo(){   // limpieza automatica de todas las colecciones temporales
+  for(const c of ["users","ordenes","precios","evo","notas","comentarios","novedades","respuestas"]){
+    const s=await getDocs(collection(db,"prueba_"+c));
+    for(let i=0;i<s.docs.length;i+=400){const b=writeBatch(db);s.docs.slice(i,i+400).forEach(d=>b.delete(d.ref));await b.commit();}
+  }
+}
+async function iniciarDemo(){
+  if(demoOcupado)return;
+  if(!datosReal.some(d=>d.ultimo>0))return dNota("Todavía no se cargaron los precios. Esperá unos segundos y probá de nuevo.");
+  demoOcupado=true;
+  try{
+    dNota("Preparando la demo...");
+    await borrarDemo();
+    const base=datosReal.filter(d=>d.ultimo>0).map(d=>d.s+":"+d.ultimo).join(";"),t=Date.now();
+    await setDoc(doc(db,"prueba_precios","actual"),{base,now:base,paso:0,t});
+    await setDoc(doc(db,"prueba_config","demo"),{activo:true,inicio:t,admin:user.uid});
+  }catch(e){console.warn(e);demoOcupado=false;return dNota("No se pudo iniciar la demo. Revisá que las reglas de Firestore estén publicadas.");}
+  demoOcupado=false;dNota("");
+  await entrarDemo();
+}
+async function entrarDemo(){
+  if(demoActiva||demoOcupado||!user)return;
+  demoOcupado=true;
+  try{
+    const real=todos.find(u=>u.id===user.uid),r=doc(db,"prueba_users",user.uid);
+    if(!(await getDoc(r)).exists()){
+      const n=user.email.split("@")[0];
+      await setDoc(r,{usuario:real?.usuario||n,nombre:real?.nombre||n,cash:CAPITAL,usd:0,ccl:0,pos:{},ops:[]});
+    }
+  }catch(e){console.warn(e);demoOcupado=false;return dNota("No se pudo entrar a la demo. Probá de nuevo.");}
+  demoOcupado=false;
+  limpiarSesion();demoActiva=true;demoPx=null;evoRes="10m";demoNota="";
+  try{sessionStorage.setItem("enDemo","1");}catch{}
+  datos=datosReal;suscribir();irA("mercado");
+}
+function salirDemo(motivo){
+  limpiarSesion();demoActiva=false;demoPx=null;evoRes="1h";
+  try{sessionStorage.removeItem("enDemo");}catch{}
+  datos=datosReal;suscribir();irA("mercado");repintarDatos();
+  dNota(motivo||"");
+}
+async function terminarDemo(){
+  if(!esAdmin||demoOcupado)return;
+  if(!confirm("¿Terminar la demo? Se borran todos los datos temporales y todos vuelven al simulador real."))return;
+  demoOcupado=true;
+  try{
+    dNota("Terminando la demo...");
+    await setDoc(doc(db,"prueba_config","demo"),{activo:false,fin:Date.now()});
+    await borrarDemo();
+    dNota("Demo terminada. Los datos temporales fueron borrados.");
+  }catch(e){console.warn(e);dNota("No se pudo terminar la demo por completo. Probá de nuevo.");}
+  finally{demoOcupado=false;}
+}
+async function avanzarDemo(){
+  if(!esAdmin||!demoActiva||!demoPx||demoOcupado)return;
+  demoOcupado=true;
+  try{
+    const p=demoPx.paso||0,id=n=>"p"+String(n).padStart(4,"0"),v0=valoresAlumnos();
+    const nuevo=moverPrecios(demoPx);
+    demoPx=nuevo;aplicarDemo();
+    const v1=valoresAlumnos(),b=writeBatch(db);
+    b.set(doc(db,"prueba_evo",id(p)),{t:tSim(p),paso:p,v:v0});
+    b.set(doc(db,"prueba_evo",id(p+1)),{t:tSim(p+1),paso:p+1,v:v1});
+    b.set(doc(db,"prueba_precios","actual"),nuevo);
+    await b.commit();
+    repintarDatos();
+  }catch(e){console.warn(e);dNota("No se pudieron avanzar los precios. Probá de nuevo.");}
+  finally{demoOcupado=false;}
+}
+function irSeccion(s){
+  if(s==="demo"){
+    if(demoActiva)return;
+    if(demoCfg?.activo)return entrarDemo();
+    if(!esAdmin)return dNota("No hay una demo activa en este momento. La inicia el docente.");
+    if(confirm("No hay una demo activa. ¿Querés iniciarla? Se borran los datos temporales anteriores y todos empiezan con el capital inicial."))iniciarDemo();
+  }else if(demoActiva)salirDemo();
+}
+$("princ").onclick=e=>{const s=e.target.dataset.sec;if(s)irSeccion(s);};
+$("demoBar").onclick=e=>{const i=e.target.id;if(i==="dAv")avanzarDemo();if(i==="dFin")terminarDemo();if(i==="dEnt")entrarDemo();};
 
 /* ---------- Acceso ---------- */
 const correo=u=>u+"@economia-aula.app";
@@ -214,21 +357,11 @@ function limpiarSesion(){   // cierra las conexiones y borra lo que quedó de la
   $("tv").innerHTML="";$("det").textContent="Elegí un activo de la lista.";$("op").classList.add("hide");$("libro").classList.add("hide");$("resumen").textContent="";
 }
 onAuthStateChanged(auth,u=>{
-  limpiarSesion();
+  limpiarSesion();demoActiva=false;demoPx=null;demoCfg=null;datos=datosReal;
   user=u;$("auth").classList.toggle("hide",!!u);$("app").classList.toggle("hide",!u);
   if(!u){$("p").value="";$("msg").textContent="";return;}
   if(!registrando)asegurarCartera(u);
   esAdmin=u.email===correo(ADMIN);$("btnTodos").classList.toggle("hide",!esAdmin);
-  escuchar(collection(db,"users"),s=>{todos=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  escuchar(query(collection(db,"notas"),orderBy("t","desc"),limit(200)),s=>{notas=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  escuchar(collection(db,"comentarios"),s=>{coment=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  escuchar(query(collection(db,"ordenes"),orderBy("t","desc"),limit(300)),s=>{ordenes=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  escuchar(query(collection(db,"novedades"),orderBy("t","desc"),limit(100)),s=>{novs=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  escuchar(query(collection(db,"evolucion_dia"),orderBy("d","desc"),limit(21)),s=>{
-    evo=s.docs.flatMap(d=>{const x=d.data();return Object.entries(x).filter(([k])=>/^h\d{4}$/.test(k)).map(([k,v])=>({t:Date.parse(`${x.d}T${k.slice(1,3)}:${k.slice(3)}:00-03:00`),v}));}).sort((a,b)=>a.t-b.t);pintarTodo();});
-  escuchar(query(collection(db,"respuestas"),orderBy("t","desc"),limit(500)),s=>{resps=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  escuchar(doc(db,"estado","precios"),s=>{const x=s.data();if(x?.actualizado)sincronizar(x.actualizado);});
-  escuchar(doc(db,"estado","forzar"),s=>{if(s.data()?.t)cargar().catch(()=>{});});
   irA("mercado");
 });
 
@@ -270,7 +403,7 @@ const RES={"10m":6e5,"1h":36e5,"1d":864e5,"1s":6048e5};
 function grafEvo(u){
   const r=RES[evoRes];
   let P=evo.map(e=>({t:e.t,v:e.v?.[u.id]})).filter(p=>p.v!=null);
-  if(datos.length)P.push({t:Date.now(),v:valor(u)});
+  if(datos.length)P.push({t:tAhora(),v:valor(u)});
   const B=new Map();P.forEach(p=>B.set(Math.floor(p.t/r),p));   // se conserva el último valor de cada intervalo
   P=[...B.values()].sort((a,b)=>a.t-b.t).slice(-80);
   const btn=`<div class="tf">${[["10m","10 minutos"],["1h","1 hora"],["1d","1 día"],["1s","1 semana"]].map(([k,n])=>`<button data-tf="${k}" class="${k===evoRes?"on":""}">${n}</button>`).join(" ")}</div>`;
@@ -330,6 +463,7 @@ function ficha(u,herr,sinMsg){
 
 function pintarTodo(){
   if(!user)return;
+  pintarPrinc();
   const yo=todos.find(u=>u.id===user.uid);
   $("yo").textContent=yo?nom(yo):"";
   if(yo)$("resumen").textContent=`Efectivo ${$$(yo.cash)}${yo.usd?` · ${us(yo.usd)} MEP`:""}${yo.ccl?` · ${us(yo.ccl)} CCL`:""} · Total ${$$(valor(yo))} (${pct(valor(yo)).toFixed(2)} %)`;
@@ -366,30 +500,30 @@ function pintarTodo(){
 document.body.addEventListener("click",async e=>{
   const t=e.target,tr=t.closest("tr[data-ver]");
   if(tr){ver=tr.dataset.ver;pintarTodo();}
-  if(t.dataset.del&&confirm("¿Seguro que querés borrarlo?"))await deleteDoc(doc(db,...t.dataset.del.split("/")));
+  if(t.dataset.del&&confirm("¿Seguro que querés borrarlo?"))await deleteDoc(doc(db,...t.dataset.del.split("/").map((x,i)=>i?x:C(x))));
   if(t.dataset.com&&$("ctxt").value.trim()){const x=$("ctxt").value.trim().slice(0,600);$("ctxt").value="";
-    await addDoc(collection(db,"comentarios"),{para:t.dataset.com,texto:x,t:Date.now()});}
-  if(t.id==="npub2"){const x=$("ntx2").value.trim();if(x){$("ntx2").value="";await addDoc(collection(db,"novedades"),{texto:x.slice(0,1500),t:Date.now()});}}
+    await addDoc(collection(db,C("comentarios")),{para:t.dataset.com,texto:x,t:Date.now()});}
+  if(t.id==="npub2"){const x=$("ntx2").value.trim();if(x){$("ntx2").value="";await addDoc(collection(db,C("novedades")),{texto:x.slice(0,1500),t:Date.now(),...(demoActiva?{previews:[]}:{})});}}
   if(t.dataset.nresp){const ta=document.querySelector(`[data-nr="${t.dataset.nresp}"]`),x=ta.value.trim();
     if(x){ta.value="";
-      if(esAdmin)await addDoc(collection(db,"comentarios"),{para:"novedad",notaId:t.dataset.nresp,texto:x.slice(0,600),t:Date.now()});
-      else await addDoc(collection(db,"respuestas"),{uid:user.uid,usuario:nom(todos.find(u=>u.id===user.uid)),para:user.uid,root:t.dataset.nresp,texto:x.slice(0,600),t:Date.now()});}}
+      if(esAdmin)await addDoc(collection(db,C("comentarios")),{para:"novedad",notaId:t.dataset.nresp,texto:x.slice(0,600),t:Date.now()});
+      else await addDoc(collection(db,C("respuestas")),{uid:user.uid,usuario:nom(todos.find(u=>u.id===user.uid)),para:user.uid,root:t.dataset.nresp,texto:x.slice(0,600),t:Date.now()});}}
   if(t.dataset.tf){evoRes=t.dataset.tf;pintarTodo();}
   if(t.dataset.edn){editNov=t.dataset.edn;pintarTodo();}
   if(t.dataset.cedn){editNov=null;pintarTodo();}
   if(t.dataset.gedn){const id=t.dataset.gedn,x=document.querySelector(`[data-ed="${id}"]`).value.trim();
-    if(x){editNov=null;await updateDoc(doc(db,"novedades",id),{texto:x.slice(0,1500),editado:Date.now(),previews:null});}}
+    if(x){editNov=null;await updateDoc(doc(db,C("novedades"),id),{texto:x.slice(0,1500),editado:Date.now(),previews:demoActiva?[]:null});}}
   if(t.id==="xls")exportar();
   if(t.dataset.alu){verAlu=t.dataset.alu;pintarTodo();}
   if(t.dataset.resp){const ta=document.querySelector(`[data-rt="${t.dataset.resp}"]`),x=ta.value.trim();
-    if(x){ta.value="";await addDoc(collection(db,"comentarios"),{para:t.dataset.para,notaId:t.dataset.resp,texto:x.slice(0,600),t:Date.now()});}}
+    if(x){ta.value="";await addDoc(collection(db,C("comentarios")),{para:t.dataset.para,notaId:t.dataset.resp,texto:x.slice(0,600),t:Date.now()});}}
   if(t.dataset.sresp){const ta=document.querySelector(`[data-sr="${t.dataset.sresp}"]`),x=ta.value.trim();
-    if(x){ta.value="";await addDoc(collection(db,"respuestas"),{uid:user.uid,usuario:nom(todos.find(u=>u.id===user.uid)),para:user.uid,root:t.dataset.sresp,texto:x.slice(0,600),t:Date.now()});}}
+    if(x){ta.value="";await addDoc(collection(db,C("respuestas")),{uid:user.uid,usuario:nom(todos.find(u=>u.id===user.uid)),para:user.uid,root:t.dataset.sresp,texto:x.slice(0,600),t:Date.now()});}}
   if(t.dataset.ev){const v=document.querySelector(`[data-pt="${t.dataset.ev}"]`).value;
-    await updateDoc(doc(db,"notas",t.dataset.ev),{puntaje:v===""?null:Math.min(10,Math.max(0,+v))});}
-  if(t.dataset.canc)await updateDoc(doc(db,"ordenes",t.dataset.canc),{estado:"cancelada"});
+    await updateDoc(doc(db,C("notas"),t.dataset.ev),{puntaje:v===""?null:Math.min(10,Math.max(0,+v))});}
+  if(t.dataset.canc)await updateDoc(doc(db,C("ordenes"),t.dataset.canc),{estado:"cancelada"});
   if(t.dataset.reset&&confirm("Esto devuelve la cartera al capital inicial. ¿Continuar?"))
-    await updateDoc(doc(db,"users",t.dataset.reset),{cash:CAPITAL,pos:{},ops:[]});
+    await updateDoc(doc(db,C("users"),t.dataset.reset),{cash:CAPITAL,pos:{},ops:[]});
 });
 
 function exportar(){
@@ -412,7 +546,7 @@ $("npub").onclick=async()=>{
   const x=$("ntxt").value.trim();if(x.length<10)return $("nmsg").textContent="Escribí al menos una o dos oraciones.";
   const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));
   const yo=todos.find(u=>u.id===user.uid);
-  await addDoc(collection(db,"notas"),{uid:user.uid,usuario:nom(yo),semana:"Semana del "+d.toLocaleDateString("es-AR",{day:"numeric",month:"long"}),texto:x,t:Date.now()});
+  await addDoc(collection(db,C("notas")),{uid:user.uid,usuario:nom(yo),semana:"Semana del "+d.toLocaleDateString("es-AR",{day:"numeric",month:"long"}),texto:x,t:Date.now()});
   $("ntxt").value="";$("nmsg").textContent="Nota publicada.";
 };
 
@@ -462,13 +596,13 @@ function pintarDiv(){
 }
 $("divtab").addEventListener("toggle",e=>{const d=e.target;if(d.dataset?.s)d.open?abiertos.add(d.dataset.s):abiertos.delete(d.dataset.s);},true);
 fetch("https://raw.githubusercontent.com/Pablo002k/InvEco/main/data/dividendos.json?t="+Math.floor(Date.now()/600000)).then(r=>r.json()).then(j=>{calDiv=j;pintarDiv();detalle();pintarTodo();}).catch(()=>{});
-function pedirLibro(s){setDoc(doc(db,"libro_pedidos",s),{s,t:Date.now()}).catch(()=>{});}
+function pedirLibro(s){if(demoActiva)return;setDoc(doc(db,"libro_pedidos",s),{s,t:Date.now()}).catch(()=>{});}
 function pintarLibro(){
   const el=$("libro");el.classList.remove("hide");
   if(!libro){el.innerHTML="<b>Libro de ofertas</b><br><small>Consultando el libro de ofertas real de IOL. Puede demorar unos segundos.</small>";return;}
   const n=Math.max(libro.bids.length,libro.asks.length),c=(x)=>x?`${$$(x.p)} · ${x.c}`:"",f=Array.from({length:n},(_,i)=>`<tr><td class="n">${c(libro.bids[i])}</td><td class="n">${c(libro.asks[i])}</td></tr>`).join("");
   el.innerHTML=`<b>Libro de ofertas de ${esc(libro.s)}</b> <small>${libro.vacio&&libro.tl?`Último libro registrado el ${fh(libro.tl)} (ahora no hay ofertas en el mercado)`:`Actualizado ${fh(libro.t)}`}</small><table><thead><tr><th class="n">Compra: precio · cantidad</th><th class="n">Venta: precio · cantidad</th></tr></thead><tbody>${f||"<tr><td colspan=2>No hay ofertas en este momento. En el mercado real las órdenes se cancelan al cierre (18:00), por eso fuera de horario el libro está vacío.</td></tr>"}</tbody></table>`;}
-function verLibro(s){unsubLibro&&unsubLibro();libro=null;pintarLibro();pedirLibro(s);
+function verLibro(s){unsubLibro&&unsubLibro();libro=null;if(demoActiva){$("libro").classList.add("hide");return;}pintarLibro();pedirLibro(s);
   unsubLibro=onSnapshot(doc(db,"libros",s),x=>{libro=x.data()||null;pintarLibro();});}
 function elegir(s){elegido=s;verLibro(s);detalle();pintar();$("omsg").textContent="";$("tv").innerHTML="";
   new TradingView.widget({container_id:"tv",symbol:"BCBA:"+s,interval:"D",locale:"es",theme:"light",autosize:true,timezone:"America/Argentina/Buenos_Aires"});}
@@ -479,6 +613,7 @@ async function cargar(){
   const t=new Date(j.actualizado);if(actualizado&&t.getTime()===actualizado.getTime())return false;
   actualizado=t;habilitadoDesde=t.getTime()+ESPERA_MS;
   datos=Object.entries(j.precios).map(([s,v])=>({s,...v})).sort((a,b)=>a.s.localeCompare(b.s));
+  datosReal=datos;if(demoActiva)aplicarDemo();
   calcFx();
   llenar($("ftipo"),[...new Set(datos.map(d=>d.tipo))],nt);llenar($("fmon"),[...new Set(datos.map(d=>d.moneda).filter(Boolean))],x=>x);
   pintar();detalle();pintarTodo();pintarDiv();pintarFx();return true;
@@ -516,7 +651,7 @@ $("pub").onclick=async()=>{
   if(t!=="mercado"&&!(lim>0))return m.textContent="Indicá un precio límite mayor que cero.";
   if(t==="stop_limite"&&!(stp>0))return m.textContent="Indicá un precio stop mayor que cero.";
   try{
-    await addDoc(collection(db,"ordenes"),{uid:user.uid,usuario:nom(yo),s:d.s,lado:$("olado").value,tipo:t,cant:n,
+    await addDoc(collection(db,C("ordenes")),{uid:user.uid,usuario:nom(yo),s:d.s,lado:$("olado").value,tipo:t,cant:n,
       ...(t!=="mercado"?{limite:lim}:{}),...(t==="stop_limite"?{stop:stp,activada:false}:{}),
       vigencia:$("ovig").value,dia:ba().dia,estado:"pendiente",t:Date.now()});
     m.textContent="Orden publicada. Se evalúa en cada actualización de precios, aproximadamente cada minuto.";$("cant").value="";
