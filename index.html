@@ -156,8 +156,10 @@ async function cambio(l){
   if(!ba().abierto)return m.textContent="El mercado está cerrado. Se puede operar de lunes a viernes, de 10:45 a 18:00.";
   if(!(n>0))return m.textContent="Ingresá una cantidad entera de dólares.";
   if(!tcOf(tipo))return m.textContent="La cotización del dólar no está disponible en este momento.";
-  try{await addDoc(collection(db,C("ordenes")),{uid:user.uid,usuario:nom(yo),s:"USD",tc:tipo,lado:l,tipo:"mercado",cant:n,vigencia:"dia",dia:ba().dia,estado:"pendiente",t:Date.now()});
-    m.textContent="Orden publicada. Se ejecuta en la próxima actualización de precios, aproximadamente cada minuto.";$("fxn").value="";}
+  try{const r=await addDoc(collection(db,C("ordenes")),{uid:user.uid,usuario:nom(yo),s:"USD",tc:tipo,lado:l,tipo:"mercado",cant:n,vigencia:"dia",dia:ba().dia,estado:"pendiente",t:Date.now()});
+    $("fxn").value="";
+    if(demoActiva){m.textContent="Orden publicada. Procesando...";cambioDemo(r.id).then(x=>{if(x)m.textContent=x;});}
+    else m.textContent="Orden publicada. Se ejecuta en la próxima actualización de precios, aproximadamente cada minuto.";}
   catch{m.textContent="No se pudo publicar la orden. Probá de nuevo.";}
 }
 const cab=(autor,tit,t)=>`<b>${esc(autor)}</b><br><small>${tit} · ${fh(t)}</small>`;
@@ -203,6 +205,7 @@ function pintarPrinc(){
   if(demoActiva){
     h=`<b>Demo activa.</b> Simulación con datos temporales: no afecta las cuentas reales. Avances de 10 minutos: ${demoPx?.paso||0}. Hora simulada: ${demoCfg?fh(tAhora()):"-"}.`;
     if(esAdmin)h+=` <button id="dAv">Avanzar 10 minutos</button> <button id="dFin">Terminar demo</button>`;
+    h+=`<details><summary>Ayuda rápida de la demo</summary><p>Cada alumno opera con su propia cuenta y empieza con ${$$(CAPITAL)} ficticios. Las compras, las ventas y los cambios de moneda se ejecutan al instante, a los precios simulados, cualquier día y a cualquier hora. Las órdenes con precio límite o stop quedan pendientes hasta que el precio las alcance. Cuando el docente toca "Avanzar 10 minutos", todos los precios cambian al azar (hasta 3 % hacia arriba o hacia abajo) y se actualizan las carteras, el ranking y el gráfico de evolución. Al terminar la demo se borran todos los datos temporales y todos vuelven al simulador real, que no se modifica.</p></details>`;
   }else if(demoCfg?.activo){
     h=`Hay una demo activa. <button id="dEnt">Entrar a la Demo</button>${esAdmin?` <button id="dFin">Terminar demo</button>`:""}`;
   }
@@ -230,11 +233,11 @@ function suscribir(){
   escuchar(collection(db,C("users")),s=>{todos=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
   escuchar(query(collection(db,C("notas")),orderBy("t","desc"),limit(200)),s=>{notas=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
   escuchar(collection(db,C("comentarios")),s=>{coment=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
-  escuchar(query(collection(db,C("ordenes")),orderBy("t","desc"),limit(300)),s=>{ordenes=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
+  escuchar(query(collection(db,C("ordenes")),orderBy("t","desc"),limit(300)),s=>{ordenes=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();if(demoActiva&&!s.metadata.hasPendingWrites)procesarPendientes();});
   escuchar(query(collection(db,C("novedades")),orderBy("t","desc"),limit(100)),s=>{novs=s.docs.map(d=>({id:d.id,...d.data()}));pintarTodo();});
   if(demoActiva){
     escuchar(query(collection(db,"prueba_evo"),orderBy("t","asc")),s=>{evo=s.docs.map(d=>({t:d.data().t,v:d.data().v}));pintarTodo();});
-    escuchar(doc(db,"prueba_precios","actual"),s=>{demoPx=s.data()||null;aplicarDemo();repintarDatos();});
+    escuchar(doc(db,"prueba_precios","actual"),s=>{demoPx=s.data()||null;aplicarDemo();repintarDatos();procesarPendientes();});
   }else{
     escuchar(query(collection(db,"evolucion_dia"),orderBy("d","desc"),limit(21)),s=>{
       evo=s.docs.flatMap(d=>{const x=d.data();return Object.entries(x).filter(([k])=>/^h\d{4}$/.test(k)).map(([k,v])=>({t:Date.parse(`${x.d}T${k.slice(1,3)}:${k.slice(3)}:00-03:00`),v}));}).sort((a,b)=>a.t-b.t);pintarTodo();});
@@ -327,6 +330,95 @@ function irSeccion(s){
 }
 $("princ").onclick=e=>{const s=e.target.dataset.sec;if(s)irSeccion(s);};
 $("demoBar").onclick=e=>{const i=e.target.id;if(i==="dAv")avanzarDemo();if(i==="dFin")terminarDemo();if(i==="dEnt")entrarDemo();};
+/* ---------- DEMO: ejecucion de ordenes en el navegador (Etapa 6) ---------- */
+const demoEjec=new Set(),r2=x=>Math.round(x*100)/100;
+async function ejecDemo(oid,px,d){   // compra o venta de un activo (equivale a ejecutar() del .py)
+  if(demoEjec.has(oid))return null;demoEjec.add(oid);
+  const oref=doc(db,"prueba_ordenes",oid),uref=doc(db,"prueba_users",user.uid),mo=monDe(d),k=kOf(d),tasa=TASA(d);
+  const campo={ARS:"cash",USD:"usd",CCL:"ccl"}[mo],falta={ARS:"pesos.",USD:"dólares MEP.",CCL:"dólares CCL."}[mo];
+  let res=null;
+  try{
+    await runTransaction(db,async tx=>{
+      res=null;
+      const os=await tx.get(oref);
+      if(!os.exists()||os.data().estado!=="pendiente")return;
+      const ud=await tx.get(uref);
+      if(!ud.exists())return;
+      const o=os.data(),u=ud.data(),pos={...(u.pos||{})},n=o.cant,s=o.s,bruto=n*px*k,com=r2(bruto*tasa),p=pos[s]||{c:0,costo:0};
+      let saldo=u[campo]||0;
+      if(o.lado==="C"){
+        if(bruto+com>saldo){res="Orden rechazada: saldo insuficiente en "+falta;tx.update(oref,{estado:"rechazada",motivo:"Saldo insuficiente en "+falta});return;}
+        saldo-=bruto+com;
+        pos[s]={c:p.c+n,costo:p.costo+bruto+com,m:mo,k};
+      }else{
+        if(n>p.c){res="Orden rechazada: no hay cantidad suficiente para vender.";tx.update(oref,{estado:"rechazada",motivo:"No había cantidad suficiente para vender."});return;}
+        saldo+=bruto-com;
+        const resto=p.c-n;
+        if(resto)pos[s]={c:resto,costo:p.costo/p.c*resto,m:mo,k};else delete pos[s];
+      }
+      const ms=tAhora();
+      tx.update(uref,{[campo]:r2(saldo),pos,ops:[...(u.ops||[]),{t:ms,s,l:o.lado,c:n,p:px,com,m:mo,k}].slice(-1000)});
+      tx.update(oref,{estado:"ejecutada",fill:{px,com,t:ms}});
+      res="Orden ejecutada a "+mon(mo,px)+" por unidad. Comisión: "+mon(mo,com)+".";
+    });
+  }catch(e){console.warn("Demo, orden:",e);res="No se pudo procesar la orden. Se reintenta con el próximo cambio de precios.";}
+  finally{demoEjec.delete(oid);}
+  return res;
+}
+async function cambioDemo(oid){   // compra o venta de dolares (equivale a cambio() del .py)
+  if(demoEjec.has(oid))return null;demoEjec.add(oid);
+  const oref=doc(db,"prueba_ordenes",oid),uref=doc(db,"prueba_users",user.uid);
+  let res=null;
+  try{
+    await runTransaction(db,async tx=>{
+      res=null;
+      const os=await tx.get(oref);
+      if(!os.exists()||os.data().estado!=="pendiente")return;
+      const ud=await tx.get(uref);
+      if(!ud.exists())return;
+      const o=os.data(),u=ud.data(),tipo=o.tc||"MEP",t=tcOf(tipo),campo=tipo==="CCL"?"ccl":"usd",n=o.cant;
+      if(!t){res="La cotización del dólar no está disponible. La orden queda pendiente.";return;}
+      let cash=u.cash,usd=u[campo]||0,p,ars,com;
+      if(o.lado==="CD"){
+        p=t.venta;ars=n*p;com=r2(ars*2*0.0071);
+        if(ars+com>cash){res="Orden rechazada: pesos insuficientes.";tx.update(oref,{estado:"rechazada",motivo:"Pesos insuficientes."});return;}
+        cash-=ars+com;usd+=n;
+      }else{
+        p=t.compra;
+        if(n>usd){res="Orden rechazada: dólares insuficientes.";tx.update(oref,{estado:"rechazada",motivo:"Dólares insuficientes."});return;}
+        ars=n*p;com=r2(ars*2*0.0071);cash+=ars-com;usd-=n;
+      }
+      const ms=tAhora(),pf=Math.round(p*10000)/10000;
+      tx.update(uref,{cash:r2(cash),[campo]:r2(usd),ops:[...(u.ops||[]),{t:ms,s:"USD",l:o.lado,c:n,p:pf,com,m:"ARS",tc:tipo}].slice(-1000)});
+      tx.update(oref,{estado:"ejecutada",fill:{px:pf,com,t:ms}});
+      res="Cambio realizado: "+us(n)+" a "+$$(pf)+" por dólar.";
+    });
+  }catch(e){console.warn("Demo, cambio:",e);res="No se pudo procesar la orden. Se reintenta con el próximo cambio de precios.";}
+  finally{demoEjec.delete(oid);}
+  return res;
+}
+function evalOrden(o){   // decide si la orden se ejecuta ahora con los precios actuales de la demo
+  const d=datos.find(x=>x.s===o.s);
+  if(!d||!(d.ultimo>0)||!operable(d))return null;
+  const ult=d.ultimo,c=o.lado==="C",ref=c?(d.venta||ult):(d.compra||ult);
+  if(o.tipo==="stop_limite"&&!o.activada){
+    if((c&&ult>=o.stop)||(!c&&ult<=o.stop))updateDoc(doc(db,"prueba_ordenes",o.id),{activada:true}).catch(()=>{});
+    else return null;
+  }
+  if(o.tipo!=="mercado"&&((c&&ref>o.limite)||(!c&&ref<o.limite)))return null;
+  return{px:ref,d};
+}
+async function procesarOrden(o){
+  if(!demoActiva||!user||o.uid!==user.uid)return null;
+  if(o.s==="USD")return cambioDemo(o.id);
+  const e=evalOrden(o);
+  if(!e)return "Orden publicada. Queda pendiente hasta que el precio alcance las condiciones indicadas.";
+  return ejecDemo(o.id,e.px,e.d);
+}
+function procesarPendientes(){   // revisa las ordenes pendientes propias (se llama al cambiar los precios y al cargar las ordenes)
+  if(!demoActiva||!user)return;
+  ordenes.filter(o=>o.uid===user.uid&&o.estado==="pendiente"&&!demoEjec.has(o.id)).forEach(o=>procesarOrden(o));
+}
 
 /* ---------- Acceso ---------- */
 const correo=u=>u+"@economia-aula.app";
@@ -524,7 +616,7 @@ document.body.addEventListener("click",async e=>{
     await updateDoc(doc(db,C("notas"),t.dataset.ev),{puntaje:v===""?null:Math.min(10,Math.max(0,+v))});}
   if(t.dataset.canc)await updateDoc(doc(db,C("ordenes"),t.dataset.canc),{estado:"cancelada"});
   if(t.dataset.reset&&confirm("Esto devuelve la cartera al capital inicial. ¿Continuar?"))
-    await updateDoc(doc(db,C("users"),t.dataset.reset),{cash:CAPITAL,pos:{},ops:[]});
+    await updateDoc(doc(db,C("users"),t.dataset.reset),{cash:CAPITAL,usd:0,ccl:0,pos:{},ops:[]});
 });
 
 function exportar(){
@@ -652,10 +744,14 @@ $("pub").onclick=async()=>{
   if(t!=="mercado"&&!(lim>0))return m.textContent="Indicá un precio límite mayor que cero.";
   if(t==="stop_limite"&&!(stp>0))return m.textContent="Indicá un precio stop mayor que cero.";
   try{
-    await addDoc(collection(db,C("ordenes")),{uid:user.uid,usuario:nom(yo),s:d.s,lado:$("olado").value,tipo:t,cant:n,
+    const r=await addDoc(collection(db,C("ordenes")),{uid:user.uid,usuario:nom(yo),s:d.s,lado:$("olado").value,tipo:t,cant:n,
       ...(t!=="mercado"?{limite:lim}:{}),...(t==="stop_limite"?{stop:stp,activada:false}:{}),
       vigencia:$("ovig").value,dia:ba().dia,estado:"pendiente",t:Date.now()});
-    m.textContent="Orden publicada. Se evalúa en cada actualización de precios, aproximadamente cada minuto.";$("cant").value="";
+    $("cant").value="";
+    if(demoActiva){
+      m.textContent="Orden publicada. Procesando...";
+      procesarOrden({id:r.id,uid:user.uid,s:d.s,lado:$("olado").value,tipo:t,cant:n,...(t!=="mercado"?{limite:lim}:{}),...(t==="stop_limite"?{stop:stp,activada:false}:{})}).then(x=>{if(x)m.textContent=x;});
+    }else m.textContent="Orden publicada. Se evalúa en cada actualización de precios, aproximadamente cada minuto.";
   }catch{m.textContent="No se pudo publicar la orden. Probá de nuevo.";}
 };
 
