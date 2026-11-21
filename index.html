@@ -362,6 +362,7 @@ onAuthStateChanged(auth,u=>{
   if(!u){$("p").value="";$("msg").textContent="";return;}
   if(!registrando)asegurarCartera(u);
   esAdmin=u.email===correo(ADMIN);$("btnTodos").classList.toggle("hide",!esAdmin);
+  suscribir();
   irA("mercado");
 });
 
