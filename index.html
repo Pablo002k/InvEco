@@ -118,7 +118,7 @@ small{opacity:.65;display:block}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,setDoc,updateDoc,runTransaction,collection,addDoc,deleteDoc,onSnapshot,query,orderBy,limit} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,getDoc,setDoc,updateDoc,runTransaction,collection,addDoc,deleteDoc,onSnapshot,query,orderBy,limit} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {CONFIG,ADMIN,CAPITAL} from "./config.js";
 
 const app=initializeApp(CONFIG),auth=getAuth(app),db=getFirestore(app);
@@ -237,9 +237,13 @@ function armarTabs(){
   const t=esAdmin?[["mercado","Mercado"],["fx","Cambio de moneda"],["cartera","Mi cartera"],["ranking","Ranking"],["divs","Calendario de dividendos"],["bonos","Calendario de bonos y ONs"],["alumnos","Alumnos"],["novedades","Novedades"]]:[["mercado","Mercado"],["fx","Cambio de moneda"],["cartera","Mi cartera"],["ranking","Ranking"],["divs","Calendario de dividendos"],["bonos","Calendario de bonos y ONs"],["notas","Mis notas semanales"],["novedades","Novedades"]];
   $("tabs").innerHTML=t.map(([k,n])=>`<button data-k="${k}" class="${k===tab?"on":""}">${n}</button>`).join("");
 }
-$("tabs").onclick=e=>{const k=e.target.dataset.k;if(!k)return;tab=k;
+function irA(k){
+  tab=k;
   for(const x of["mercado","cartera","ranking","notas","alumnos","novedades","divs","fx","bonos"])$("t-"+x).classList.toggle("hide",x!==k);
-  armarTabs();pintarTodo();};
+  armarTabs();
+  pintarTodo();
+}
+$("tabs").onclick=e=>{const k=e.target.dataset.k;if(k)irA(k);};
 
 /* ---------- Valuación ---------- */
 const precio=s=>{const v=datos.find(d=>d.s===s)?.ultimo;return v>0?v:undefined;};
