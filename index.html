@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Simulador de inversiones</title>
+<title>InvEco</title>
 <style>
 :root{color-scheme:light dark;font-family:system-ui,sans-serif}
 body{margin:0;padding:14px;max-width:1150px;margin-inline:auto}
@@ -23,9 +23,34 @@ small{opacity:.65;display:block}
 .card{border:1px solid #8884;padding:10px;margin:10px 0}
 .pv{display:flex;gap:10px;border:1px solid #8884;margin-top:8px;text-decoration:none;color:inherit}.pv img{width:150px;object-fit:cover}.pv span{padding:8px}.nota{border-left:4px solid #3b82f6}.consejo{border-left:4px solid #d97706}.resp{border-left:4px solid #8886;margin-left:18px}.res{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}.res>div{border:1px solid #8884;padding:8px}.res small{display:block}.dvr,.dvh{display:grid;grid-template-columns:1.7fr 1fr 1fr 1fr .9fr .7fr 1fr 1.4fr;gap:6px;padding:8px;align-items:center}.dvr{cursor:pointer;list-style:none}.dvr::-webkit-details-marker{display:none}.dvh{font-weight:600;font-size:.85rem;border-bottom:1px solid #8884}.dv{border-bottom:1px solid #8883}.dvr .n,.dvh .n{text-align:right}.ar{display:inline-block;transition:transform .15s}details[open]>.dvr .ar{transform:rotate(90deg)}.dvb{padding:0 8px 10px 26px}textarea{resize:none;min-height:84px;max-height:220px;overflow-y:auto;line-height:1.4}.up{color:#0a7d33}.dn{color:#c0282d}.hide{display:none}
 .evo{display:grid;grid-template-columns:1.7fr 1fr;gap:12px;align-items:start}@media(max-width:800px){.evo{grid-template-columns:1fr}}
+#barra{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:-14px -14px 12px;padding:6px 14px;background:Canvas;border-bottom:1px solid #8884}
+#marca{border:0;background:none;font-size:1.2rem;font-weight:700;margin-right:auto;padding:8px 4px}
+#navBtn{display:none;min-height:44px}
+#navp{display:flex;flex-wrap:wrap;gap:4px;margin:0}
+#navp button{min-height:40px}
+#navp button.on{font-weight:700;text-decoration:underline}
+@media(max-width:768px){#navBtn{display:block}#navp{display:none;width:100%;flex-direction:column}#navp.abierto{display:flex}#navp button{width:100%;text-align:left;min-height:44px}#tabs{flex-wrap:nowrap;overflow-x:auto}#tabs button{flex:0 0 auto;white-space:nowrap;min-height:44px}}
 </style>
 </head>
 <body>
+<header id="barra">
+  <button id="marca" data-sec="inicio">InvEco</button>
+  <button id="navBtn" aria-expanded="false" aria-controls="navp">Menú</button>
+  <nav id="navp" aria-label="Navegación principal">
+    <button data-sec="inicio" class="on">Inicio</button>
+    <button data-sec="simulador">Simulador de Mercado</button>
+    <button data-sec="guia">Guía Rápida</button>
+    <button data-sec="test">Test de Perfil</button>
+    <button data-sec="noticias">Últimas Noticias</button>
+    <button data-sec="demo">Demo</button>
+    <button data-sec="contacto">Contacto</button>
+  </nav>
+</header>
+
+<section id="sec-inicio" class="sec"><h2>Inicio</h2><p>Esta sección se completará en la próxima etapa.</p></section>
+
+<section id="sec-simulador" class="sec hide">
+<div id="zona">
 <div id="auth" class="card" style="max-width:380px;margin:40px auto">
   <h1>Simulador de inversiones</h1>
   <p>Ingresá con tu usuario y contraseña, o creá una cuenta nueva.</p>
@@ -37,7 +62,6 @@ small{opacity:.65;display:block}
 
 <div id="app" class="hide">
   <div><b id="yo"></b> · <span id="resumen"></span> <button id="sal">Salir</button></div>
-  <nav id="princ"><button data-sec="real" class="on">Simulador de mercado</button> <button data-sec="demo">Demo</button></nav>
   <div id="demoBar" class="card hide"></div>
   <nav id="tabs"></nav>
 
@@ -45,7 +69,7 @@ small{opacity:.65;display:block}
     <p class="reloj"></p>
     <div style="margin-bottom:8px"><button id="btn">Actualizar ahora</button> <button id="btnTodos" class="hide">Actualizar para todos</button> <span id="estado">Cargando…</span></div>
     <details class="card"><summary>Ayuda rápida: ¿qué estoy mirando?</summary>
-      <p><b>Pesos y dólares.</b> Muchos activos aparecen repetidos: la versión simple se cotiza en pesos y las que terminan en C o D, en dólares. Los activos en dólares se compran con dólares, que se obtienen en "Cambio de moneda": los terminados en D usan dólares MEP y los terminados en C, dólares CCL.</p>
+      <p><b>Pesos y dólares.</b> Muchos activos aparecen repetidos: la versión simple se cotiza en pesos y las que terminan en C o D, en dólares. Los activos en dólares se compran con dólares, que se obtienen en "Cambio de Divisas": los terminados en D usan dólares MEP y los terminados en C, dólares CCL.</p>
       <p><b>Acción:</b> una parte de una empresa. <b>CEDEAR:</b> un certificado que representa acciones de empresas del exterior y se compra en pesos. <b>ETF:</b> una canasta de activos que se compra como una sola acción.</p>
       <p><b>Bono:</b> un préstamo que le hacés al Estado a cambio de intereses. <b>Letra:</b> un bono de corto plazo. <b>Obligación negociable:</b> un bono emitido por una empresa. Los bonos se cotizan por cada 100 de valor nominal: si el precio es de $80.000, comprar 100 nominales cuesta $80.000 y 1 nominal cuesta $800. Ya se pueden operar los bonos AL30, GD30, AL35 y GD35 y las obligaciones negociables de Banco Macro (Clase G) y de Edenor (Clase 7); sus pagos de intereses y devoluciones de capital figuran en el Calendario de bonos y ONs. Los demás bonos y obligaciones se muestran como referencia y se irán habilitando. Las letras se habilitarán más adelante: momentáneamente no se pueden operar porque la plataforma que nos provee los precios presenta una falla en su lista de letras.</p>
       <p>Para profundizar en cualquiera de estos conceptos, podés consultar fuentes especializadas o conversarlo con tu docente.</p>
@@ -85,7 +109,7 @@ small{opacity:.65;display:block}
   </section>
   <section id="t-fx" class="hide">
     <p class="reloj"></p>
-    <div class="card"><b>Cambio de moneda</b>
+    <div class="card"><b>Cambio de Divisas</b>
       <p>En esta sección se pueden cambiar pesos por dólares y dólares por pesos. Existen dos tipos de dólar financiero: el <b>dólar MEP</b>, que queda depositado en una cuenta en Argentina y sirve para operar los activos cuyo símbolo termina en D, y el <b>dólar CCL</b> (contado con liquidación), que queda en el exterior y sirve para los activos que terminan en C.</p></div>
     <div class="card"><b>¿Cómo se lee la cotización?</b>
       <p>La cotización se expresa desde el punto de vista de quien ofrece los dólares, como en cualquier casa de cambio. <b>Compra</b> es el precio al que el mercado compra dólares: es lo que recibís si vendés los tuyos. <b>Venta</b> es el precio al que el mercado vende dólares: es lo que pagás si querés comprarlos. Por eso la Venta siempre es mayor que la Compra, y esa diferencia se llama <i>spread</i>.</p>
@@ -98,7 +122,7 @@ small{opacity:.65;display:block}
       <p id="fxm"></p></div>
   </section>
   <section id="t-divs" class="hide"><div class="card"><b>Calendario de dividendos</b>
-    <p>Un dividendo es la parte de las ganancias que una empresa reparte entre sus accionistas. Para cobrarlo hay que tener el activo antes de la fecha de corte, y el dinero se acredita en la fecha de pago. En este simulador se acredita en dólares, igual que en la realidad, con una retención estimada (30 % para empresas de Estados Unidos). Para pasarlos a pesos, se pueden vender en "Cambio de moneda". Las fechas marcadas como estimadas se calculan con la periodicidad habitual de cada empresa y pueden variar.</p><p><i>Este calendario se está ampliando: próximamente se cargarán las fechas de más empresas.</i></p></div>
+    <p>Un dividendo es la parte de las ganancias que una empresa reparte entre sus accionistas. Para cobrarlo hay que tener el activo antes de la fecha de corte, y el dinero se acredita en la fecha de pago. En este simulador se acredita en dólares, igual que en la realidad, con una retención estimada (30 % para empresas de Estados Unidos). Para pasarlos a pesos, se pueden vender en "Cambio de Divisas". Las fechas marcadas como estimadas se calculan con la periodicidad habitual de cada empresa y pueden variar.</p><p><i>Este calendario se está ampliando: próximamente se cargarán las fechas de más empresas.</i></p></div>
     <div id="divtab"></div></section>
   <section id="t-alumnos" class="hide"><div id="alu-lista"></div><div id="alu-ficha"></div></section>
   <section id="t-novedades" class="hide">
@@ -114,6 +138,17 @@ small{opacity:.65;display:block}
     <div id="nlista"></div>
   </section>
 </div>
+</div>
+</section>
+
+<section id="sec-demo" class="sec hide">
+  <div id="demoPuerta" class="card hide"></div>
+</section>
+
+<section id="sec-guia" class="sec hide"><h2>Guía Rápida</h2><p>Esta sección se completará en una etapa próxima.</p></section>
+<section id="sec-test" class="sec hide"><h2>Test de Perfil de Inversor</h2><p>Esta sección se completará en una etapa próxima.</p></section>
+<section id="sec-noticias" class="sec hide"><h2>Últimas Noticias</h2><p>Esta sección se completará en una etapa próxima.</p></section>
+<section id="sec-contacto" class="sec hide"><h2>Contacto</h2><p>Esta sección se completará en una etapa próxima.</p></section>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -199,7 +234,7 @@ const rd=x=>+x.toPrecision(5);
 const famDe=(s,S)=>s.length>1&&"CDO".includes(s.slice(-1))&&S.has(s.slice(0,-1))?s.slice(0,-1):s;
 const valoresAlumnos=()=>Object.fromEntries(todos.filter(u=>(u.usuario||"")!==ADMIN).map(u=>[u.id,Math.round(valor(u)*100)/100]));
 function dNota(t){demoNota=t;pintarPrinc();if(t)setTimeout(()=>{if(demoNota===t){demoNota="";pintarPrinc();}},10000);}
-function pintarPrinc(){
+  vistaSec();
   document.querySelectorAll("#princ button").forEach(b=>b.classList.toggle("on",(b.dataset.sec==="demo")===demoActiva));
   const B=$("demoBar");let h="";
   if(demoActiva){
@@ -283,13 +318,13 @@ async function entrarDemo(){
   }catch(e){console.warn(e);demoOcupado=false;return dNota("No se pudo entrar a la demo. Probá de nuevo.");}
   demoOcupado=false;
   limpiarSesion();demoActiva=true;demoPx=null;evoRes="10m";demoNota="";
-  try{sessionStorage.setItem("enDemo","1");}catch{}
+  try{sessionStorage.setItem("enDemo","1");}catch{}mostrarSec("demo");
   datos=datosReal;suscribir();irA("mercado");
 }
 function salirDemo(motivo){
   limpiarSesion();demoActiva=false;demoPx=null;evoRes="1h";
   try{sessionStorage.removeItem("enDemo");}catch{}
-  datos=datosReal;suscribir();irA("mercado");repintarDatos();
+  datos=datosReal;suscribir();irA("mercado");repintarDatos();if(secActual==="demo")mostrarSec("simulador");
   dNota(motivo||"");
 }
 async function terminarDemo(){
@@ -320,15 +355,47 @@ async function avanzarDemo(){
   }catch(e){console.warn(e);dNota("No se pudieron avanzar los precios. Probá de nuevo.");}
   finally{demoOcupado=false;}
 }
-function irSeccion(s){
-  if(s==="demo"){
-    if(demoActiva)return;
-    if(demoCfg?.activo)return entrarDemo();
-    if(!esAdmin)return dNota("No hay una demo activa en este momento. La inicia el docente.");
-    if(confirm("No hay una demo activa. ¿Querés iniciarla? Se borran los datos temporales anteriores y todos empiezan con el capital inicial."))iniciarDemo();
-  }else if(demoActiva)salirDemo();
+/* ---------- NAVEGACIÓN PRINCIPAL (7 secciones) ---------- */
+const SECS=["inicio","simulador","guia","test","noticias","demo","contacto"];
+let secActual=enDemoSS()?"demo":"inicio";
+function vistaSec(){   // decide dónde se ve el acceso o la aplicación y cuándo se muestra la puerta de la Demo
+  const zona=$("zona"),pta=$("demoPuerta"),puerta=secActual==="demo"&&!!user&&!demoActiva;
+  if(!puerta&&(secActual==="simulador"||secActual==="demo")){const d=$("sec-"+secActual);if(zona.parentNode!==d)d.appendChild(zona);}
+  zona.classList.toggle("hide",puerta);
+  pta.classList.toggle("hide",!puerta);
+  if(!puerta)return;
+  const h="<b>Demo</b>"+(demoCfg?.activo
+    ?'<p>Hay una demo activa en este momento.</p><button data-pd="entrar">Entrar a la Demo</button>'
+    :esAdmin
+      ?'<p>No hay una demo activa. Al iniciarla se borran los datos temporales anteriores y todos empiezan con el capital inicial.</p><button data-pd="iniciar">Iniciar demo</button>'
+      :'<p>No hay una demo activa en este momento. Cuando el docente la inicie, vas a poder entrar desde esta sección.</p>')
+    +(demoNota?`<p>${esc(demoNota)}</p>`:"");
+  if(pta._h!==h){pta.innerHTML=h;pta._h=h;}
 }
-$("princ").onclick=e=>{const s=e.target.dataset.sec;if(s)irSeccion(s);};
+function mostrarSec(s){   // muestra una sección y oculta las demás, sin tocar la URL ni pedir datos
+  secActual=s;
+  SECS.forEach(x=>$("sec-"+x).classList.toggle("hide",x!==s));
+  document.querySelectorAll("#navp button").forEach(b=>{const on=b.dataset.sec===s;b.classList.toggle("on",on);if(on)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");});
+  $("navp").classList.remove("abierto");$("navBtn").setAttribute("aria-expanded","false");
+  vistaSec();
+  window.scrollTo(0,0);
+}
+function irSec(s){
+  if(s==="demo"){
+    try{sessionStorage.setItem("enDemo","1");}catch{}
+    mostrarSec("demo");
+    if(user&&!demoActiva&&demoCfg?.activo)entrarDemo();
+    return;
+  }
+  if(!demoActiva){try{sessionStorage.removeItem("enDemo");}catch{}}
+  if(s==="simulador"&&demoActiva){mostrarSec("simulador");salirDemo();return;}
+  mostrarSec(s);
+}
+$("marca").onclick=()=>irSec("inicio");
+$("navp").onclick=e=>{const b=e.target.closest("button");if(b&&b.dataset.sec)irSec(b.dataset.sec);};
+$("navBtn").onclick=()=>{const a=$("navp").classList.toggle("abierto");$("navBtn").setAttribute("aria-expanded",String(a));};
+$("demoPuerta").onclick=e=>{const a=e.target.dataset.pd;if(a==="entrar")entrarDemo();if(a==="iniciar"&&confirm("¿Querés iniciar la demo? Se borran los datos temporales anteriores y todos empiezan con el capital inicial."))iniciarDemo();};
+mostrarSec(secActual);
 $("demoBar").onclick=e=>{const i=e.target.id;if(i==="dAv")avanzarDemo();if(i==="dFin")terminarDemo();if(i==="dEnt")entrarDemo();};
 /* ---------- DEMO: ejecucion de ordenes en el navegador (Etapa 6) ---------- */
 const demoEjec=new Set(),r2=x=>Math.round(x*100)/100;
@@ -451,7 +518,7 @@ function limpiarSesion(){   // cierra las conexiones y borra lo que quedó de la
 onAuthStateChanged(auth,u=>{
   limpiarSesion();demoActiva=false;demoPx=null;demoCfg=null;datos=datosReal;
   user=u;$("auth").classList.toggle("hide",!!u);$("app").classList.toggle("hide",!u);
-  if(!u){$("p").value="";$("msg").textContent="";return;}
+  if(!u){$("p").value="";$("msg").textContent="";vistaSec();return;}
   if(!registrando)asegurarCartera(u);
   esAdmin=u.email===correo(ADMIN);$("btnTodos").classList.toggle("hide",!esAdmin);
   suscribir();
@@ -460,7 +527,7 @@ onAuthStateChanged(auth,u=>{
 
 /* ---------- Pestañas ---------- */
 function armarTabs(){
-  const t=esAdmin?[["mercado","Mercado"],["fx","Cambio de moneda"],["cartera","Mi cartera"],["ranking","Ranking"],["divs","Calendario de dividendos"],["bonos","Calendario de bonos y ONs"],["alumnos","Alumnos"],["novedades","Novedades"]]:[["mercado","Mercado"],["fx","Cambio de moneda"],["cartera","Mi cartera"],["ranking","Ranking"],["divs","Calendario de dividendos"],["bonos","Calendario de bonos y ONs"],["notas","Mis notas semanales"],["novedades","Novedades"]];
+  const t=esAdmin?[["mercado","Mercado"],["fx","Cambio de Divisas"],["cartera","Mi cartera"],["divs","Calendario de dividendos"],["bonos","Calendario de bonos y ONs"],["alumnos","Alumnos"],["novedades","Novedades"],["ranking","Ranking"]]:[["mercado","Mercado"],["fx","Cambio de Divisas"],["cartera","Mi cartera"],["divs","Calendario de dividendos"],["bonos","Calendario de bonos y ONs"],["notas","Mis notas semanales"],["novedades","Novedades"],["ranking","Ranking"]];
   $("tabs").innerHTML=t.map(([k,n])=>`<button data-k="${k}" class="${k===tab?"on":""}">${n}</button>`).join("");
 }
 function irA(k){
