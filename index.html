@@ -234,6 +234,7 @@ const rd=x=>+x.toPrecision(5);
 const famDe=(s,S)=>s.length>1&&"CDO".includes(s.slice(-1))&&S.has(s.slice(0,-1))?s.slice(0,-1):s;
 const valoresAlumnos=()=>Object.fromEntries(todos.filter(u=>(u.usuario||"")!==ADMIN).map(u=>[u.id,Math.round(valor(u)*100)/100]));
 function dNota(t){demoNota=t;pintarPrinc();if(t)setTimeout(()=>{if(demoNota===t){demoNota="";pintarPrinc();}},10000);}
+function pintarPrinc(){
   vistaSec();
   document.querySelectorAll("#princ button").forEach(b=>b.classList.toggle("on",(b.dataset.sec==="demo")===demoActiva));
   const B=$("demoBar");let h="";
