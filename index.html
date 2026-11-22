@@ -30,6 +30,36 @@ small{opacity:.65;display:block}
 #navp button{min-height:40px}
 #navp button.on{font-weight:700;text-decoration:underline}
 @media(max-width:768px){#navBtn{display:block}#navp{display:none;width:100%;flex-direction:column}#navp.abierto{display:flex}#navp button{width:100%;text-align:left;min-height:44px}#tabs{flex-wrap:nowrap;overflow-x:auto}#tabs button{flex:0 0 auto;white-space:nowrap;min-height:44px}}
+.sec:not(.hide){animation:ent .35s ease-out}
+@keyframes ent{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.sec:not(.hide){animation:none}.tc,#heroCta{transition:none}.tc:hover{transform:none}}
+#sec-inicio{background:#F8FAFC;color:#0F2942;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden}
+#hero{position:relative;background:#EDF4FC;border-bottom:1px solid #E2E8F0}
+#heroCv{position:absolute;inset:0;width:100%;height:100%;display:block}
+#heroIn{position:relative;display:grid;grid-template-columns:1.4fr 1fr;gap:28px;align-items:center;padding:44px 28px}
+#heroTx h1{font-size:2.3rem;line-height:1.15;margin:6px 0 12px}
+#heroTx .sub{font-size:1.05rem;line-height:1.55;max-width:36em;margin:0 0 20px;color:#334155}
+.eyebrow{margin:0;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:#1D4ED8}
+#heroCta{background:#0F2942;color:#fff;border:1px solid #0F2942;border-radius:6px;padding:12px 22px;font-size:1rem;min-height:44px;transition:background .15s}
+#heroCta:hover{background:#1D4ED8;border-color:#1D4ED8}
+#heroCta:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px}
+#tel{background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:16px;box-shadow:0 1px 3px rgba(15,41,66,.08)}
+#tel small{color:#475569;margin-top:10px}
+.telf{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #E2E8F0;font-size:.95rem}
+.telf b{font-family:ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;font-weight:600;display:flex;align-items:center}
+.punto{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px}
+.punto.on{background:#0D7A3E}.punto.off{background:#94A3B8}
+#mods{padding:28px}
+.mod{margin-bottom:30px}
+.mod:last-child{margin-bottom:0}
+.mod h3{margin:2px 0 0;font-size:1.3rem}
+.mod .sub{margin:4px 0 14px;color:#475569}
+.tcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.tc{background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:14px;box-shadow:0 1px 2px rgba(15,41,66,.06);transition:transform .15s,box-shadow .15s}
+.tc:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(15,41,66,.1)}
+.tc h4{margin:0 0 6px;font-size:1rem;color:#0F2942}
+.tc p{margin:0;font-size:.92rem;line-height:1.5;color:#334155}
+@media(max-width:800px){#heroIn{grid-template-columns:1fr;padding:28px 18px}#heroTx h1{font-size:1.7rem}#mods{padding:18px}}
 </style>
 </head>
 <body>
@@ -47,7 +77,84 @@ small{opacity:.65;display:block}
   </nav>
 </header>
 
-<section id="sec-inicio" class="sec"><h2>Inicio</h2><p>Esta sección se completará en la próxima etapa.</p></section>
+<section id="sec-inicio" class="sec">
+  <div id="hero">
+    <canvas id="heroCv" aria-hidden="true"></canvas>
+    <div id="heroIn">
+      <div id="heroTx">
+        <p class="eyebrow">Simulador bursátil educativo</p>
+        <h1>Aprendé a invertir con datos reales del mercado argentino</h1>
+        <p class="sub">Operá con $ 500.000 ficticios sobre precios reales de la bolsa. Compará acciones, bonos y dólares, seguí la evolución de tu cartera y participá del ranking de la clase.</p>
+        <button id="heroCta">Ingresar al Simulador</button>
+      </div>
+      <aside id="tel" aria-label="Estado del mercado en vivo">
+        <p class="eyebrow">Mercado en vivo</p>
+        <div class="telf"><span>Estado de la rueda</span><b><span id="telPunto" class="punto off"></span><span id="telRueda">-</span></b></div>
+        <div class="telf"><span>Dólar MEP</span><b id="telMEP">-</b></div>
+        <div class="telf"><span>Dólar CCL</span><b id="telCCL">-</b></div>
+        <div class="telf"><span>Instrumentos monitoreados</span><b id="telN">-</b></div>
+        <small id="telNota">Cargando precios…</small>
+      </aside>
+    </div>
+  </div>
+  <div id="mods">
+    <article class="mod">
+      <p class="eyebrow">Módulo 1</p>
+      <h3>Introducción al mercado de capitales</h3>
+      <p class="sub">El lugar donde el ahorro se encuentra con quienes necesitan financiamiento.</p>
+      <div class="tcs">
+        <div class="tc"><h4>Qué es</h4><p>Es el espacio donde se compran y venden activos financieros. Quienes tienen ahorros pueden invertirlos, y las empresas y el Estado obtienen fondos para sus proyectos.</p></div>
+        <div class="tc"><h4>CNV</h4><p>La Comisión Nacional de Valores es el organismo del Estado que regula y supervisa el mercado de capitales para proteger a los inversores.</p></div>
+        <div class="tc"><h4>BYMA</h4><p>Bolsas y Mercados Argentinos es la bolsa donde se negocian los activos. En este simulador, la rueda funciona de lunes a viernes, de 10:45 a 18:00.</p></div>
+        <div class="tc"><h4>Rendimiento y riesgo</h4><p>En general, cuanto mayor es la ganancia posible de una inversión, mayor es también el riesgo de perder parte del capital.</p></div>
+      </div>
+    </article>
+    <article class="mod">
+      <p class="eyebrow">Módulo 2</p>
+      <h3>Renta variable</h3>
+      <p class="sub">Activos cuyo resultado no está asegurado de antemano: dependen de cómo les vaya a las empresas y al mercado.</p>
+      <div class="tcs">
+        <div class="tc"><h4>Acciones</h4><p>Son partes de una empresa. Quien las compra es dueño de una porción y puede ganar por la suba del precio y por los dividendos.</p></div>
+        <div class="tc"><h4>CEDEARs</h4><p>Son certificados que representan acciones de empresas del exterior. Se compran en pesos en la bolsa argentina, como cualquier otro activo local.</p></div>
+        <div class="tc"><h4>ETFs</h4><p>Son fondos que cotizan como una acción y reúnen una canasta de activos, por ejemplo las empresas que forman un índice.</p></div>
+        <div class="tc"><h4>Dividendos</h4><p>Es la parte de las ganancias que una empresa reparte entre sus accionistas. Para cobrarlo hay que tener el activo antes de la fecha de corte.</p></div>
+      </div>
+    </article>
+    <article class="mod">
+      <p class="eyebrow">Módulo 3</p>
+      <h3>Renta fija</h3>
+      <p class="sub">Instrumentos de deuda: quien invierte presta dinero y recibe pagos en fechas establecidas.</p>
+      <div class="tcs">
+        <div class="tc"><h4>Bonos soberanos</h4><p>Son préstamos que se le hacen al Estado. A cambio, el Estado paga intereses (la renta) y devuelve el capital prestado (la amortización).</p></div>
+        <div class="tc"><h4>Obligaciones negociables</h4><p>Son bonos emitidos por empresas para financiarse. Funcionan igual que los bonos del Estado, pero dependen de la solvencia de la empresa.</p></div>
+        <div class="tc"><h4>Amortización</h4><p>Es la devolución del capital. No es una ganancia: es dinero que vuelve a tus manos, y por eso el precio del bono baja en proporción.</p></div>
+        <div class="tc"><h4>TIR</h4><p>La tasa interna de retorno indica qué rendimiento anual obtiene quien compra un bono a un precio dado y cobra todos sus pagos hasta el vencimiento. Si el precio baja, la TIR sube.</p></div>
+      </div>
+    </article>
+    <article class="mod">
+      <p class="eyebrow">Módulo 4</p>
+      <h3>Mercado de cambios</h3>
+      <p class="sub">Cómo se consiguen dólares a través del mercado de capitales.</p>
+      <div class="tcs">
+        <div class="tc"><h4>Dólar MEP</h4><p>Se obtiene comprando un bono en pesos y vendiéndolo en dólares. Los dólares quedan en una cuenta en Argentina y sirven para activos terminados en D.</p></div>
+        <div class="tc"><h4>Dólar CCL</h4><p>Es el contado con liquidación: funciona de forma parecida, pero los dólares quedan en el exterior. Sirve para activos terminados en C.</p></div>
+        <div class="tc"><h4>Cotización implícita</h4><p>Surge de comparar el precio en pesos y el precio en dólares de un mismo bono. Por eso se mueve con el mercado y no la fija nadie.</p></div>
+        <div class="tc"><h4>Compra, venta y spread</h4><p>Quien compra dólares paga el precio de venta; quien los vende recibe el de compra. La diferencia entre ambos es el spread.</p></div>
+      </div>
+    </article>
+    <article class="mod">
+      <p class="eyebrow">Módulo 5</p>
+      <h3>Tipos de órdenes</h3>
+      <p class="sub">La forma en que le indicás al mercado cuándo y a qué precio querés operar.</p>
+      <div class="tcs">
+        <div class="tc"><h4>Orden de mercado</h4><p>Se ejecuta de inmediato al mejor precio disponible. Es la más rápida, pero no controlás el precio exacto.</p></div>
+        <div class="tc"><h4>Orden límite</h4><p>Fijás el precio máximo al que querés comprar o el mínimo al que querés vender. Si el mercado no llega a ese precio, la orden no se ejecuta.</p></div>
+        <div class="tc"><h4>Stop límite</h4><p>Se activa cuando el precio llega a un valor llamado stop, y desde ese momento actúa como una orden límite. Sirve para limitar pérdidas.</p></div>
+        <div class="tc"><h4>Vigencia</h4><p>Una orden puede valer solo por el día o hasta que la canceles. Al cierre de la rueda, las órdenes del día vencen.</p></div>
+      </div>
+    </article>
+  </div>
+</section>
 
 <section id="sec-simulador" class="sec hide">
 <div id="zona">
@@ -283,7 +390,7 @@ function suscribir(){
   escuchar(doc(db,"estado","forzar"),s=>{if(s.data()?.t)cargar().catch(()=>{});});
   escuchar(doc(db,"prueba_config","demo"),s=>{
     demoCfg=s.data()||null;
-    if(demoActiva&&!demoCfg?.activo)return salirDemo("La demo terminó. Volviste al simulador real.");
+    if(demoActiva&&!demoCfg?.activo)return salirDemo("La demo terminó.");
     if(!demoActiva&&demoCfg?.activo&&enDemoSS())entrarDemo();
     pintarTodo();});
 }
@@ -325,7 +432,7 @@ async function entrarDemo(){
 function salirDemo(motivo){
   limpiarSesion();demoActiva=false;demoPx=null;evoRes="1h";
   try{sessionStorage.removeItem("enDemo");}catch{}
-  datos=datosReal;suscribir();irA("mercado");repintarDatos();if(secActual==="demo")mostrarSec("simulador");
+  datos=datosReal;suscribir();irA("mercado");repintarDatos();
   dNota(motivo||"");
 }
 async function terminarDemo(){
@@ -833,6 +940,79 @@ setInterval(()=>{reloj();relojBA();},1000);relojBA();
 $("btnTodos").onclick=()=>setDoc(doc(db,"estado","forzar"),{t:Date.now()});
 $("fxc").onclick=()=>cambio("CD");$("fxv").onclick=()=>cambio("VD");$("fxn").addEventListener("input",estFx);$("fxt").addEventListener("change",estFx);
 setInterval(()=>{if(elegido&&tab==="mercado")pedirLibro(elegido);},120000);
+/* ---------- INICIO: hero animado y telemetría (Etapa 2) ---------- */
+$("heroCta").onclick=()=>irSec("simulador");
+const MQ=window.matchMedia("(prefers-reduced-motion: reduce)");
+const hero=$("hero"),cv=$("heroCv"),cx=cv.getContext("2d");
+const LINEAS=[{f:1,v:.0003,ph:0,c:"rgba(29,78,216,.55)"},{f:1.3,v:.00022,ph:2,c:"rgba(15,41,66,.4)"},{f:.8,v:.00035,ph:4,c:"rgba(13,122,62,.4)"}];
+let cvW=0,cvH=0,cvRaf=0,cvUlt=0,cvVis=false;
+function cvTam(){   // ajusta el lienzo al tamaño del hero (máximo 2 puntos por píxel)
+  const r=hero.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2);
+  cvW=r.width;cvH=r.height;cv.width=Math.round(cvW*d);cv.height=Math.round(cvH*d);cx.setTransform(d,0,0,d,0,0);
+}
+function cvDib(t){   // dibuja la cuadrícula y las líneas de tendencia
+  if(!cvW||!cvH)return;
+  cx.clearRect(0,0,cvW,cvH);
+  cx.strokeStyle="rgba(15,41,66,.07)";cx.lineWidth=1;cx.beginPath();
+  for(let x=0;x<=cvW;x+=48){cx.moveTo(x+.5,0);cx.lineTo(x+.5,cvH);}
+  for(let y=0;y<=cvH;y+=48){cx.moveTo(0,y+.5);cx.lineTo(cvW,y+.5);}
+  cx.stroke();
+  LINEAS.forEach((l,i)=>{
+    cx.beginPath();cx.strokeStyle=l.c;cx.lineWidth=2;
+    for(let x=0;x<=cvW;x+=8){
+      const u=x/cvW,y=cvH*(.78-.1*i)-u*cvH*.28+Math.sin(u*5*l.f+l.ph+t*l.v)*cvH*.06+Math.sin(u*14*l.f+t*l.v*1.7)*cvH*.015;
+      if(x)cx.lineTo(x,y);else cx.moveTo(x,y);
+    }
+    cx.stroke();
+  });
+}
+function cvCuadro(ts){   // animación a unos 30 cuadros por segundo; se corta sola si no se ve
+  cvRaf=0;
+  if(document.hidden||!cvVis||MQ.matches)return;
+  if(ts-cvUlt>=33){cvUlt=ts;cvDib(ts);}
+  cvRaf=requestAnimationFrame(cvCuadro);
+}
+function cvEstado(){   // pausa si la pestaña no está activa, si Inicio no se ve o si el usuario pidió menos movimiento
+  if(document.hidden||!cvVis||MQ.matches){
+    if(cvRaf){cancelAnimationFrame(cvRaf);cvRaf=0;}
+    if(MQ.matches&&cvVis)cvDib(0);
+    return;
+  }
+  if(!cvRaf)cvRaf=requestAnimationFrame(cvCuadro);
+}
+new IntersectionObserver(e=>{cvVis=e[0].isIntersecting;cvEstado();}).observe(hero);
+new ResizeObserver(()=>{cvTam();cvDib(performance.now());cvEstado();}).observe(hero);
+document.addEventListener("visibilitychange",cvEstado);
+MQ.addEventListener("change",cvEstado);
+
+/* Telemetría: usa siempre los precios reales (también cuando se está en la Demo) y no requiere sesión */
+let telClave=0,telMEP=null,telCCL=null;
+function ruedaReal(){
+  const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:TZ,weekday:"short",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date()).map(x=>[x.type,x.value]));
+  const m=+p.hour*60+ +p.minute;
+  return !["Sat","Sun"].includes(p.weekday)&&m>=645&&m<1080;
+}
+function tcReal(suf){   // dólar implícito con los bonos AL30/GD30/AL35/GD35; para el CCL, respaldo con la mediana de los CEDEARs
+  for(const a of ["AL30","GD30","AL35","GD35"]){
+    const A=datosReal.find(d=>d.s===a),B=datosReal.find(d=>d.s===a+suf);
+    if(A?.ultimo>0&&B?.ultimo>0)return A.ultimo/B.ultimo;
+  }
+  if(suf!=="C")return null;
+  const m=new Map(datosReal.map(d=>[d.s,d]));
+  const r=datosReal.filter(d=>d.tipo==="cedears"&&d.ultimo>0&&m.get(d.s+"C")?.ultimo>0).map(d=>d.ultimo/m.get(d.s+"C").ultimo).sort((a,b)=>a-b);
+  return r.length?r[Math.floor(r.length/2)]:null;
+}
+function setTel(id,v){const e=$(id);if(e.textContent!==v)e.textContent=v;}
+function pintarTel(){
+  const ab=ruedaReal();
+  setTel("telRueda",ab?"Abierta":"Cerrada");$("telPunto").className="punto "+(ab?"on":"off");
+  if(actualizado&&actualizado.getTime()!==telClave){telClave=actualizado.getTime();telMEP=tcReal("D");telCCL=tcReal("C");}
+  setTel("telMEP",telMEP?$$(telMEP):"-");
+  setTel("telCCL",telCCL?$$(telCCL):"-");
+  setTel("telN",datosReal.length?datosReal.length.toLocaleString("es-AR"):"-");
+  setTel("telNota",actualizado?"Precios de las "+actualizado.toLocaleTimeString("es-AR",{timeZone:TZ,hour:"2-digit",minute:"2-digit",hour12:false}):"Cargando precios…");
+}
+pintarTel();setInterval(pintarTel,1000);
 </script>
 </body>
 </html>
