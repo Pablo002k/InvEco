@@ -354,6 +354,7 @@ async function avanzarDemo(){
     repintarDatos();
   }catch(e){console.warn(e);dNota("No se pudieron avanzar los precios. Probá de nuevo.");}
   finally{demoOcupado=false;}
+}
 /* ---------- NAVEGACIÓN PRINCIPAL (7 secciones) ---------- */
 const SECS=["inicio","simulador","guia","test","noticias","demo","contacto"];
 let secActual=enDemoSS()?"demo":"inicio";
