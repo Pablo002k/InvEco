@@ -109,6 +109,33 @@ small{opacity:.65;display:block}
   .fcf{border-bottom:0;border-radius:12px 12px 0 0;box-shadow:none;padding-bottom:6px}
   .fcb{border-top:0;border-radius:0 0 12px 12px;padding-top:6px}
 }
+/* Guía Rápida */
+#sec-guia.sec{max-width:none;margin:0;padding:0;background:#F8FAFC;color:#0F2942}
+#guiaHero{background:#EDF4FC;border-bottom:1px solid #E2E8F0;padding:44px 28px 28px}
+.gin{max-width:1100px;margin-inline:auto}
+#guiaHero h2{font-size:2rem;line-height:1.15;margin:6px 0 10px}
+#guiaHero .sub{max-width:46em;margin:0 0 20px;font-size:1.05rem;line-height:1.55;color:#1E293B}
+#guiaIdx{display:flex;flex-wrap:wrap;gap:8px}
+#guiaIdx button{min-height:44px;padding:0 14px;background:#fff;color:#0F2942;border:1px solid #E2E8F0;border-radius:6px;font-size:.95rem;transition:border-color .15s,color .15s}
+#guiaIdx button:hover{border-color:#1D4ED8;color:#1D4ED8}
+#guiaIdx button:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
+#guiaBody{padding:32px 28px 64px}
+.gb{margin-bottom:44px;scroll-margin-top:76px}
+.gb:last-child{margin-bottom:0}
+.gbh{display:flex;align-items:center;gap:12px}
+.gn{flex:0 0 auto;width:36px;height:36px;border-radius:50%;background:#0F2942;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-variant-numeric:tabular-nums}
+.gb h3{margin:0;font-size:1.4rem;color:#0F2942}
+.gb>.sub{margin:6px 0 16px;color:#475569}
+.gcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:14px}
+.gc{background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:18px;box-shadow:0 1px 3px rgba(15,41,66,.06)}
+.gc h4{margin:0 0 8px;font-size:1.05rem;color:#0F2942}
+.gc p,.gc li{font-size:.97rem;line-height:1.55;color:#1E293B}
+.gc p{margin:0 0 8px}
+.gc p:last-child{margin-bottom:0}
+.gc ul{margin:0;padding-left:20px}
+.gc li{margin-bottom:5px}
+.gc .gej{margin:10px 0 0;padding:10px 12px;background:#EDF4FC;border-left:3px solid #1D4ED8;border-radius:0 6px 6px 0;font-size:.92rem}
+@media(max-width:800px){#guiaHero{padding:28px 16px 20px}#guiaHero h2{font-size:1.6rem}#guiaBody{padding:24px 16px 48px}}
 </style>
 </head>
 <body>
@@ -249,7 +276,208 @@ small{opacity:.65;display:block}
   <div id="demoPuerta" class="card hide"></div>
 </section>
 
-<section id="sec-guia" class="sec hide"><h2>Guía Rápida</h2><p>Esta sección se completará en una etapa próxima.</p></section>
+<section id="sec-guia" class="sec hide">
+  <div id="guiaHero"><div class="gin">
+    <p class="eyebrow">Manual del simulador</p>
+    <h2>Guía Rápida</h2>
+    <p class="sub">Todo lo necesario para empezar a operar: cómo crear tu cuenta, cuándo funciona el mercado, cómo leer los precios, qué tipos de órdenes existen y cómo seguir tus resultados.</p>
+    <div id="guiaIdx" role="navigation" aria-label="Contenido de la guía">
+      <button data-gu="guia1">1. Tu cuenta</button>
+      <button data-gu="guia2">2. Horarios y precios</button>
+      <button data-gu="guia3">3. Cotizaciones y operación</button>
+      <button data-gu="guia4">4. Tipos de órdenes</button>
+      <button data-gu="guia5">5. Dólares, cobros y seguimiento</button>
+    </div>
+  </div></div>
+
+  <div id="guiaBody"><div class="gin">
+
+    <article class="gb" id="guia1">
+      <div class="gbh"><span class="gn">1</span><h3>Creación de cuenta y primeros pasos</h3></div>
+      <p class="sub">Qué necesitás para registrarte y cómo funciona el simulador.</p>
+      <div class="gcs">
+        <div class="gc"><h4>Crear tu cuenta</h4>
+          <ul>
+            <li>Entrá a "Simulador de Mercado" desde el menú superior.</li>
+            <li>Elegí un usuario de 3 a 20 caracteres (letras, números, punto, guion o guion bajo) y una contraseña de al menos 6 caracteres.</li>
+            <li>Tocá "Crear cuenta". No hace falta correo electrónico.</li>
+            <li>Las próximas veces, ingresá con tu usuario y tu contraseña tocando "Ingresar".</li>
+          </ul>
+          <p class="gej">El nombre que escribas es el que verán tus compañeros y tu docente en el ranking. Elegí uno apropiado.</p>
+        </div>
+        <div class="gc"><h4>Tu capital inicial</h4>
+          <p>Cada cuenta nueva empieza con <b>$ 500.000 ficticios</b> en pesos. El dinero no es real, pero los precios sí: provienen del mercado argentino y se mueven como en un broker verdadero.</p>
+          <p>Tu objetivo es hacer crecer tu <b>patrimonio</b>: la suma de tu efectivo en pesos, tus dólares y el valor actual de tus tenencias.</p>
+        </div>
+        <div class="gc"><h4>Cómo funciona el simulador</h4>
+          <ul>
+            <li>Elegís un activo y publicás una orden de compra o de venta.</li>
+            <li>El sistema la ejecuta con los precios reales del mercado.</li>
+            <li>Se descuentan comisiones, como en un broker real.</li>
+            <li>Tu cartera, tu resultado y tu lugar en el ranking se actualizan solos.</li>
+          </ul>
+        </div>
+        <div class="gc"><h4>Recorrido por las pestañas</h4>
+          <ul>
+            <li><b>Mercado:</b> lista de activos, detalle, gráfico y formulario de órdenes.</li>
+            <li><b>Cambio de Divisas:</b> comprar y vender dólares.</li>
+            <li><b>Mi cartera:</b> tu estado contable, tus órdenes y la evolución de tu patrimonio.</li>
+            <li><b>Calendario de dividendos</b> y <b>Calendario de bonos y ONs:</b> próximos cobros.</li>
+            <li><b>Mis notas semanales:</b> tus reflexiones y la conversación con el docente.</li>
+            <li><b>Novedades:</b> avisos y enlaces que publica el docente.</li>
+            <li><b>Ranking:</b> la clasificación de toda la clase.</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <article class="gb" id="guia2">
+      <div class="gbh"><span class="gn">2</span><h3>Horarios y actualización de precios</h3></div>
+      <p class="sub">Cuándo se puede operar y cada cuánto cambian los precios.</p>
+      <div class="gcs">
+        <div class="gc"><h4>Horario de la rueda</h4>
+          <p>El mercado funciona de <b>lunes a viernes, de 10:45 a 18:00</b> (hora de Buenos Aires). En ese horario podés publicar órdenes y cambiar dólares.</p>
+          <p>Fuera de él, los botones de operar se desactivan, pero podés mirar los precios, tu cartera, los calendarios y el ranking. En la pestaña Mercado, un reloj te indica si la rueda está abierta o cerrada.</p>
+          <p class="gej">El simulador no distingue feriados. En un día feriado la bolsa real está cerrada y los precios no se mueven.</p>
+        </div>
+        <div class="gc"><h4>Actualización de precios</h4>
+          <p>Mientras la rueda está abierta, los precios se actualizan <b>aproximadamente cada minuto</b>. La página busca los datos nuevos sola, sin que tengas que recargarla.</p>
+          <p>Debajo del botón "Actualizar ahora" ves la hora de los datos y la última verificación. Fuera del horario de mercado los precios no cambian: es normal.</p>
+        </div>
+        <div class="gc"><h4>Cuándo se ejecutan tus órdenes</h4>
+          <p>Una orden no se ejecuta en el instante en que la publicás: se evalúa en cada actualización de precios, es decir, aproximadamente cada minuto. Mientras tanto figura como <b>pendiente</b>.</p>
+        </div>
+        <div class="gc"><h4>Demo: practicar fuera de horario</h4>
+          <p>La sección Demo es una réplica del simulador con precios simulados que se mueven al azar. Cuando el docente la activa, se puede operar cualquier día y a cualquier hora, y las órdenes de mercado se ejecutan al instante.</p>
+          <p>Empezás con $ 500.000 propios de la Demo. Nada de lo que hagas ahí afecta tu cartera real, y al terminarla los datos se borran.</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="gb" id="guia3">
+      <div class="gbh"><span class="gn">3</span><h3>Cómo leer las cotizaciones y operar</h3></div>
+      <p class="sub">De la tabla de precios a tu primera orden.</p>
+      <div class="gcs">
+        <div class="gc"><h4>La tabla de activos</h4>
+          <p>Usá el buscador (por símbolo o nombre) y los filtros de tipo y moneda para encontrar un activo. La tabla muestra el símbolo, el tipo, el último precio y la variación porcentual.</p>
+          <p>Tocá una fila para ver el detalle y el gráfico. La pestaña Mercado también tiene una "Ayuda rápida" desplegable con conceptos básicos.</p>
+        </div>
+        <div class="gc"><h4>Qué significa cada dato</h4>
+          <ul>
+            <li><b>Último:</b> precio de la operación más reciente.</li>
+            <li><b>Variación:</b> cambio porcentual respecto del cierre anterior.</li>
+            <li><b>Compra y Venta:</b> las puntas del mercado (se explican abajo).</li>
+            <li><b>Apertura, Máximo y Mínimo:</b> precios del día.</li>
+            <li><b>Cierre anterior:</b> último precio de la rueda previa.</li>
+            <li><b>Volumen:</b> cantidad de unidades operadas.</li>
+          </ul>
+        </div>
+        <div class="gc"><h4>Compra, Venta y libro de ofertas</h4>
+          <p><b>Compra</b> es el precio más alto que alguien ofrece pagar. <b>Venta</b> es el más bajo al que alguien ofrece vender. Cuando comprás, pagás la punta de <b>Venta</b>; cuando vendés, recibís la punta de <b>Compra</b>. La diferencia entre ambas se llama spread.</p>
+          <p class="gej">Ejemplo: si Compra dice $ 10.000 y Venta dice $ 10.100, comprar te cuesta $ 10.100 por unidad y vender te da $ 10.000.</p>
+          <p>El libro de ofertas muestra hasta 6 niveles de precios con sus cantidades, tomados del mercado real. Fuera de horario aparece vacío o con el último libro registrado.</p>
+        </div>
+        <div class="gc"><h4>Pesos y dólares: los sufijos</h4>
+          <p>Muchos activos aparecen repetidos. El símbolo sin sufijo cotiza en <b>pesos</b>; el que termina en <b>D</b> cotiza en <b>dólares MEP</b> y el que termina en <b>C</b>, en <b>dólares CCL</b>.</p>
+          <p>Los activos en dólares se pagan con dólares del tipo correspondiente, que se consiguen en la pestaña Cambio de Divisas.</p>
+        </div>
+        <div class="gc"><h4>Qué se puede operar</h4>
+          <ul>
+            <li>Acciones, CEDEARs y ETFs.</li>
+            <li>Bonos y obligaciones negociables con calendario cargado: AL30, GD30, AL35, GD35, ON Banco Macro Clase G y ON Edenor Clase 7.</li>
+            <li>Los demás bonos y ONs se muestran solo como referencia. Las letras todavía no se pueden operar.</li>
+          </ul>
+          <p>Los bonos y las ONs se operan por <b>nominales</b>, y su precio se expresa por cada 100 nominales.</p>
+          <p class="gej">Ejemplo: si un bono cotiza a $ 80.000, comprar 100 nominales cuesta $ 80.000 y comprar 1 nominal cuesta $ 800.</p>
+        </div>
+        <div class="gc"><h4>Comisiones</h4>
+          <p>Cada compra y cada venta tiene una comisión de <b>0,71 %</b> del importe (comisión del broker más IVA, de forma aproximada). Se suma al costo cuando comprás y se descuenta cuando vendés.</p>
+          <p class="gej">Ejemplo: comprar 10 unidades a $ 10.000 son $ 100.000, más $ 710 de comisión: pagás $ 100.710 en total.</p>
+        </div>
+        <div class="gc"><h4>Cómo publicar una orden</h4>
+          <ul>
+            <li>Elegí un activo de la lista.</li>
+            <li>En "Nueva orden", indicá si querés comprar o vender, el tipo de orden y su vigencia.</li>
+            <li>Escribí la cantidad (y los precios límite o stop, si corresponde). Debajo verás un importe estimado.</li>
+            <li>Tocá "Publicar orden". Podés seguirla en Mi cartera.</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <article class="gb" id="guia4">
+      <div class="gbh"><span class="gn">4</span><h3>Tipos de órdenes</h3></div>
+      <p class="sub">La forma de indicarle al mercado cuándo y a qué precio querés operar.</p>
+      <div class="gcs">
+        <div class="gc"><h4>A precio de mercado</h4>
+          <p>Se ejecuta en la próxima actualización de precios, a la punta que corresponde: si comprás, a la punta de Venta; si vendés, a la de Compra.</p>
+          <p>Es la más simple y la más rápida, pero no elegís el precio exacto.</p>
+        </div>
+        <div class="gc"><h4>Límite</h4>
+          <p>Fijás el precio máximo al que querés comprar o el mínimo al que querés vender. Si el mercado no llega a ese precio, la orden queda pendiente.</p>
+          <p class="gej">Ejemplo: querés comprar una acción que hoy está a $ 10.000, pero solo si baja a $ 9.500. Publicás una compra límite a $ 9.500 y se ejecuta cuando la punta de Venta llega a $ 9.500 o menos.</p>
+        </div>
+        <div class="gc"><h4>Stop límite</h4>
+          <p>Indicás dos precios: el <b>stop</b> y el <b>límite</b>. La orden espera hasta que el último precio toca el stop (en una venta, cuando baja hasta ese valor o menos; en una compra, cuando sube hasta ese valor o más). Desde ese momento funciona como una orden límite. Sirve para limitar pérdidas.</p>
+          <p class="gej">Ejemplo: tenés una acción y publicás una venta con stop $ 9.500 y límite $ 9.400. Si el precio baja a $ 9.500 o menos, la orden se activa y se ejecuta solo si la punta de Compra es de $ 9.400 o más.</p>
+        </div>
+        <div class="gc"><h4>Vigencia</h4>
+          <ul>
+            <li><b>Válida por el día:</b> vence al cierre de la rueda (18:00).</li>
+            <li><b>Hasta cancelar:</b> sigue vigente hasta que se ejecute o la canceles.</li>
+          </ul>
+          <p>Mientras una orden esté pendiente, podés cancelarla desde Mi cartera, en la lista de órdenes.</p>
+        </div>
+        <div class="gc"><h4>Estados de una orden</h4>
+          <ul>
+            <li><b>Pendiente:</b> espera que se cumplan sus condiciones.</li>
+            <li><b>Ejecutada:</b> se concretó y figura en tu libro de operaciones.</li>
+            <li><b>Rechazada:</b> al ejecutarse no había saldo o cantidad suficiente, o el activo no está habilitado. Se muestra el motivo.</li>
+            <li><b>Cancelada:</b> la cancelaste vos.</li>
+            <li><b>Vencida:</b> era válida solo por el día y la rueda cerró.</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <article class="gb" id="guia5">
+      <div class="gbh"><span class="gn">5</span><h3>Cambio de moneda, dividendos, bonos y seguimiento</h3></div>
+      <p class="sub">Qué pasa con tus dólares, tus cobros y tus resultados.</p>
+      <div class="gcs">
+        <div class="gc"><h4>Cambio de Divisas</h4>
+          <p>Permite cambiar pesos por dólares y dólares por pesos. Hay dos tipos: el <b>dólar MEP</b>, para activos terminados en D, y el <b>dólar CCL</b>, para activos terminados en C.</p>
+          <p>La cotización se calcula con bonos reales que cotizan en pesos y en dólares. Para comprar dólares fijate en el valor de <b>Venta</b>; para venderlos, en el de <b>Compra</b>. El cambio lleva dos comisiones (una por cada operación), cerca de 1,42 % en total, y solo se puede hacer en horario de rueda.</p>
+        </div>
+        <div class="gc"><h4>Dividendos</h4>
+          <p>Un dividendo es la parte de las ganancias que una empresa reparte entre sus accionistas. Lo cobrás si tenías el activo <b>antes de la fecha de corte</b>, y se acredita en la fecha de pago, en <b>dólares MEP</b> y con una retención estimada (30 % para empresas de Estados Unidos).</p>
+          <p>Las fechas marcadas como "Estimada" pueden variar. Para pasar los dólares a pesos, usá Cambio de Divisas.</p>
+        </div>
+        <div class="gc"><h4>Bonos y obligaciones negociables</h4>
+          <p>Pagan <b>renta</b> (intereses) y <b>amortización</b> (devolución del capital) en las fechas del calendario, siempre que hayas tenido el bono antes de cada pago.</p>
+          <p>Los Bonar (AL) pagan en dólares MEP; los Global (GD) y las ONs internacionales, en dólares CCL. La amortización es capital que vuelve a tus manos, no una ganancia: por eso el precio del bono baja en proporción.</p>
+        </div>
+        <div class="gc"><h4>Mi cartera</h4>
+          <ul>
+            <li>Efectivo, dólares, valor de tus tenencias y patrimonio total.</li>
+            <li><b>Resultado realizado:</b> ganancia o pérdida de lo que ya vendiste.</li>
+            <li><b>Resultado no realizado:</b> lo que ganarías o perderías si vendieras hoy.</li>
+            <li>Dividendos y pagos de bonos cobrados, y comisiones pagadas.</li>
+            <li>Un gráfico de la evolución de tu patrimonio (10 minutos, 1 hora, 1 día o 1 semana) y tu libro de operaciones.</li>
+            <li>Los próximos cobros de tu cartera.</li>
+          </ul>
+        </div>
+        <div class="gc"><h4>Ranking</h4>
+          <p>Ordena a toda la clase según el <b>patrimonio total</b>: efectivo, dólares convertidos a pesos y valor de las tenencias. Se recalcula con cada actualización de precios. Tocá a un compañero para ver su cartera completa.</p>
+        </div>
+        <div class="gc"><h4>Notas semanales y Novedades</h4>
+          <p>En "Mis notas semanales" contá qué compraste o vendiste, por qué lo hiciste y qué esperás a futuro. Tu docente puede comentar, responderte y evaluar la nota con un puntaje de 0 a 10; vos también podés responderle.</p>
+          <p>En "Novedades" encontrás los avisos y enlaces que publica el docente, y podés dejar tus respuestas.</p>
+        </div>
+      </div>
+    </article>
+
+  </div></div>
+</section>
 <section id="sec-test" class="sec hide"><h2>Test de Perfil de Inversor</h2><p>Esta sección se completará en una etapa próxima.</p></section>
 <section id="sec-noticias" class="sec hide"><h2>Últimas Noticias</h2><p>Esta sección se completará en una etapa próxima.</p></section>
 <section id="sec-contacto" class="sec hide"><h2>Contacto</h2><p>Esta sección se completará en una etapa próxima.</p></section>
@@ -1120,6 +1348,12 @@ $("bandaIr").onclick=()=>{bandaCerrar();irSec("simulador");};
 $("bandaX").onclick=bandaCerrar;
 window.addEventListener("scroll",bandaVista,{passive:true});
 window.addEventListener("resize",bandaVista);
+
+/* ---------- GUÍA RÁPIDA (Etapa 3) ---------- */
+$("guiaIdx").onclick=e=>{   // los botones del índice llevan al bloque elegido, sin tocar la URL
+  const b=e.target.closest("button"),s=b&&$(b.dataset.gu);
+  if(s)s.scrollIntoView({behavior:MQ.matches?"auto":"smooth",block:"start"});
+};
 </script>
 </body>
 </html>
