@@ -6,7 +6,7 @@
 <title>InvEco</title>
 <style>
 :root{color-scheme:light dark;font-family:system-ui,sans-serif}
-body{margin:0;padding:14px;max-width:1150px;margin-inline:auto}
+body{margin:0}
 nav{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 button{padding:8px 13px;font-size:.9rem;cursor:pointer}button:disabled{cursor:not-allowed}
 nav button.on,.g button.on,.tf button.on{font-weight:700;text-decoration:underline}
@@ -23,7 +23,7 @@ small{opacity:.65;display:block}
 .card{border:1px solid #8884;padding:10px;margin:10px 0}
 .pv{display:flex;gap:10px;border:1px solid #8884;margin-top:8px;text-decoration:none;color:inherit}.pv img{width:150px;object-fit:cover}.pv span{padding:8px}.nota{border-left:4px solid #3b82f6}.consejo{border-left:4px solid #d97706}.resp{border-left:4px solid #8886;margin-left:18px}.res{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}.res>div{border:1px solid #8884;padding:8px}.res small{display:block}.dvr,.dvh{display:grid;grid-template-columns:1.7fr 1fr 1fr 1fr .9fr .7fr 1fr 1.4fr;gap:6px;padding:8px;align-items:center}.dvr{cursor:pointer;list-style:none}.dvr::-webkit-details-marker{display:none}.dvh{font-weight:600;font-size:.85rem;border-bottom:1px solid #8884}.dv{border-bottom:1px solid #8883}.dvr .n,.dvh .n{text-align:right}.ar{display:inline-block;transition:transform .15s}details[open]>.dvr .ar{transform:rotate(90deg)}.dvb{padding:0 8px 10px 26px}textarea{resize:none;min-height:84px;max-height:220px;overflow-y:auto;line-height:1.4}.up{color:#0a7d33}.dn{color:#c0282d}.hide{display:none}
 .evo{display:grid;grid-template-columns:1.7fr 1fr;gap:12px;align-items:start}@media(max-width:800px){.evo{grid-template-columns:1fr}}
-#barra{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:-14px -14px 12px;padding:6px 14px;background:Canvas;border-bottom:1px solid #8884}
+#barra{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0;padding:6px max(14px,calc((100% - 1400px)/2));background:Canvas;border-bottom:1px solid #8884}
 #marca{border:0;background:none;font-size:1.2rem;font-weight:700;margin-right:auto;padding:8px 4px}
 #navBtn{display:none;min-height:44px}
 #navp{display:flex;flex-wrap:wrap;gap:4px;margin:0}
@@ -32,34 +32,79 @@ small{opacity:.65;display:block}
 @media(max-width:768px){#navBtn{display:block}#navp{display:none;width:100%;flex-direction:column}#navp.abierto{display:flex}#navp button{width:100%;text-align:left;min-height:44px}#tabs{flex-wrap:nowrap;overflow-x:auto}#tabs button{flex:0 0 auto;white-space:nowrap;min-height:44px}}
 .sec:not(.hide){animation:ent .35s ease-out}
 @keyframes ent{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-@media(prefers-reduced-motion:reduce){.sec:not(.hide){animation:none}.tc,#heroCta{transition:none}.tc:hover{transform:none}}
-#sec-inicio{background:#F8FAFC;color:#0F2942;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden}
+.sec:not(#sec-inicio){max-width:1150px;margin-inline:auto;padding:14px}
+#sec-inicio{background:#F8FAFC;color:#0F2942;overflow-x:clip}
 #hero{position:relative;background:#EDF4FC;border-bottom:1px solid #E2E8F0}
 #heroCv{position:absolute;inset:0;width:100%;height:100%;display:block}
-#heroIn{position:relative;display:grid;grid-template-columns:1.4fr 1fr;gap:28px;align-items:center;padding:44px 28px}
-#heroTx h1{font-size:2.3rem;line-height:1.15;margin:6px 0 12px}
-#heroTx .sub{font-size:1.05rem;line-height:1.55;max-width:36em;margin:0 0 20px;color:#334155}
+#heroIn{position:relative;display:grid;grid-template-columns:1.4fr 1fr;gap:28px;align-items:center;max-width:1400px;margin-inline:auto;padding:56px 28px}
+#heroTx h1{font-size:2.3rem;line-height:1.15;margin:6px 0 14px;text-shadow:0 1px 2px rgba(237,244,252,.9)}
+#heroTx .sub{font-size:1.05rem;line-height:1.55;max-width:36em;margin:0;color:#1E293B;text-shadow:0 1px 2px rgba(237,244,252,.9)}
 .eyebrow{margin:0;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:#1D4ED8}
-#heroCta{background:#0F2942;color:#fff;border:1px solid #0F2942;border-radius:6px;padding:12px 22px;font-size:1rem;min-height:44px;transition:background .15s}
-#heroCta:hover{background:#1D4ED8;border-color:#1D4ED8}
-#heroCta:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px}
 #tel{background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:16px;box-shadow:0 1px 3px rgba(15,41,66,.08)}
 #tel small{color:#475569;margin-top:10px}
 .telf{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #E2E8F0;font-size:.95rem}
 .telf b{font-family:ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;font-weight:600;display:flex;align-items:center}
 .punto{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px}
-.punto.on{background:#0D7A3E}.punto.off{background:#94A3B8}
-#mods{padding:28px}
-.mod{margin-bottom:30px}
+.punto.on{background:#0D7A3E}.punto.off{background:#B91C1C}
+#mods{background:#F8FAFC;padding:40px 28px 80px}
+#modsIn{max-width:1400px;margin-inline:auto}
+.mod{margin-bottom:44px}
 .mod:last-child{margin-bottom:0}
-.mod h3{margin:2px 0 0;font-size:1.3rem}
-.mod .sub{margin:4px 0 14px;color:#475569}
-.tcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.tc{background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:14px;box-shadow:0 1px 2px rgba(15,41,66,.06);transition:transform .15s,box-shadow .15s}
-.tc:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(15,41,66,.1)}
-.tc h4{margin:0 0 6px;font-size:1rem;color:#0F2942}
-.tc p{margin:0;font-size:.92rem;line-height:1.5;color:#334155}
-@media(max-width:800px){#heroIn{grid-template-columns:1fr;padding:28px 18px}#heroTx h1{font-size:1.7rem}#mods{padding:18px}}
+.mod h3{margin:0;font-size:1.4rem;color:#0F2942}
+.mod .sub{margin:6px 0 18px;color:#475569}
+/* Flip cards (PC) */
+.fcs{display:none;gap:16px;grid-template-columns:repeat(2,1fr)}
+@media(min-width:768px){.fcs{display:grid}}
+@media(min-width:1100px){.fcs{grid-template-columns:repeat(4,1fr)}}
+.fc{position:relative;min-height:260px;border-radius:12px;perspective:1000px;transition:transform .3s ease,filter .3s ease,opacity .3s ease}
+.fc:focus-visible{outline:2px solid #1D4ED8;outline-offset:3px}
+.fci{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,.2,.2,1)}
+.fc:hover .fci,.fc:focus-visible .fci{transform:rotateY(180deg)}
+.fc:hover,.fc:focus-visible{transform:scale(1.05);z-index:2}
+.fcs:has(.fc:hover) .fc:not(:hover),.fcs:has(.fc:focus-visible) .fc:not(:focus-visible){filter:blur(3px);transform:scale(.96);opacity:.9}
+.fcf,.fcb{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;overflow:hidden;border-radius:12px;border:1px solid #E2E8F0;background:rgba(255,255,255,.7);box-shadow:0 8px 20px -6px rgba(15,23,42,.08);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.fcb{transform:rotateY(180deg)}
+.fcf::before,.fcb::before{content:"";position:absolute;top:-40px;right:-40px;width:130px;height:130px;border-radius:50%;background:var(--g,#1D4ED8);filter:blur(24px);opacity:.35;z-index:0}
+.fcf>*,.fcb>*{position:relative;z-index:1}
+.fcf h4{margin:0;font-size:1.3rem;font-weight:700;line-height:1.25;color:#0F2942}
+.fcb p{margin:0;font-size:.92rem;line-height:1.5;color:#475569}
+.fc:nth-child(2n){--g:#1D4ED8}.fc:nth-child(4n+1){--g:#0D7A3E}.fc:nth-child(4n+3){--g:#B91C1C}
+/* Carrusel (celular) */
+.cw{display:none}
+@media(max-width:767px){.cw{display:block}}
+.cws{display:grid;padding-bottom:32px;touch-action:pan-y;-webkit-user-select:none;user-select:none}
+.cwc{grid-area:1/1;box-sizing:border-box;min-height:220px;max-height:280px;overflow-y:auto;padding:22px 20px;background:#fff;border:1px solid #E2E8F0;border-radius:18px;box-shadow:0 8px 20px -6px rgba(15,23,42,.12);transform-origin:center bottom;touch-action:pan-y;transition:transform .35s ease,opacity .35s ease;will-change:transform}
+.cwc h4{margin:0 0 8px;font-size:1.25rem;color:#0F2942}
+.cwc p{margin:0;font-size:.95rem;line-height:1.5;color:#475569}
+.cwd{display:flex;justify-content:center;gap:8px;margin-top:6px}
+.cwd i{display:block;width:8px;height:8px;border-radius:4px;background:#CBD5E1;transition:background-color .3s,width .3s}
+.cwd i.on{width:22px;background:#1D4ED8}
+.cwh{margin:10px 0 0;text-align:center;font-size:.82rem;color:#475569}
+#mods.sinhint .cwh{display:none}
+/* Banda inferior */
+#banda{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:#fff;border-top:1px solid #E2E8F0;box-shadow:0 -4px 16px rgba(15,41,66,.1);visibility:hidden;transform:translateY(100%);transition:transform .3s ease-out,visibility 0s linear .3s}
+#banda.vis{visibility:visible;transform:none;transition:transform .3s ease-out}
+#banda p{margin:0;font-weight:600;color:#0F2942}
+#banda button{min-height:44px;min-width:44px;border-radius:6px;font-size:.95rem}
+#bandaIr{background:#0F2942;color:#fff;border:1px solid #0F2942;padding:0 18px}
+#bandaIr:hover{background:#1D4ED8;border-color:#1D4ED8}
+#bandaX{background:transparent;color:#0F2942;border:1px solid #E2E8F0}
+#banda button:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
+@media(max-width:800px){#heroIn{grid-template-columns:1fr;padding:28px 18px}#heroTx h1{font-size:1.7rem}#mods{padding:24px 16px 80px}#banda{justify-content:space-between}}
+@media(prefers-reduced-motion:reduce){
+  .sec:not(.hide){animation:none}
+  #banda{transition:none}
+  .cwc,.cwd i{transition:none}
+  .fc,.fci{transition:none}
+  .fc{min-height:0}
+  .fc:hover,.fc:focus-visible{transform:none}
+  .fcs:has(.fc:hover) .fc:not(:hover),.fcs:has(.fc:focus-visible) .fc:not(:focus-visible){filter:none;transform:none;opacity:1}
+  .fc:hover .fci,.fc:focus-visible .fci{transform:none}
+  .fci{position:static;display:flex;flex-direction:column;transform-style:flat}
+  .fcf,.fcb{position:relative;inset:auto;transform:none;-webkit-backface-visibility:visible;backface-visibility:visible}
+  .fcf{border-bottom:0;border-radius:12px 12px 0 0;box-shadow:none;padding-bottom:6px}
+  .fcb{border-top:0;border-radius:0 0 12px 12px;padding-top:6px}
+}
 </style>
 </head>
 <body>
@@ -82,10 +127,9 @@ small{opacity:.65;display:block}
     <canvas id="heroCv" aria-hidden="true"></canvas>
     <div id="heroIn">
       <div id="heroTx">
-        <p class="eyebrow">Simulador bursátil educativo</p>
+        <p class="eyebrow">InvEco · Educación financiera</p>
         <h1>Aprendé a invertir con datos reales del mercado argentino</h1>
         <p class="sub">Operá con $ 500.000 ficticios sobre precios reales de la bolsa. Compará acciones, bonos y dólares, seguí la evolución de tu cartera y participá del ranking de la clase.</p>
-        <button id="heroCta">Ingresar al Simulador</button>
       </div>
       <aside id="tel" aria-label="Estado del mercado en vivo">
         <p class="eyebrow">Mercado en vivo</p>
@@ -97,62 +141,11 @@ small{opacity:.65;display:block}
       </aside>
     </div>
   </div>
-  <div id="mods">
-    <article class="mod">
-      <p class="eyebrow">Módulo 1</p>
-      <h3>Introducción al mercado de capitales</h3>
-      <p class="sub">El lugar donde el ahorro se encuentra con quienes necesitan financiamiento.</p>
-      <div class="tcs">
-        <div class="tc"><h4>Qué es</h4><p>Es el espacio donde se compran y venden activos financieros. Quienes tienen ahorros pueden invertirlos, y las empresas y el Estado obtienen fondos para sus proyectos.</p></div>
-        <div class="tc"><h4>CNV</h4><p>La Comisión Nacional de Valores es el organismo del Estado que regula y supervisa el mercado de capitales para proteger a los inversores.</p></div>
-        <div class="tc"><h4>BYMA</h4><p>Bolsas y Mercados Argentinos es la bolsa donde se negocian los activos. En este simulador, la rueda funciona de lunes a viernes, de 10:45 a 18:00.</p></div>
-        <div class="tc"><h4>Rendimiento y riesgo</h4><p>En general, cuanto mayor es la ganancia posible de una inversión, mayor es también el riesgo de perder parte del capital.</p></div>
-      </div>
-    </article>
-    <article class="mod">
-      <p class="eyebrow">Módulo 2</p>
-      <h3>Renta variable</h3>
-      <p class="sub">Activos cuyo resultado no está asegurado de antemano: dependen de cómo les vaya a las empresas y al mercado.</p>
-      <div class="tcs">
-        <div class="tc"><h4>Acciones</h4><p>Son partes de una empresa. Quien las compra es dueño de una porción y puede ganar por la suba del precio y por los dividendos.</p></div>
-        <div class="tc"><h4>CEDEARs</h4><p>Son certificados que representan acciones de empresas del exterior. Se compran en pesos en la bolsa argentina, como cualquier otro activo local.</p></div>
-        <div class="tc"><h4>ETFs</h4><p>Son fondos que cotizan como una acción y reúnen una canasta de activos, por ejemplo las empresas que forman un índice.</p></div>
-        <div class="tc"><h4>Dividendos</h4><p>Es la parte de las ganancias que una empresa reparte entre sus accionistas. Para cobrarlo hay que tener el activo antes de la fecha de corte.</p></div>
-      </div>
-    </article>
-    <article class="mod">
-      <p class="eyebrow">Módulo 3</p>
-      <h3>Renta fija</h3>
-      <p class="sub">Instrumentos de deuda: quien invierte presta dinero y recibe pagos en fechas establecidas.</p>
-      <div class="tcs">
-        <div class="tc"><h4>Bonos soberanos</h4><p>Son préstamos que se le hacen al Estado. A cambio, el Estado paga intereses (la renta) y devuelve el capital prestado (la amortización).</p></div>
-        <div class="tc"><h4>Obligaciones negociables</h4><p>Son bonos emitidos por empresas para financiarse. Funcionan igual que los bonos del Estado, pero dependen de la solvencia de la empresa.</p></div>
-        <div class="tc"><h4>Amortización</h4><p>Es la devolución del capital. No es una ganancia: es dinero que vuelve a tus manos, y por eso el precio del bono baja en proporción.</p></div>
-        <div class="tc"><h4>TIR</h4><p>La tasa interna de retorno indica qué rendimiento anual obtiene quien compra un bono a un precio dado y cobra todos sus pagos hasta el vencimiento. Si el precio baja, la TIR sube.</p></div>
-      </div>
-    </article>
-    <article class="mod">
-      <p class="eyebrow">Módulo 4</p>
-      <h3>Mercado de cambios</h3>
-      <p class="sub">Cómo se consiguen dólares a través del mercado de capitales.</p>
-      <div class="tcs">
-        <div class="tc"><h4>Dólar MEP</h4><p>Se obtiene comprando un bono en pesos y vendiéndolo en dólares. Los dólares quedan en una cuenta en Argentina y sirven para activos terminados en D.</p></div>
-        <div class="tc"><h4>Dólar CCL</h4><p>Es el contado con liquidación: funciona de forma parecida, pero los dólares quedan en el exterior. Sirve para activos terminados en C.</p></div>
-        <div class="tc"><h4>Cotización implícita</h4><p>Surge de comparar el precio en pesos y el precio en dólares de un mismo bono. Por eso se mueve con el mercado y no la fija nadie.</p></div>
-        <div class="tc"><h4>Compra, venta y spread</h4><p>Quien compra dólares paga el precio de venta; quien los vende recibe el de compra. La diferencia entre ambos es el spread.</p></div>
-      </div>
-    </article>
-    <article class="mod">
-      <p class="eyebrow">Módulo 5</p>
-      <h3>Tipos de órdenes</h3>
-      <p class="sub">La forma en que le indicás al mercado cuándo y a qué precio querés operar.</p>
-      <div class="tcs">
-        <div class="tc"><h4>Orden de mercado</h4><p>Se ejecuta de inmediato al mejor precio disponible. Es la más rápida, pero no controlás el precio exacto.</p></div>
-        <div class="tc"><h4>Orden límite</h4><p>Fijás el precio máximo al que querés comprar o el mínimo al que querés vender. Si el mercado no llega a ese precio, la orden no se ejecuta.</p></div>
-        <div class="tc"><h4>Stop límite</h4><p>Se activa cuando el precio llega a un valor llamado stop, y desde ese momento actúa como una orden límite. Sirve para limitar pérdidas.</p></div>
-        <div class="tc"><h4>Vigencia</h4><p>Una orden puede valer solo por el día o hasta que la canceles. Al cierre de la rueda, las órdenes del día vencen.</p></div>
-      </div>
-    </article>
+  <div id="mods"><div id="modsIn"></div></div>
+  <div id="banda" role="region" aria-label="Invitación a operar">
+    <p>¿Querés empezar a operar?</p>
+    <button id="bandaIr">Ir al Simulador</button>
+    <button id="bandaX" aria-label="Cerrar aviso">X</button>
   </div>
 </section>
 
@@ -343,7 +336,6 @@ const valoresAlumnos=()=>Object.fromEntries(todos.filter(u=>(u.usuario||"")!==AD
 function dNota(t){demoNota=t;pintarPrinc();if(t)setTimeout(()=>{if(demoNota===t){demoNota="";pintarPrinc();}},10000);}
 function pintarPrinc(){
   vistaSec();
-  document.querySelectorAll("#princ button").forEach(b=>b.classList.toggle("on",(b.dataset.sec==="demo")===demoActiva));
   const B=$("demoBar");let h="";
   if(demoActiva){
     h=`<b>Demo activa.</b> Simulación con datos temporales: no afecta las cuentas reales. Avances de 10 minutos: ${demoPx?.paso||0}. Hora simulada: ${demoCfg?fh(tAhora()):"-"}.`;
@@ -455,7 +447,7 @@ async function avanzarDemo(){
     const nuevo=moverPrecios(demoPx);
     demoPx=nuevo;aplicarDemo();
     const v1=valoresAlumnos(),b=writeBatch(db);
-    b.set(doc(db,"prueba_evo",id(p)),{t:tSim(p),paso:p,v:v0});
+    if(p===0)b.set(doc(db,"prueba_evo",id(p)),{t:tSim(p),paso:p,v:v0});
     b.set(doc(db,"prueba_evo",id(p+1)),{t:tSim(p+1),paso:p+1,v:v1});
     b.set(doc(db,"prueba_precios","actual"),nuevo);
     await b.commit();
@@ -941,10 +933,9 @@ $("btnTodos").onclick=()=>setDoc(doc(db,"estado","forzar"),{t:Date.now()});
 $("fxc").onclick=()=>cambio("CD");$("fxv").onclick=()=>cambio("VD");$("fxn").addEventListener("input",estFx);$("fxt").addEventListener("change",estFx);
 setInterval(()=>{if(elegido&&tab==="mercado")pedirLibro(elegido);},120000);
 /* ---------- INICIO: hero animado y telemetría (Etapa 2) ---------- */
-$("heroCta").onclick=()=>irSec("simulador");
 const MQ=window.matchMedia("(prefers-reduced-motion: reduce)");
 const hero=$("hero"),cv=$("heroCv"),cx=cv.getContext("2d");
-const LINEAS=[{f:1,v:.0003,ph:0,c:"rgba(29,78,216,.55)"},{f:1.3,v:.00022,ph:2,c:"rgba(15,41,66,.4)"},{f:.8,v:.00035,ph:4,c:"rgba(13,122,62,.4)"}];
+const LINEAS=[{f:1,v:.0003,ph:0,c:"rgba(29,78,216,.55)"},{f:1.3,v:.00022,ph:2,c:"rgba(185,28,28,.35)"},{f:.8,v:.00035,ph:4,c:"rgba(13,122,62,.4)"}];
 let cvW=0,cvH=0,cvRaf=0,cvUlt=0,cvVis=false;
 function cvTam(){   // ajusta el lienzo al tamaño del hero (máximo 2 puntos por píxel)
   const r=hero.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2);
@@ -1013,6 +1004,118 @@ function pintarTel(){
   setTel("telNota",actualizado?"Precios de las "+actualizado.toLocaleTimeString("es-AR",{timeZone:TZ,hour:"2-digit",minute:"2-digit",hour12:false}):"Cargando precios…");
 }
 pintarTel();setInterval(pintarTel,1000);
+
+/* ---------- INICIO: módulos, carruseles y banda inferior (ajustes post Etapa 2) ---------- */
+const MODS=[
+  {t:"Introducción al mercado de capitales",s:"El lugar donde el ahorro se encuentra con quienes necesitan financiamiento.",c:[
+    ["Qué es","Es el espacio donde se compran y venden activos financieros. Quienes tienen ahorros pueden invertirlos, y las empresas y el Estado obtienen fondos para sus proyectos."],
+    ["CNV","La Comisión Nacional de Valores es el organismo del Estado que regula y supervisa el mercado de capitales para proteger a los inversores."],
+    ["BYMA","Bolsas y Mercados Argentinos es la bolsa donde se negocian los activos. En este simulador, la rueda funciona de lunes a viernes, de 10:45 a 18:00."],
+    ["Rendimiento y riesgo","En general, cuanto mayor es la ganancia posible de una inversión, mayor es también el riesgo de perder parte del capital."]]},
+  {t:"Renta variable",s:"Activos cuyo resultado no está asegurado de antemano: dependen de cómo les vaya a las empresas y al mercado.",c:[
+    ["Acciones","Son partes de una empresa. Quien las compra es dueño de una porción y puede ganar por la suba del precio y por los dividendos."],
+    ["CEDEARs","Son certificados que representan acciones de empresas del exterior. Se compran en pesos en la bolsa argentina, como cualquier otro activo local."],
+    ["ETFs","Son fondos que cotizan como una acción y reúnen una canasta de activos, por ejemplo las empresas que forman un índice."],
+    ["Dividendos","Es la parte de las ganancias que una empresa reparte entre sus accionistas. Para cobrarlo hay que tener el activo antes de la fecha de corte."]]},
+  {t:"Renta fija",s:"Instrumentos de deuda: quien invierte presta dinero y recibe pagos en fechas establecidas.",c:[
+    ["Bonos soberanos","Son préstamos que se le hacen al Estado. A cambio, el Estado paga intereses (la renta) y devuelve el capital prestado (la amortización)."],
+    ["Obligaciones negociables","Son bonos emitidos por empresas para financiarse. Funcionan igual que los bonos del Estado, pero dependen de la solvencia de la empresa."],
+    ["Amortización","Es la devolución del capital. No es una ganancia: es dinero que vuelve a tus manos, y por eso el precio del bono baja en proporción."],
+    ["TIR","La tasa interna de retorno indica qué rendimiento anual obtiene quien compra un bono a un precio dado y cobra todos sus pagos hasta el vencimiento. Si el precio baja, la TIR sube."]]},
+  {t:"Mercado de cambios",s:"Cómo se consiguen dólares a través del mercado de capitales.",c:[
+    ["Dólar MEP","Se obtiene comprando un bono en pesos y vendiéndolo en dólares. Los dólares quedan en una cuenta en Argentina y sirven para activos terminados en D."],
+    ["Dólar CCL","Es el contado con liquidación: funciona de forma parecida, pero los dólares quedan en el exterior. Sirve para activos terminados en C."],
+    ["Cotización implícita","Surge de comparar el precio en pesos y el precio en dólares de un mismo bono. Por eso se mueve con el mercado y no la fija nadie."],
+    ["Compra, venta y spread","Quien compra dólares paga el precio de venta; quien los vende recibe el de compra. La diferencia entre ambos es el spread."]]},
+  {t:"Tipos de órdenes",s:"La forma en que le indicás al mercado cuándo y a qué precio querés operar.",c:[
+    ["Orden de mercado","Se ejecuta de inmediato al mejor precio disponible. Es la más rápida, pero no controlás el precio exacto."],
+    ["Orden límite","Fijás el precio máximo al que querés comprar o el mínimo al que querés vender. Si el mercado no llega a ese precio, la orden no se ejecuta."],
+    ["Stop límite","Se activa cuando el precio llega a un valor llamado stop, y desde ese momento actúa como una orden límite. Sirve para limitar pérdidas."],
+    ["Vigencia","Una orden puede valer solo por el día o hasta que la canceles. Al cierre de la rueda, las órdenes del día vencen."]]}
+];
+function armarMods(){   // un solo contenido para las dos presentaciones: flip cards (PC) y carrusel (celular)
+  $("modsIn").innerHTML=MODS.map(m=>`<article class="mod"><h3>${esc(m.t)}</h3><p class="sub">${esc(m.s)}</p>`
+    +`<div class="fcs">${m.c.map(([a,b])=>`<div class="fc" tabindex="0"><div class="fci"><div class="fcf"><h4>${esc(a)}</h4></div><div class="fcb"><p>${esc(b)}</p></div></div></div>`).join("")}</div>`
+    +`<div class="cw"><div class="cws">${m.c.map(([a,b])=>`<div class="cwc"><h4>${esc(a)}</h4><p>${esc(b)}</p></div>`).join("")}</div>`
+    +`<div class="cwd">${m.c.map(()=>"<i></i>").join("")}</div><p class="cwh">Deslizá para navegar</p></div></article>`).join("");
+}
+
+/* Carrusel de tarjetas apiladas (solo celular) */
+const MQM=window.matchMedia("(max-width:767px)");
+const CW_POS=[{y:0,s:1,o:1,z:3},{y:14,s:.94,o:1,z:2},{y:28,s:.88,o:.85,z:1}];
+let cwLimpiar=[];
+function cwHintVisto(){try{return sessionStorage.getItem("hintCw")==="1";}catch{return false;}}
+function cwOcultarHint(){$("mods").classList.add("sinhint");try{sessionStorage.setItem("hintCw","1");}catch{}}
+function cwCrear(w){   // crea un carrusel y devuelve la función que lo desarma
+  const st=w.querySelector(".cws"),tj=[...st.children],pt=[...w.querySelectorAll(".cwd i")],n=tj.length;
+  let cur=0,busy=false,x0=0,y0=0,eje=null,dx=0,ancho=300;
+  function render(){   // la posición de cada tarjeta sale de aritmética modular; no se reordena el DOM
+    tj.forEach((c,i)=>{
+      const p=(i-cur+n)%n,g=CW_POS[p]||{y:28,s:.88,o:0,z:0};
+      c.style.transform=`translateY(${g.y}px) scale(${g.s})`;c.style.opacity=g.o;c.style.zIndex=g.z;
+      c.style.pointerEvents=p===0?"auto":"none";
+    });
+    pt.forEach((d,i)=>d.classList.toggle("on",i===cur));
+  }
+  function ir(d){
+    if(busy)return;
+    busy=true;cur=(cur+d+n)%n;render();
+    setTimeout(()=>{busy=false;},MQ.matches?0:350);   // temporizador sincronizado con la duración de la animación
+  }
+  function soltar(e){
+    st.removeEventListener("pointermove",mov);st.removeEventListener("pointerup",fin);st.removeEventListener("pointercancel",fin);
+    try{if(e&&st.hasPointerCapture(e.pointerId))st.releasePointerCapture(e.pointerId);}catch{}
+  }
+  function down(e){
+    if(busy||(e.pointerType==="mouse"&&e.button!==0))return;
+    x0=e.clientX;y0=e.clientY;eje=null;dx=0;ancho=st.clientWidth||300;
+    try{st.setPointerCapture(e.pointerId);}catch{}
+    st.addEventListener("pointermove",mov);st.addEventListener("pointerup",fin);st.addEventListener("pointercancel",fin);
+  }
+  function mov(e){
+    const ax=e.clientX-x0,ay=e.clientY-y0;
+    if(!eje){
+      if(Math.abs(ax)<6&&Math.abs(ay)<6)return;
+      if(Math.abs(ay)>Math.abs(ax)){soltar(e);return;}   // gesto vertical: se deja que la página haga scroll
+      eje="x";cwOcultarHint();tj[cur].style.transition="none";
+    }
+    dx=ax;tj[cur].style.transform=`translateX(${dx}px) rotate(${dx/25}deg)`;
+  }
+  function fin(e){
+    const horiz=eje==="x";
+    soltar(e);
+    tj.forEach(c=>{c.style.transition="";});
+    if(horiz&&e.type==="pointerup"&&Math.abs(dx)>=Math.min(60,ancho*.2))ir(dx>0?1:-1);   // derecha: siguiente; izquierda: anterior
+    else render();
+    dx=0;eje=null;
+  }
+  st.addEventListener("pointerdown",down);
+  render();
+  return()=>{st.removeEventListener("pointerdown",down);soltar();tj.forEach(c=>c.removeAttribute("style"));};
+}
+function cwEstado(){   // los carruseles solo existen mientras la pantalla es de celular
+  cwLimpiar.forEach(f=>f());cwLimpiar=[];
+  if(MQM.matches)cwLimpiar=[...document.querySelectorAll(".cw")].map(cwCrear);
+}
+armarMods();
+if(cwHintVisto())$("mods").classList.add("sinhint");
+cwEstado();
+MQM.addEventListener("change",cwEstado);
+
+/* Banda inferior: aparece al pasar el 80 % del recorrido de Inicio, una sola vez por sesión */
+const banda=$("banda"),secIni=$("sec-inicio");
+function bandaCerrada(){try{return sessionStorage.getItem("bandaCerrada")==="1";}catch{return false;}}
+let bandaOff=bandaCerrada();
+function bandaVista(){
+  if(bandaOff||secActual!=="inicio"){banda.classList.remove("vis");return;}
+  const r=secIni.getBoundingClientRect(),rango=r.height-window.innerHeight;
+  banda.classList.toggle("vis",rango>0&&-r.top>=rango*.8);
+}
+function bandaCerrar(){bandaOff=true;try{sessionStorage.setItem("bandaCerrada","1");}catch{}banda.classList.remove("vis");}
+$("bandaIr").onclick=()=>{bandaCerrar();irSec("simulador");};
+$("bandaX").onclick=bandaCerrar;
+window.addEventListener("scroll",bandaVista,{passive:true});
+window.addEventListener("resize",bandaVista);
 </script>
 </body>
 </html>
