@@ -312,6 +312,84 @@ td.n,.dvr .n,.telf b{font-family:var(--f-mono);font-variant-numeric:tabular-nums
 #nwLista>.nwc:first-child p{font-size:1rem}
 #nwTV{border-radius:12px;box-shadow:0 12px 32px -12px rgba(15,41,66,.18)}
 @media(prefers-reduced-motion:reduce){.gc,.nwc{transition:none}.gc:hover,.nwc:hover{transform:none}}
+/* Simulador (Etapa 6, parte 3) */
+#app>div:first-child{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 14px;background:#fff;border:1px solid #E2E8F0;border-radius:10px}
+#resumen{font-family:var(--f-mono);font-size:.88rem;color:#334155}
+#sal{margin-left:auto}
+.card{padding:14px;background:#fff;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 3px rgba(15,41,66,.06)}
+.card.nota{border-left:4px solid #1D4ED8}.card.consejo{border-left:4px solid #B45309}.card.resp{border-left:4px solid #CBD5E1}
+details.card summary{cursor:pointer;font-weight:600}
+small{opacity:1;color:#475569}
+#zona h3,#zona h4{color:#0F2942}
+#zona h4{margin:18px 0 8px;font-size:1.05rem}
+/* botones y campos */
+#zona button,#demoPuerta button{min-height:36px;padding:0 14px;color:#0F2942;background:#fff;border:1px solid #CBD5E1;border-radius:6px;font-weight:500;transition:border-color .15s,background-color .15s,color .15s}
+#zona button:hover:not(:disabled),#demoPuerta button:hover:not(:disabled){border-color:#1D4ED8;color:#1D4ED8}
+#zona button:disabled{color:#94A3B8;background:#F1F5F9;border-color:#E2E8F0}
+#zona button:focus-visible,#demoPuerta button:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
+#zona :is(#ent,#pub,#fxc,#npub,#npub2),#demoPuerta [data-pd]{color:#fff;background:#0F2942;border-color:#0F2942}
+#zona :is(#ent,#pub,#fxc,#npub,#npub2):hover:not(:disabled),#demoPuerta [data-pd]:hover{color:#fff;background:#1D4ED8;border-color:#1D4ED8}
+#zona :is(#ent,#pub,#fxc,#npub,#npub2):disabled{color:#64748B;background:#E2E8F0;border-color:#CBD5E1}
+#zona input,#zona select{min-height:40px}
+#zona input,#zona select,#zona textarea{color:#0F2942;background:#fff;border:1px solid #CBD5E1;border-radius:6px}
+#zona input:focus-visible,#zona select:focus-visible,#zona textarea:focus-visible{outline:2px solid #1D4ED8;outline-offset:1px;border-color:#1D4ED8}
+/* pestañas internas */
+#tabs{gap:2px;margin:12px 0;border-bottom:1px solid #E2E8F0}
+#zona #tabs button{min-height:44px;padding:0 14px;color:#334155;background:transparent;border:0;border-bottom:2px solid transparent;border-radius:0;white-space:nowrap}
+#zona #tabs button:hover{color:#1D4ED8;background:transparent}
+#zona #tabs button.on{color:#0F2942;font-weight:600;text-decoration:none;border-bottom-color:#1D4ED8}
+/* tablas y bloques */
+.l{background:#fff;border:1px solid #E2E8F0;border-radius:8px}
+#zona th{font-size:.78rem;font-weight:600;color:#334155;background:#F1F5F9;border-bottom:1px solid #E2E8F0}
+#zona td{border-bottom:1px solid #EEF2F7}
+.l th{position:sticky;top:0;z-index:2}
+tr.k:hover{background:#F1F5F9}
+tr.s{background:#EDF4FC}
+.reloj{margin:0 0 10px;padding:8px 12px;font-size:.88rem;font-variant-numeric:tabular-nums;color:#334155;background:#EDF4FC;border-left:3px solid #1D4ED8;border-radius:0 6px 6px 0}
+#estado{font-size:.85rem;color:#475569}
+#det{margin:0 0 10px;padding:12px 14px;line-height:1.6;background:#fff;border:1px solid #E2E8F0;border-radius:8px;scroll-margin-top:64px}
+.res>div{padding:10px 12px;background:#fff;border:1px solid #E2E8F0;border-radius:8px}
+.res b{font-family:var(--f-mono);font-size:1rem;font-variant-numeric:tabular-nums}
+/* destello de precios */
+@keyframes flUp{from{background:rgba(13,122,62,.35)}to{background:transparent}}
+@keyframes flDn{from{background:rgba(185,28,28,.3)}to{background:transparent}}
+.fl-up{animation:flUp .6s ease-out}
+.fl-dn{animation:flDn .6s ease-out}
+/* ticker */
+#ticker{overflow:hidden;margin:10px 0;background:#fff;border:1px solid #E2E8F0;border-radius:10px}
+#tkTrack{display:flex;width:max-content;animation:tkm var(--tkd,48s) linear infinite}
+#ticker:hover #tkTrack{animation-play-state:paused}
+.tks{display:flex;flex:0 0 auto}
+.tk{display:inline-flex;align-items:baseline;gap:8px;padding:9px 20px;white-space:nowrap;font-family:var(--f-mono);font-size:.85rem;font-variant-numeric:tabular-nums;border-right:1px solid #E2E8F0}
+.tk b{font-family:var(--f-titulo);color:#0F2942}
+.tkv.up{color:#0D7A3E}.tkv.dn{color:#B91C1C}
+@keyframes tkm{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+/* gráfico */
+#tvc{padding:0;overflow:hidden}
+.tvh{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border-bottom:1px solid #E2E8F0}
+#tv{height:560px;border:0}
+#tvc:has(#tv:empty){display:none}
+#tvc.tv-fullscreen{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;margin:0;border:0;border-radius:0;background:#fff}
+#tvc.tv-fullscreen .tvh{padding-top:calc(8px + env(safe-area-inset-top,0px))}
+#tvc.tv-fullscreen #tv{flex:1;height:auto;min-height:0}
+/* celular */
+@media(max-width:768px){
+  #zona button,#demoPuerta button{min-height:44px}
+  #zona input,#zona select,#zona textarea{font-size:16px}
+  .c>.l{max-height:260px}
+  .l td:first-child,.l th:first-child{position:sticky;left:0;z-index:1;background:#fff}
+  .l th:first-child{z-index:3;background:#F1F5F9}
+  tr.s td:first-child{background:#EDF4FC}
+  .dvh>span:first-child,.dvr>span:first-child{position:sticky;left:0;z-index:1;background:#fff}
+  .dvh>span:first-child{background:#F1F5F9}
+  #tv{height:430px}
+}
+@media(prefers-reduced-motion:reduce){
+  .fl-up,.fl-dn{animation:none}
+  #tkTrack{animation:none}
+  #ticker{overflow-x:auto}
+  #zona button,#demoPuerta button{transition:none}
+}
 </style>
 </head>
 <body>
@@ -369,6 +447,7 @@ td.n,.dvr .n,.telf b{font-family:var(--f-mono);font-variant-numeric:tabular-nums
 
 <div id="app" class="hide">
   <div><b id="yo"></b> · <span id="resumen"></span> <button id="sal">Salir</button></div>
+  <div id="ticker" class="hide" aria-label="Cotizaciones de los principales activos"><div id="tkTrack"></div></div>
   <div id="demoBar" class="card hide"></div>
   <nav id="tabs"></nav>
 
@@ -399,7 +478,7 @@ td.n,.dvr .n,.telf b{font-family:var(--f-mono);font-variant-numeric:tabular-nums
             <input id="ostop" type="number" min="0" step="0.01" placeholder="Precio stop" class="hide"></div>
           <p id="oest"></p><button id="pub">Publicar orden</button> <span id="omsg"></span></div>
         <div id="libro" class="card hide"></div>
-        <div id="tv"></div>
+        <div id="tvc" class="card"><div class="tvh"><b>Gráfico del activo</b><button id="tvAmp" type="button" aria-pressed="false">Ampliar gráfico</button></div><div id="tv"></div></div>
       </div>
     </div>
   </section>
@@ -1323,10 +1402,44 @@ $("npub").onclick=async()=>{
 
 /* ---------- Mercado (precios de IOL y gráfico de TradingView) ---------- */
 function llenar(sel,vals,et){const a=sel.value;sel.innerHTML=sel.options[0].outerHTML+vals.map(v=>`<option value="${esc(v)}">${esc(et(v))}</option>`).join("");sel.value=a;}
+let pxAnt={},pxModo="r",flash={},flashT=0,ultDatos=null;
+function marcarCambios(){   // compara los precios nuevos con los anteriores para marcar cuáles subieron o bajaron
+  const m=demoActiva?"d":"r";
+  if(m!==pxModo){pxAnt={};pxModo=m;}
+  const f={};
+  for(const d of datos){const u=d.ultimo;if(!(u>0))continue;const a=pxAnt[d.s];if(a!=null&&a!==u)f[d.s]=u>a?"up":"dn";pxAnt[d.s]=u;}
+  flash=f;flashT=Date.now();
+}
+const TK=["AAPL","MSFT","GOOGL","AMZN","META","NVDA","TSLA","MELI","KO","SPY","QQQ","GLD","BABA","JPM","VIST","AMD"];
+let tkClave="";
+const tkFmt=n=>Number(n).toLocaleString("es-AR",{maximumFractionDigits:2});
+function pintarTicker(){   // la cinta se arma una sola vez; después solo se actualizan los valores, para que no se corte el movimiento
+  const tk=$("ticker"),L=TK.map(s=>datos.find(d=>d.s===s)).filter(d=>d&&d.ultimo>0);
+  if(L.length<4){tk.classList.add("hide");return;}
+  tk.classList.remove("hide");
+  const clave=L.map(d=>d.s).join(",");
+  if(clave!==tkClave){
+    tkClave=clave;
+    const set=L.map(d=>`<span class="tk" data-s="${esc(d.s)}"><b>${esc(d.s)}</b><span class="tkp"></span><span class="tkv"></span></span>`).join("");
+    $("tkTrack").innerHTML=`<div class="tks">${set}</div><div class="tks" aria-hidden="true">${set}</div>`;
+    $("tkTrack").style.setProperty("--tkd",(L.length*3)+"s");
+  }
+  const M=new Map(L.map(d=>[d.s,d]));
+  tk.querySelectorAll(".tk").forEach(e=>{
+    const d=M.get(e.dataset.s),v=d.variacion_pct,t=e.querySelector(".tkv");
+    e.querySelector(".tkp").textContent=tkFmt(d.ultimo);
+    t.textContent=v==null?"":(v>0?"+":"")+tkFmt(v)+" %";
+    t.className="tkv "+(v>0?"up":v<0?"dn":"");
+  });
+}
 function pintar(){
+  if(datos!==ultDatos){marcarCambios();ultDatos=datos;}
+  pintarTicker();
   const q=$("buscar").value.trim().toLowerCase(),t=$("ftipo").value,m=$("fmon").value;
   const l=datos.filter(d=>(!q||d.s.toLowerCase().includes(q)||(d.nombre||"").toLowerCase().includes(q))&&(!t||d.tipo===t)&&(!m||d.moneda===m)).slice(0,300);
-  $("filas").innerHTML=l.map(d=>`<tr class="k${d.s===elegido?" s":""}" data-s="${esc(d.s)}"><td>${esc(d.s)}<small>${esc(d.nombre)}</small></td><td>${esc(nt(d.tipo))}</td><td class="n">${d.ultimo>0?d.ultimo:"-"}</td><td class="n">${d.ultimo>0&&d.variacion_pct!=null?d.variacion_pct:"-"}</td></tr>`).join("");
+  const rec=Date.now()-flashT<900;
+  $("filas").innerHTML=l.map(d=>{const v=d.variacion_pct,fl=rec&&flash[d.s]?" fl-"+flash[d.s]:"";
+    return`<tr class="k${d.s===elegido?" s":""}" data-s="${esc(d.s)}"><td>${esc(d.s)}<small>${esc(d.nombre)}</small></td><td>${esc(nt(d.tipo))}</td><td class="n${fl}">${d.ultimo>0?d.ultimo:"-"}</td><td class="n${d.ultimo>0&&v>0?" up":d.ultimo>0&&v<0?" dn":""}">${d.ultimo>0&&v!=null?v:"-"}</td></tr>`;}).join("");
 }
 const operable=d=>(["acciones","cedears","etfs"].includes(d.tipo)||((d.tipo==="bonos"||d.tipo==="obligaciones_negociables")&&esBonoOp(d.s)))&&d.ultimo>0;
 function detalle(){
@@ -1376,7 +1489,7 @@ function pintarLibro(){
 function verLibro(s){unsubLibro&&unsubLibro();libro=null;if(demoActiva){$("libro").classList.add("hide");return;}pintarLibro();pedirLibro(s);
   unsubLibro=onSnapshot(doc(db,"libros",s),x=>{libro=x.data()||null;pintarLibro();});}
 function elegir(s){elegido=s;verLibro(s);detalle();pintar();$("omsg").textContent="";$("tv").innerHTML="";
-  new TradingView.widget({container_id:"tv",symbol:"BCBA:"+s,interval:"D",locale:"es",theme:"light",autosize:true,timezone:"America/Argentina/Buenos_Aires"});}
+  new TradingView.widget({container_id:"tv",symbol:"BCBA:"+s,interval:"D",locale:"es",theme:"light",autosize:true,timezone:"America/Argentina/Buenos_Aires",hide_top_toolbar:false,hide_side_toolbar:MQM.matches,withdateranges:true,allow_symbol_change:true,save_image:true,show_popup_button:true,popup_width:"1000",popup_height:"650"});}
 async function cargar(){
   const j=await(await fetch(URL_PRECIOS+"?t="+Math.floor(Date.now()/30000),{cache:"no-store"})).json();
   if(!j.actualizado)throw 0;
@@ -1404,7 +1517,7 @@ function sincronizar(act){   // el servidor avisa que publicó precios nuevos: t
 $("btn").onclick=async()=>{$("btn").disabled=true;$("estado").textContent="Buscando precios nuevos…";
   try{if(!(await cargar()))habilitadoDesde=Date.now()+20000;}catch{habilitadoDesde=Date.now()+20000;}};
 ["buscar","ftipo","fmon"].forEach(i=>$(i).addEventListener(i==="buscar"?"input":"change",pintar));
-$("filas").onclick=e=>{const tr=e.target.closest("tr");if(tr)elegir(tr.dataset.s);};
+$("filas").onclick=e=>{const tr=e.target.closest("tr");if(!tr)return;elegir(tr.dataset.s);if(MQM.matches)$("det").scrollIntoView({behavior:MQ.matches?"auto":"smooth",block:"start"});};
 
 function estimar(){
   const d=datos.find(x=>x.s===elegido);if(!d)return;
@@ -1763,6 +1876,16 @@ new IntersectionObserver(e=>{   // se activa al mostrar la sección; vuelve a pe
 
 /* ---------- PIE DE PÁGINA (Etapa 6) ---------- */
 $("pie").onclick=e=>{const b=e.target.closest("button[data-sec]");if(b)irSec(b.dataset.sec);};
+
+/* ---------- GRÁFICO EN PANTALLA COMPLETA (Etapa 6, parte 3) ---------- */
+function tvAmpliar(on){
+  $("tvc").classList.toggle("tv-fullscreen",on);
+  document.body.style.overflow=on?"hidden":"";
+  $("tvAmp").textContent=on?"Cerrar pantalla completa":"Ampliar gráfico";
+  $("tvAmp").setAttribute("aria-pressed",String(on));
+}
+$("tvAmp").onclick=()=>tvAmpliar(!$("tvc").classList.contains("tv-fullscreen"));
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("tvc").classList.contains("tv-fullscreen"))tvAmpliar(false);});
 </script>
 </body>
 </html>
