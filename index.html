@@ -4,9 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>InvEco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
 <style>
-:root{color-scheme:light dark;font-family:system-ui,sans-serif}
-body{margin:0}
+:root{color-scheme:light;--f-cuerpo:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--f-titulo:"Plus Jakarta Sans","Inter",system-ui,sans-serif;--f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+body{margin:0;background:#F8FAFC;color:#0F2942;font-family:var(--f-cuerpo)}
 nav{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 button{padding:8px 13px;font-size:.9rem;cursor:pointer}button:disabled{cursor:not-allowed}
 nav button.on,.g button.on,.tf button.on{font-weight:700;text-decoration:underline}
@@ -202,11 +205,60 @@ small{opacity:.65;display:block}
 @media(max-width:900px){.nwg{grid-template-columns:1fr}#nwTV{position:static;height:560px}}
 @media(max-width:800px){#nwHero{padding:28px 16px 20px}#nwHero h2{font-size:1.6rem}#nwBody{padding:20px 16px 48px}}
 @media(prefers-reduced-motion:reduce){.nwc{transition:none}}
+/* Identidad visual (Etapa 6, parte 1) */
+button,input,select,textarea{font-family:inherit}
+h1,h2,h3,h4{font-family:var(--f-titulo)}
+td.n,.dvr .n,.telf b{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.up{color:#0D7A3E}.dn{color:#B91C1C}
+.sec{min-height:calc(100vh - 260px)}
+.logo{display:block;flex:0 0 auto;height:32px;width:auto}
+#barra{background:#fff}
+#marca{display:flex;align-items:center;gap:10px;font-family:var(--f-titulo);font-size:1.25rem;font-weight:700;letter-spacing:-.01em;color:#0F2942;cursor:pointer}
+#navBtn{background:#fff;color:#0F2942;border:1px solid #E2E8F0;border-radius:6px}
+#navp button{background:transparent;border:0;border-bottom:2px solid transparent;border-radius:0;padding:0 12px;color:#334155;font-size:.95rem;font-weight:500;transition:color .15s,border-color .15s}
+#navp button:hover{color:#1D4ED8}
+#navp button.on{color:#0F2942;font-weight:600;text-decoration:none;border-bottom-color:#1D4ED8}
+#navp button:focus-visible,#marca:focus-visible,#navBtn:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
+@media(max-width:768px){#navp button{border-bottom:0;border-left:3px solid transparent;padding:0 12px}#navp button.on{border-left-color:#1D4ED8}}
+/* Contacto */
+#sec-contacto.sec{max-width:none;margin:0;padding:0;background:#F8FAFC;color:#0F2942}
+#ctHero{background:#EDF4FC;border-bottom:1px solid #E2E8F0;padding:44px 28px 28px}
+.cin{max-width:1100px;margin-inline:auto}
+#ctHero h2{font-size:2rem;line-height:1.15;margin:6px 0 10px}
+#ctHero .sub{max-width:46em;margin:0;font-size:1.05rem;line-height:1.55;color:#1E293B}
+#ctBody{padding:32px 28px 64px}
+.ctg{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:start}
+.ctc{background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:22px;box-shadow:0 1px 3px rgba(15,41,66,.06)}
+.ctc h3{margin:0 0 12px;font-size:1.2rem;color:#0F2942}
+.ctc p{margin:0 0 10px;font-size:.97rem;line-height:1.55;color:#1E293B}
+.ctd{display:grid;grid-template-columns:max-content 1fr;gap:8px 18px;margin:0 0 14px}
+.ctd dt{font-size:.8rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#475569}
+.ctd dd{margin:0;font-size:.97rem;color:#0F2942}
+.cics{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+.cic{position:relative;display:flex;align-items:center;justify-content:center;width:48px;height:48px;border:1px solid #E2E8F0;border-radius:50%;background:#fff;color:#0F2942;transition:background-color .15s,color .15s,border-color .15s}
+.cic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cic:hover,.cic:focus-visible{background:#1D4ED8;border-color:#1D4ED8;color:#fff}
+.cic:focus-visible{outline:2px solid #1D4ED8;outline-offset:3px}
+.cic::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);padding:4px 9px;border-radius:4px;background:#0F2942;color:#fff;font-size:.78rem;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s}
+.cic:hover::after,.cic:focus-visible::after{opacity:1}
+/* Pie de página */
+#pie{background:#0F2942;color:#CBD5E1;padding:36px 28px 28px}
+.pin{max-width:1400px;margin-inline:auto;display:grid;grid-template-columns:1.4fr 1fr;gap:28px}
+#pie .pm{display:flex;align-items:center;gap:10px;color:#fff;font-family:var(--f-titulo);font-size:1.15rem;font-weight:700}
+#pie .logo{height:28px}
+#pie p{margin:10px 0 0;max-width:44em;font-size:.9rem;line-height:1.55}
+#pie nav{display:flex;flex-wrap:wrap;align-content:flex-start;gap:0 18px}
+#pie nav button{min-height:44px;padding:6px 0;background:none;border:0;color:#CBD5E1;font-size:.92rem;text-align:left;cursor:pointer}
+#pie nav button:hover{color:#fff;text-decoration:underline}
+#pie nav button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+#pie .pc{grid-column:1/-1;margin:0;padding-top:16px;border-top:1px solid #1E3A5F;font-size:.82rem;color:#94A3B8}
+@media(max-width:800px){#ctHero{padding:28px 16px 20px}#ctHero h2{font-size:1.6rem}#ctBody{padding:20px 16px 48px}.ctg{grid-template-columns:1fr}.ctd{grid-template-columns:1fr;gap:2px}.ctd dd{margin-bottom:10px}#pie{padding:28px 16px 22px}.pin{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){#navp button,.cic,.cic::after{transition:none}}
 </style>
 </head>
 <body>
 <header id="barra">
-  <button id="marca" data-sec="inicio">InvEco</button>
+  <button id="marca" data-sec="inicio"><svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#0F2942"/><path d="M6 22l7-7 5 4 8-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>InvEco</span></button>
   <button id="navBtn" aria-expanded="false" aria-controls="navp">Menú</button>
   <nav id="navp" aria-label="Navegación principal">
     <button data-sec="inicio" class="on">Inicio</button>
@@ -592,7 +644,60 @@ small{opacity:.65;display:block}
     </aside>
   </div></div>
 </section>
-<section id="sec-contacto" class="sec hide"><h2>Contacto</h2><p>Esta sección se completará en una etapa próxima.</p></section>
+<section id="sec-contacto" class="sec hide">
+  <div id="ctHero"><div class="cin">
+    <p class="eyebrow">InvEco · Educación financiera</p>
+    <h2>Contacto</h2>
+    <p class="sub">InvEco es un proyecto educativo creado para enseñar cómo funciona el mercado de capitales argentino. Si tenés consultas, sugerencias o comentarios, podés comunicarte por cualquiera de los medios que figuran en esta página.</p>
+  </div></div>
+  <div id="ctBody"><div class="cin ctg">
+    <div class="ctc">
+      <h3>Acerca del proyecto</h3>
+      <dl class="ctd">
+        <dt>Docente</dt><dd>Pablo Agustín Cejas</dd>
+        <dt>Área</dt><dd>Economía (nivel secundario)</dd>
+        <dt>Ubicación</dt><dd>Tucumán, Argentina</dd>
+        <dt>Cátedra</dt><dd>Tecnología Educativa II</dd>
+        <dt>Institución</dt><dd>Universidad Tecnológica Nacional – Facultad Regional Tucumán</dd>
+      </dl>
+      <p>El simulador permite practicar inversiones con $ 500.000 ficticios sobre precios reales del mercado argentino. Su propósito es que los estudiantes comprendan, sin ningún riesgo, cómo se compran y venden acciones, bonos y dólares, y cómo se leen los resultados de una cartera.</p>
+      <p>El dinero y las operaciones son simulados. Nada de lo que se muestra constituye una recomendación de inversión.</p>
+    </div>
+    <div class="ctc">
+      <h3>Canales de contacto</h3>
+      <p>Elegí el medio que prefieras. Cada ícono abre una pestaña nueva.</p>
+      <div class="cics">
+        <!-- COMPLETAR: reemplazar COMPLETAR_TELEFONO por el número con código de país, sin signos ni espacios (ejemplo: 5493810000000) -->
+        <a class="cic" href="https://wa.me/+543815265708" target="_blank" rel="noopener" aria-label="WhatsApp" data-tip="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.3l-4.5 1.2z"/><path d="M9.2 8.6c-.3.7-.1 1.8 1 3.1 1.1 1.3 2.3 2 3.2 2 .6 0 1.1-.5 1.3-1l-1.7-.9-.7.6c-.9-.3-1.7-1.1-2.1-2l.6-.7-.8-1.7c-.4.1-.7.3-.9.6z"/></svg></a>
+        <!-- COMPLETAR: reemplazar COMPLETAR_EMAIL por la dirección de correo -->
+        <a class="cic" href="mailto:agustincejas2@gmail.com" aria-label="Correo electrónico" data-tip="Correo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></svg></a>
+        <!-- COMPLETAR: reemplazar COMPLETAR_FACEBOOK por el nombre de la página o del perfil -->
+        <a class="cic" href="https://www.facebook.com/pabloagustin.cejas" target="_blank" rel="noopener" aria-label="Facebook" data-tip="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 3.5h-2.4a4 4 0 0 0-4 4V10H7.5v3.6h2.6v7h3.6v-7h2.5l.7-3.6h-3.2V8c0-.4.3-.7.7-.7h2.1z"/></svg></a>
+        <!-- COMPLETAR: reemplazar COMPLETAR_CANAL_YOUTUBE por el nombre del canal (sin la arroba) -->
+        <a class="cic" href="https://www.youtube.com/@agustincejas7291" target="_blank" rel="noopener" aria-label="YouTube" data-tip="YouTube"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.2 9.4v5.2l4.6-2.6z" fill="currentColor"/></svg></a>
+        <!-- COMPLETAR: reemplazar COMPLETAR_INSTAGRAM por el nombre de usuario (sin la arroba) -->
+        <a class="cic" href="https://www.instagram.com/asdasd" target="_blank" rel="noopener" aria-label="Instagram" data-tip="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor"/></svg></a>
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<footer id="pie"><div class="pin">
+  <div>
+    <div class="pm"><svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#1D4ED8"/><path d="M6 22l7-7 5 4 8-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>InvEco</span></div>
+    <p>Simulador de inversiones con fines educativos. Los precios provienen del mercado argentino; el dinero y las operaciones son ficticios. Nada de lo que se muestra constituye una recomendación de inversión.</p>
+  </div>
+  <nav aria-label="Navegación del pie de página">
+    <button data-sec="inicio">Inicio</button>
+    <button data-sec="simulador">Simulador de Mercado</button>
+    <button data-sec="guia">Guía Rápida</button>
+    <button data-sec="test">Test de Perfil</button>
+    <button data-sec="noticias">Últimas Noticias</button>
+    <button data-sec="demo">Demo</button>
+    <button data-sec="contacto">Contacto</button>
+  </nav>
+  <p class="pc">Universidad Tecnológica Nacional – Facultad Regional Tucumán · Tecnología Educativa II</p>
+</div></footer>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1580,6 +1685,9 @@ new IntersectionObserver(e=>{   // se activa al mostrar la sección; vuelve a pe
   notWidget();
   if(!notOk||Date.now()-notUlt>600000)notCargar();
 }).observe($("sec-noticias"));
+
+/* ---------- PIE DE PÁGINA (Etapa 6) ---------- */
+$("pie").onclick=e=>{const b=e.target.closest("button[data-sec]");if(b)irSec(b.dataset.sec);};
 </script>
 </body>
 </html>
