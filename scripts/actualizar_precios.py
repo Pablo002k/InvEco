@@ -3,6 +3,8 @@ Solo LEE precios: no usa ninguna función de compra o venta.
 La clave llega por variables secretas: nunca se escribe acá."""
 import html, json, os, re, shutil, subprocess, sys, tempfile, time
 import urllib.parse, urllib.request, urllib.error
+import email.utils
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 
 BASE = "https://api.iolinversiones.com"
@@ -81,15 +83,160 @@ def traer(usuario, clave, primera):
             "fuente": "IOL", "plazo": PLAZO, "precios": precios}
 
 
+# ---------- Noticias (RSS) ----------
+UA_NAV = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+FEEDS = [
+    ("Investing.com", "https://es.investing.com/rss/news_25.rss", "es"),
+    ("elEconomista", "https://www.eleconomista.es/rss/rss-mercados.php", "es"),
+    ("The Wall Street Journal", "https://feeds.content.dowjones.io/public/rss/RSSMarketsMain", "en"),
+    ("MarketWatch", "https://feeds.content.dowjones.io/public/rss/mw_topstories", "en"),
+]
+NOTI = {"t": 0, "datos": None}
+NOTI_CADA = 1800   # los feeds se vuelven a leer cada 30 minutos
+
+
+def _limpio(s, tope=None):
+    """Saca etiquetas HTML, decodifica entidades, compacta espacios y recorta en una palabra entera."""
+    s = re.sub(r"<[^>]+>", " ", s or "")
+    s = re.sub(r"\s+", " ", html.unescape(s)).strip()
+    if tope and len(s) > tope:
+        s = s[:tope].rsplit(" ", 1)[0].rstrip(" ,.;:") + "…"
+    return s
+
+
+def _fecha(s):
+    s = (s or "").strip()
+    if not s:
+        return None
+    try:
+        d = email.utils.parsedate_to_datetime(s)
+    except Exception:
+        try:
+            d = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        except Exception:
+            return None
+    if d.tzinfo is None:
+        d = d.replace(tzinfo=timezone.utc)
+    return d.astimezone(timezone.utc)
+
+
+def _hijo(nodo, *nombres):
+    for c in nodo:
+        if isinstance(c.tag, str) and c.tag.rsplit("}", 1)[-1] in nombres:
+            return c
+    return None
+
+
+def _leer_feed(nombre, url, idioma):
+    req = urllib.request.Request(url, headers={"User-Agent": UA_NAV,
+                                               "Accept": "application/rss+xml, application/xml, text/xml, */*",
+                                               "Accept-Language": "es,en;q=0.8"})
+    with urllib.request.urlopen(req, timeout=10) as r:
+        crudo = r.read(3000000)
+    crudo = re.sub(rb"&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)", b"&amp;", crudo)   # '&' sueltos que rompen el XML
+    raiz = ET.fromstring(crudo)
+    salida = []
+    for it in raiz.iter():
+        if not isinstance(it.tag, str) or it.tag.rsplit("}", 1)[-1] not in ("item", "entry"):
+            continue
+        t, l = _hijo(it, "title"), _hijo(it, "link")
+        d, f = _hijo(it, "description", "summary", "content"), _hijo(it, "pubDate", "published", "updated", "date")
+        titulo = _limpio(t.text if t is not None else "", 220)
+        enlace = ((l.get("href") or l.text or "") if l is not None else "").strip()
+        if not titulo or not re.match(r"https?://", enlace, re.I):
+            continue
+        resumen = _limpio(d.text if d is not None else "", 240)
+        if resumen == titulo:
+            resumen = ""
+        fe = _fecha(f.text if f is not None else "")
+        salida.append({"titulo": titulo, "resumen": resumen, "url": enlace, "fuente": nombre, "idioma": idioma,
+                       "fecha": fe.isoformat(timespec="seconds") if fe else ""})
+        if len(salida) >= 20:
+            break
+    return salida
+
+
+def noticias_traer():
+    por = {"es": [], "en": []}
+    vistos = set()
+    for nombre, url, idioma in FEEDS:
+        try:
+            lista = _leer_feed(nombre, url, idioma)
+            print(f"Noticias: {nombre} OK ({len(lista)})")
+        except Exception as e:
+            print(f"Noticias: {nombre} falló ({type(e).__name__}: {e})")
+            continue
+        for n in lista:
+            if n["url"] in vistos:
+                continue
+            vistos.add(n["url"])
+            por[idioma].append(n)
+    for L in por.values():
+        L.sort(key=lambda n: n["fecha"], reverse=True)
+    es, en = por["es"], por["en"]
+    items = es[:10] + en[:6]
+    if len(items) < 16:   # si falta de un idioma, se completa con el otro
+        usadas = {n["url"] for n in items}
+        resto = sorted([n for n in es[10:] + en[6:] if n["url"] not in usadas], key=lambda n: n["fecha"], reverse=True)
+        items += resto[:16 - len(items)]
+    items.sort(key=lambda n: n["fecha"], reverse=True)
+    return items
+
+
+def noticias_previas():
+    """Si no se pudo leer ningún feed, recupera el último noticias.json publicado."""
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    if not repo:
+        return None
+    try:
+        req = urllib.request.Request(f"https://raw.githubusercontent.com/{repo}/datos/noticias.json?t={int(time.time())}",
+                                     headers={"User-Agent": UA_NAV})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            j = json.load(r)
+        return j if isinstance(j.get("items"), list) and j["items"] else None
+    except Exception as e:
+        print("Sin noticias previas:", e)
+        return None
+
+
+def noticias():
+    ahora = time.time()
+    if NOTI["datos"] and ahora - NOTI["t"] < NOTI_CADA:
+        return NOTI["datos"]
+    try:
+        items = noticias_traer()
+    except Exception as e:
+        print("Noticias con error:", e)
+        items = None
+    if items:
+        NOTI["datos"] = {"actualizado": datetime.now(timezone.utc).isoformat(timespec="seconds"), "items": items}
+        NOTI["t"] = ahora
+    else:
+        NOTI["t"] = ahora - NOTI_CADA + 300   # se reintenta en 5 minutos
+        if not NOTI["datos"]:
+            NOTI["datos"] = noticias_previas()
+    return NOTI["datos"]
+
+
 def publicar(salida):
     """Sube precios.json a la rama 'datos' (un solo commit, sin historial)."""
     tmp = tempfile.mkdtemp()
     try:
         with open(os.path.join(tmp, "precios.json"), "w", encoding="utf-8") as f:
             json.dump(salida, f, ensure_ascii=False, separators=(",", ":"))
+        try:
+            nt = noticias()
+        except Exception as e:
+            print("Noticias con error:", e)
+            nt = None
+        if nt:
+            with open(os.path.join(tmp, "noticias.json"), "w", encoding="utf-8") as f:
+                json.dump(nt, f, ensure_ascii=False, separators=(",", ":"))
         repo, tok = os.environ.get("GITHUB_REPOSITORY"), os.environ.get("GITHUB_TOKEN")
         if not repo or not tok:
             shutil.copy(os.path.join(tmp, "precios.json"), "precios.json")
+            if os.path.exists(os.path.join(tmp, "noticias.json")):
+                shutil.copy(os.path.join(tmp, "noticias.json"), "noticias.json")
             print("Guardado en ./precios.json (modo local)")
             return
         def git(*a):
@@ -97,7 +244,7 @@ def publicar(salida):
         git("init", "-q"); git("checkout", "-q", "-b", "datos")
         git("config", "user.name", "github-actions[bot]")
         git("config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com")
-        git("add", "precios.json"); git("commit", "-q", "-m", "Precios " + salida["actualizado"])
+        git("add", "-A"); git("commit", "-q", "-m", "Precios " + salida["actualizado"])
         git("push", "-q", "--force", f"https://x-access-token:{tok}@github.com/{repo}.git", "datos")
         print("Publicado en la rama 'datos'")
     except subprocess.CalledProcessError:
