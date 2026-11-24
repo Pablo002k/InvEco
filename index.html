@@ -172,6 +172,36 @@ small{opacity:.65;display:block}
 .tnota{margin:14px 0 18px;padding:10px 12px;font-size:.9rem;line-height:1.5;color:#1E293B;background:#EDF4FC;border-left:3px solid #1D4ED8;border-radius:0 6px 6px 0}
 @media(max-width:800px){#testHero{padding:28px 16px 20px}#testHero h2{font-size:1.6rem}#testBody{padding:20px 16px 48px}.tq{padding:14px}#tRes{padding:18px}#tResN{font-size:1.6rem}}
 @media(prefers-reduced-motion:reduce){.tbar i,.to,#tVer,#tFin{transition:none}}
+/* Últimas Noticias */
+#sec-noticias.sec{max-width:none;margin:0;padding:0;background:#F8FAFC;color:#0F2942}
+#nwHero{background:#EDF4FC;border-bottom:1px solid #E2E8F0;padding:44px 28px 28px}
+.nin{max-width:1200px;margin-inline:auto}
+#nwHero h2{font-size:2rem;line-height:1.15;margin:6px 0 10px}
+#nwHero .sub{max-width:46em;margin:0;font-size:1.05rem;line-height:1.55;color:#1E293B}
+#nwBody{padding:28px 28px 64px}
+.nwg{display:grid;grid-template-columns:1.85fr 1fr;gap:20px;align-items:start}
+.nwh{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px;margin-bottom:12px}
+.nwh h3{margin:0;font-size:1.3rem;color:#0F2942}
+.nwh small{display:inline;opacity:1;color:#475569;font-variant-numeric:tabular-nums}
+.nwm{margin:0 0 12px;padding:16px;background:#fff;border:1px solid #E2E8F0;border-radius:10px;color:#475569}
+.nwc{display:block;margin-bottom:12px;padding:16px 18px;background:#fff;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 3px rgba(15,41,66,.06);text-decoration:none;color:inherit;transition:border-color .15s,box-shadow .15s}
+.nwc:hover{border-color:#1D4ED8;box-shadow:0 6px 14px rgba(15,41,66,.1)}
+.nwc:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
+.nwmeta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.8rem;color:#475569;font-variant-numeric:tabular-nums}
+.nwmeta b{color:#1D4ED8;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.nwen{padding:1px 8px;border:1px solid #CBD5E1;border-radius:10px;background:#F1F5F9}
+.nwc h4{margin:6px 0;font-size:1.05rem;line-height:1.35;color:#0F2942}
+.nwc p{margin:0;font-size:.95rem;line-height:1.5;color:#1E293B}
+.nwf{margin:6px 0 0;font-size:.85rem;line-height:1.5;color:#475569}
+#nwRe{min-height:44px;padding:0 20px;color:#fff;background:#0F2942;border:1px solid #0F2942;border-radius:6px}
+#nwTV{position:sticky;top:76px;height:min(720px,calc(100vh - 100px));min-height:420px;background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden}
+#nwTV .tradingview-widget-container{height:100%;display:flex;flex-direction:column}
+#nwTV .tradingview-widget-container__widget{flex:1;min-height:0}
+.tradingview-widget-copyright{padding:4px 8px;text-align:center;font-size:.75rem}
+.tradingview-widget-copyright a{color:#1D4ED8}
+@media(max-width:900px){.nwg{grid-template-columns:1fr}#nwTV{position:static;height:560px}}
+@media(max-width:800px){#nwHero{padding:28px 16px 20px}#nwHero h2{font-size:1.6rem}#nwBody{padding:20px 16px 48px}}
+@media(prefers-reduced-motion:reduce){.nwc{transition:none}}
 </style>
 </head>
 <body>
@@ -542,7 +572,26 @@ small{opacity:.65;display:block}
     </div>
   </div></div>
 </section>
-<section id="sec-noticias" class="sec hide"><h2>Últimas Noticias</h2><p>Esta sección se completará en una etapa próxima.</p></section>
+<section id="sec-noticias" class="sec hide">
+  <div id="nwHero"><div class="nin">
+    <p class="eyebrow">Mercados y economía</p>
+    <h2>Últimas Noticias</h2>
+    <p class="sub">Titulares de medios especializados en español y en inglés, junto a un panel de noticias de los mercados. Al tocar una noticia se abre el artículo original en otra pestaña.</p>
+  </div></div>
+  <div id="nwBody"><div class="nin nwg">
+    <div id="nwCol">
+      <div class="nwh"><h3>Titulares</h3><small id="nwAct"></small></div>
+      <div id="nwLista"><p class="nwm">Cargando noticias…</p></div>
+      <p class="nwf">Las noticias pertenecen a sus medios de origen y se muestran como referencia educativa. Las marcadas "En inglés" no están traducidas.</p>
+    </div>
+    <aside id="nwTV" aria-label="Panel de noticias de TradingView">
+      <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <div class="tradingview-widget-copyright"><a href="https://es.tradingview.com/" rel="noopener nofollow" target="_blank">Seguí todos los mercados en TradingView</a></div>
+      </div>
+    </aside>
+  </div></div>
+</section>
 <section id="sec-contacto" class="sec hide"><h2>Contacto</h2><p>Esta sección se completará en una etapa próxima.</p></section>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
@@ -1492,6 +1541,45 @@ testArmar();testEstado();
 $("tQs").addEventListener("change",testEstado);
 $("tVer").onclick=testResultado;
 $("tFin").onclick=testReiniciar;
+
+/* ---------- ÚLTIMAS NOTICIAS (Etapa 5) ---------- */
+const URL_NOT="https://raw.githubusercontent.com/Pablo002k/InvEco/datos/noticias.json";
+let notCargando=false,notOk=false,notUlt=0,notTV=false;
+function notFecha(s){const d=new Date(s);return isNaN(d)?"":d.toLocaleString("es-AR",{timeZone:TZ,day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23"});}
+function notPintar(j){
+  const L=(j&&Array.isArray(j.items)?j.items:[]).filter(n=>n&&n.titulo&&/^https?:\/\//i.test(n.url||""));
+  const fa=j&&j.actualizado?notFecha(j.actualizado):"";
+  $("nwAct").textContent=fa?"Actualizado: "+fa:"";
+  if(!L.length){notOk=false;$("nwLista").innerHTML='<p class="nwm">Todavía no hay noticias publicadas. Se actualizan durante el horario de mercado.</p>';return;}
+  notOk=true;
+  $("nwLista").innerHTML=L.map(n=>{const f=n.fecha?notFecha(n.fecha):"";
+    return`<a class="nwc" href="${esc(n.url)}" target="_blank" rel="noopener noreferrer"><div class="nwmeta"><b>${esc(n.fuente||"")}</b>${f?`<span>${f}</span>`:""}${n.idioma==="en"?'<span class="nwen">En inglés</span>':""}</div><h4>${esc(n.titulo)}</h4>${n.resumen?`<p>${esc(n.resumen)}</p>`:""}</a>`;}).join("");
+}
+async function notCargar(){
+  if(notCargando)return;notCargando=true;
+  if(!notOk)$("nwLista").innerHTML='<p class="nwm">Cargando noticias…</p>';
+  try{
+    const r=await fetch(URL_NOT+"?t="+Math.floor(Date.now()/300000),{cache:"no-store"});
+    if(!r.ok)throw new Error(r.status);
+    notPintar(await r.json());notUlt=Date.now();
+  }catch(e){
+    if(!notOk)$("nwLista").innerHTML='<p class="nwm">No se pudieron cargar las noticias en este momento.</p><button id="nwRe">Reintentar</button>';
+  }
+  notCargando=false;
+}
+function notWidget(){   // panel de noticias de TradingView, se carga una sola vez
+  if(notTV)return;notTV=true;
+  const s=document.createElement("script");
+  s.src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js";s.async=true;
+  s.textContent=JSON.stringify({feedMode:"market",market:"stock",isTransparent:false,displayMode:"regular",width:"100%",height:"100%",colorTheme:"light",locale:"es"});
+  $("nwTV").querySelector(".tradingview-widget-container").appendChild(s);
+}
+$("nwLista").onclick=e=>{if(e.target.id==="nwRe")notCargar();};
+new IntersectionObserver(e=>{   // se activa al mostrar la sección; vuelve a pedir datos si pasaron más de 10 minutos
+  if(!e[0].isIntersecting)return;
+  notWidget();
+  if(!notOk||Date.now()-notUlt>600000)notCargar();
+}).observe($("sec-noticias"));
 </script>
 </body>
 </html>
