@@ -136,6 +136,42 @@ small{opacity:.65;display:block}
 .gc li{margin-bottom:5px}
 .gc .gej{margin:10px 0 0;padding:10px 12px;background:#EDF4FC;border-left:3px solid #1D4ED8;border-radius:0 6px 6px 0;font-size:.92rem}
 @media(max-width:800px){#guiaHero{padding:28px 16px 20px}#guiaHero h2{font-size:1.6rem}#guiaBody{padding:24px 16px 48px}}
+/* Test: Perfil de Inversor */
+#sec-test.sec{max-width:none;margin:0;padding:0;background:#F8FAFC;color:#0F2942}
+#testHero{background:#EDF4FC;border-bottom:1px solid #E2E8F0;padding:44px 28px 28px}
+.tin{max-width:820px;margin-inline:auto}
+#testHero h2{font-size:2rem;line-height:1.15;margin:6px 0 10px}
+#testHero .sub{max-width:46em;margin:0;font-size:1.05rem;line-height:1.55;color:#1E293B}
+#testBody{padding:28px 28px 64px}
+#tProg{margin-bottom:20px}
+#tCnt{display:block;margin-bottom:6px;font-size:.92rem;font-weight:600;color:#475569;font-variant-numeric:tabular-nums}
+.tbar{height:8px;background:#E2E8F0;border-radius:4px;overflow:hidden}
+.tbar i{display:block;height:100%;width:0;background:#1D4ED8;transition:width .25s}
+.tq{min-width:0;margin:0 0 18px;padding:18px;border:0;border-radius:10px;background:#fff;box-shadow:0 0 0 1px #E2E8F0,0 1px 3px rgba(15,41,66,.06)}
+.tq legend{padding:0;margin-bottom:6px;font-size:1.05rem;font-weight:600;line-height:1.4;color:#0F2942}
+.tqn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-right:10px;border-radius:50%;background:#0F2942;color:#fff;font-size:.9rem;font-weight:700;font-variant-numeric:tabular-nums}
+.to{display:flex;align-items:flex-start;gap:12px;min-height:44px;margin-top:8px;padding:12px 14px;box-sizing:border-box;background:#fff;border:1px solid #E2E8F0;border-radius:8px;cursor:pointer;transition:border-color .15s,background-color .15s}
+.to:hover{border-color:#1D4ED8}
+.to:has(input:checked){border-color:#1D4ED8;background:#EDF4FC}
+.to:focus-within{outline:2px solid #1D4ED8;outline-offset:2px}
+.to input{flex:0 0 auto;width:20px;height:20px;margin:1px 0 0;padding:0;accent-color:#1D4ED8}
+.to span{font-size:.97rem;line-height:1.5;color:#1E293B}
+#tMsg{min-height:1.4em;margin:4px 0 10px;font-size:.92rem;color:#475569}
+#tVer,#tFin{min-height:44px;padding:0 24px;font-size:1rem;color:#fff;background:#0F2942;border:1px solid #0F2942;border-radius:6px;transition:background-color .15s}
+#tVer:hover:not(:disabled),#tFin:hover{background:#1D4ED8;border-color:#1D4ED8}
+#tVer:disabled{color:#475569;background:#E2E8F0;border-color:#CBD5E1}
+#tVer:focus-visible,#tFin:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
+#tRes{padding:24px;background:#fff;border-radius:10px;box-shadow:0 0 0 1px #E2E8F0,0 1px 3px rgba(15,41,66,.06);scroll-margin-top:76px}
+#tRes:focus{outline:none}
+#tResN{margin:4px 0 2px;font-size:1.9rem;color:#0F2942}
+#tResP{margin:0 0 14px;font-size:.92rem;color:#475569;font-variant-numeric:tabular-nums}
+#tEsc{display:flex;gap:6px;margin-bottom:16px}
+#tEsc span{flex:1;padding:8px 4px;text-align:center;font-size:.85rem;color:#475569;background:#F1F5F9;border:1px solid #E2E8F0;border-radius:6px}
+#tEsc span.on{color:#fff;font-weight:700;background:#1D4ED8;border-color:#1D4ED8}
+#tResD,#tResI{margin:0 0 10px;font-size:1rem;line-height:1.6;color:#1E293B}
+.tnota{margin:14px 0 18px;padding:10px 12px;font-size:.9rem;line-height:1.5;color:#1E293B;background:#EDF4FC;border-left:3px solid #1D4ED8;border-radius:0 6px 6px 0}
+@media(max-width:800px){#testHero{padding:28px 16px 20px}#testHero h2{font-size:1.6rem}#testBody{padding:20px 16px 48px}.tq{padding:14px}#tRes{padding:18px}#tResN{font-size:1.6rem}}
+@media(prefers-reduced-motion:reduce){.tbar i,.to,#tVer,#tFin{transition:none}}
 </style>
 </head>
 <body>
@@ -478,7 +514,34 @@ small{opacity:.65;display:block}
 
   </div></div>
 </section>
-<section id="sec-test" class="sec hide"><h2>Test de Perfil de Inversor</h2><p>Esta sección se completará en una etapa próxima.</p></section>
+<section id="sec-test" class="sec hide">
+  <div id="testHero"><div class="tin">
+    <p class="eyebrow">Autoconocimiento financiero</p>
+    <h2>Test: Perfil de Inversor</h2>
+    <p class="sub">Respondé 7 preguntas situacionales para descubrir cuánto riesgo estás dispuesto a asumir al invertir. No se piden datos reales, no hace falta tener una cuenta y tus respuestas no se guardan.</p>
+  </div></div>
+  <div id="testBody"><div class="tin">
+    <div id="tForm">
+      <div id="tProg">
+        <span id="tCnt">Respondidas: 0 de 7</span>
+        <div class="tbar"><i id="tBarI"></i></div>
+      </div>
+      <div id="tQs"></div>
+      <p id="tMsg" role="status"></p>
+      <button id="tVer" disabled>Ver mi perfil</button>
+    </div>
+    <div id="tRes" class="hide" tabindex="-1">
+      <p class="eyebrow">Tu perfil de inversor</p>
+      <h3 id="tResN"></h3>
+      <p id="tResP"></p>
+      <div id="tEsc" aria-hidden="true"><span>Conservador</span><span>Moderado</span><span>Agresivo</span></div>
+      <p id="tResD"></p>
+      <p id="tResI"></p>
+      <p class="tnota">Este resultado es una orientación educativa basada en tus respuestas. No constituye una recomendación de inversión.</p>
+      <button id="tFin">Finalizar Test</button>
+    </div>
+  </div></div>
+</section>
 <section id="sec-noticias" class="sec hide"><h2>Últimas Noticias</h2><p>Esta sección se completará en una etapa próxima.</p></section>
 <section id="sec-contacto" class="sec hide"><h2>Contacto</h2><p>Esta sección se completará en una etapa próxima.</p></section>
 
@@ -1354,6 +1417,81 @@ $("guiaIdx").onclick=e=>{   // los botones del índice llevan al bloque elegido,
   const b=e.target.closest("button"),s=b&&$(b.dataset.gu);
   if(s)s.scrollIntoView({behavior:MQ.matches?"auto":"smooth",block:"start"});
 };
+
+/* ---------- TEST: PERFIL DE INVERSOR (Etapa 4) ---------- */
+const TEST=[
+  {q:"Imaginá que recibís $ 500.000 para invertir. ¿Cómo los distribuirías?",o:[
+    ["Dejaría la mayor parte en dólares o en activos de bajo riesgo, y solo una porción pequeña en acciones.",1],
+    ["Pondría la mitad en activos seguros y la otra mitad en acciones o CEDEARs.",2],
+    ["Pondría casi todo en acciones o CEDEARs, buscando el mayor crecimiento posible.",3]]},
+  {q:"Un mes después de invertir, el valor de tu cartera cayó 15 %. ¿Qué harías?",o:[
+    ["Aprovecharía la baja para comprar más a precios menores.",3],
+    ["Esperaría sin hacer nada hasta que se recupere.",2],
+    ["Vendería todo para evitar perder más.",1]]},
+  {q:"¿Por cuánto tiempo pensás mantener tu inversión?",o:[
+    ["Menos de 1 año.",1],
+    ["Más de 5 años.",3],
+    ["Entre 1 y 5 años.",2]]},
+  {q:"¿Cuánto conocés sobre inversiones y mercados financieros?",o:[
+    ["Bastante: sigo el mercado y entiendo los riesgos que corro.",3],
+    ["Casi nada: recién estoy empezando.",1],
+    ["Algo: conozco los conceptos básicos.",2]]},
+  {q:"¿Cuál es tu objetivo principal al invertir?",o:[
+    ["Cuidar mi dinero y no perderlo, aunque gane poco.",1],
+    ["Ganarle a la inflación asumiendo un riesgo moderado.",2],
+    ["Obtener la mayor ganancia posible, aunque pueda perder una parte importante.",3]]},
+  {q:"¿Cómo repartirías tu dinero entre distintos activos?",o:[
+    ["En uno o dos activos en los que tengo mucha confianza.",3],
+    ["En muchos activos distintos (acciones, bonos y dólares), para que ninguno pese demasiado.",1],
+    ["En unos pocos activos, los que más me convenzan.",2]]},
+  {q:"Una acción que compraste subió 40 % en pocas semanas. ¿Qué hacés?",o:[
+    ["Vendo una parte y dejo el resto invertido.",2],
+    ["La mantengo, e incluso compro más, porque creo que va a seguir subiendo.",3],
+    ["Vendo todo y me quedo con la ganancia.",1]]}
+];
+const PERFILES=[
+  {max:12,n:"Conservador",d:"Priorizás cuidar tu capital y preferís resultados previsibles, aunque la ganancia sea menor. Las caídas en el valor de tus inversiones te generan incomodidad.",i:"Suelen alinearse con este perfil los bonos y las obligaciones negociables, que pagan renta en fechas conocidas, y la tenencia de dólares. Una porción pequeña en CEDEARs o ETFs de empresas grandes y estables puede sumar algo de crecimiento."},
+  {max:17,n:"Moderado",d:"Buscás un equilibrio entre crecer y cuidar tu capital: aceptás que el valor de tu cartera suba y baje si eso te da la posibilidad de ganar más.",i:"Suele alinearse con este perfil una combinación de renta fija (bonos y obligaciones negociables) con renta variable diversificada, como CEDEARs de empresas grandes y ETFs que replican índices."},
+  {max:21,n:"Agresivo",d:"Aceptás caídas importantes a cambio de la posibilidad de ganancias mayores, y en general pensás en el largo plazo.",i:"Suelen alinearse con este perfil las acciones, los CEDEARs de sectores de alto crecimiento y los ETFs temáticos, que tienen variaciones de precio más fuertes. Aun así, conviene no concentrar todo el capital en pocos activos."}
+];
+function testArmar(){
+  $("tQs").innerHTML=TEST.map((p,i)=>`<fieldset class="tq"><legend><span class="tqn">${i+1}</span>${esc(p.q)}</legend>`
+    +p.o.map(([t,v])=>`<label class="to"><input type="radio" name="tq${i}" value="${v}"><span>${esc(t)}</span></label>`).join("")+`</fieldset>`).join("");
+}
+function testEstado(){   // actualiza el contador, la barra y el botón según las respuestas dadas
+  const n=TEST.filter((_,i)=>document.querySelector(`input[name="tq${i}"]:checked`)).length;
+  $("tCnt").textContent=`Respondidas: ${n} de ${TEST.length}`;
+  $("tBarI").style.width=(n/TEST.length*100)+"%";
+  $("tVer").disabled=n<TEST.length;
+  $("tMsg").textContent=n<TEST.length?`Respondé las ${TEST.length} preguntas para ver tu perfil.`:"";
+}
+function testResultado(){
+  let pts=0;
+  for(let i=0;i<TEST.length;i++){
+    const r=document.querySelector(`input[name="tq${i}"]:checked`);
+    if(!r)return testEstado();
+    pts+=+r.value;
+  }
+  const idx=PERFILES.findIndex(x=>pts<=x.max),p=PERFILES[idx];
+  $("tResN").textContent=p.n;
+  $("tResP").textContent=`${pts} de ${TEST.length*3} puntos`;
+  $("tResD").textContent=p.d;
+  $("tResI").textContent=p.i;
+  [...$("tEsc").children].forEach((s,j)=>s.classList.toggle("on",j===idx));
+  $("tForm").classList.add("hide");$("tRes").classList.remove("hide");
+  $("tRes").scrollIntoView({behavior:MQ.matches?"auto":"smooth",block:"start"});
+  $("tRes").focus({preventScroll:true});
+}
+function testReiniciar(){   // vuelve el test a su estado original; no cambia de sección
+  document.querySelectorAll("#tQs input:checked").forEach(r=>{r.checked=false;});
+  $("tRes").classList.add("hide");$("tForm").classList.remove("hide");
+  testEstado();
+  window.scrollTo(0,0);
+}
+testArmar();testEstado();
+$("tQs").addEventListener("change",testEstado);
+$("tVer").onclick=testResultado;
+$("tFin").onclick=testReiniciar;
 </script>
 </body>
 </html>
