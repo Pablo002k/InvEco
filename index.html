@@ -1061,7 +1061,7 @@ function vistaSec(){   // decide dónde se ve el acceso o la aplicación y cuán
   const h="<b>Demo</b>"+(!demoCfgListo?'<p>Conectando con la Demo…</p>':demoCfg?.activo
     ?'<p>Hay una demo activa en este momento.</p><button data-pd="entrar">Entrar a la Demo</button>'
     :esAdmin
-      ?'<p>No hay una demo activa. Al iniciarla se borran los datos temporales anteriores y todos empiezan con el capital inicial.</p><button data-pd="iniciar">Iniciar demo</button>'
+      ?'<p>No hay una demo activa.</p><button data-pd="iniciar">Iniciar demo</button>'
       :'<p>No hay una demo activa en este momento. Cuando el docente la inicie, vas a poder entrar desde esta sección.</p>')
     +(demoNota?`<p>${esc(demoNota)}</p>`:"");
   if(pta._h!==h){pta.innerHTML=h;pta._h=h;}
