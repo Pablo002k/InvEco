@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>InvEco</title>
+<meta name="description" content="InvEco: simulador de inversiones educativo con precios reales del mercado argentino y dinero ficticio.">
+<meta name="theme-color" content="#0F2942">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230F2942'/%3E%3Cpath d='M6 22l7-7 5 4 8-9' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
@@ -406,6 +409,7 @@ tr.s{background:#EDF4FC}
     <button data-sec="contacto">Contacto</button>
   </nav>
 </header>
+<noscript><p style="margin:0;padding:16px;background:#EDF4FC;color:#0F2942">Esta página necesita JavaScript para funcionar. Activalo en tu navegador y volvé a cargarla.</p></noscript>
 
 <section id="sec-inicio" class="sec">
   <div id="hero">
@@ -914,7 +918,7 @@ function ba(){const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZo
 function relojBA(){const b=ba(),t=`Buenos Aires ${b.hora} · `+(demoActiva?"Demo: mercado simulado, abierto todo el día":b.abierto?"Mercado abierto":"Mercado cerrado (abre a las 10:45, de lunes a viernes)");document.querySelectorAll(".reloj").forEach(e=>e.textContent=t);$("pub").disabled=!b.abierto;$("fxc").disabled=$("fxv").disabled=!b.abierto;}
 let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],novs=[],ver=null,verAlu=null,editNov=null,ultCheck=null,calBon=null,fxMed=null,resps=[],evo=[],calDiv=null,libro=null,unsubLibro=null,tab="mercado";
 /* ---------- DEMO (version de prueba con datos temporales) ---------- */
-let demoActiva=false,demoCfg=null,demoPx=null,datosReal=[],demoOcupado=false,demoNota="";
+let demoActiva=false,demoCfg=null,demoCfgListo=false,demoPx=null,datosReal=[],demoOcupado=false,demoNota="";
 const C=n=>demoActiva?"prueba_"+n:n;
 const tSim=p=>(demoCfg?.inicio||0)+p*600000;
 const tAhora=()=>demoActiva&&demoPx&&demoCfg?tSim(demoPx.paso||0):Date.now();
@@ -971,7 +975,7 @@ function suscribir(){
   escuchar(doc(db,"estado","precios"),s=>{const x=s.data();if(x?.actualizado)sincronizar(x.actualizado);});
   escuchar(doc(db,"estado","forzar"),s=>{if(s.data()?.t)cargar().catch(()=>{});});
   escuchar(doc(db,"prueba_config","demo"),s=>{
-    demoCfg=s.data()||null;
+    demoCfg=s.data()||null;demoCfgListo=true;
     if(demoActiva&&!demoCfg?.activo)return salirDemo("La demo terminó.");
     if(!demoActiva&&demoCfg?.activo&&enDemoSS())entrarDemo();
     pintarTodo();});
@@ -1054,7 +1058,7 @@ function vistaSec(){   // decide dónde se ve el acceso o la aplicación y cuán
   zona.classList.toggle("hide",puerta);
   pta.classList.toggle("hide",!puerta);
   if(!puerta)return;
-  const h="<b>Demo</b>"+(demoCfg?.activo
+  const h="<b>Demo</b>"+(!demoCfgListo?'<p>Conectando con la Demo…</p>':demoCfg?.activo
     ?'<p>Hay una demo activa en este momento.</p><button data-pd="entrar">Entrar a la Demo</button>'
     :esAdmin
       ?'<p>No hay una demo activa. Al iniciarla se borran los datos temporales anteriores y todos empiezan con el capital inicial.</p><button data-pd="iniciar">Iniciar demo</button>'
@@ -1203,10 +1207,10 @@ const escuchar=(ref,fn)=>unsubs.push(onSnapshot(ref,fn,e=>console.warn("Firestor
 function limpiarSesion(){   // cierra las conexiones y borra lo que quedó de la sesión anterior
   unsubs.forEach(f=>f());unsubs=[];if(unsubLibro){unsubLibro();unsubLibro=null;}
   todos=[];notas=[];coment=[];ordenes=[];novs=[];resps=[];evo=[];ver=null;verAlu=null;editNov=null;elegido=null;libro=null;
-  $("tv").innerHTML="";$("det").textContent="Elegí un activo de la lista.";$("op").classList.add("hide");$("libro").classList.add("hide");$("resumen").textContent="";
+  tvAmpliar(false);$("tv").innerHTML="";$("det").textContent="Elegí un activo de la lista.";$("op").classList.add("hide");$("libro").classList.add("hide");$("resumen").textContent="";
 }
 onAuthStateChanged(auth,u=>{
-  limpiarSesion();demoActiva=false;demoPx=null;demoCfg=null;datos=datosReal;
+  limpiarSesion();demoActiva=false;demoPx=null;demoCfg=null;demoCfgListo=false;datos=datosReal;
   user=u;$("auth").classList.toggle("hide",!!u);$("app").classList.toggle("hide",!u);
   if(!u){$("p").value="";$("msg").textContent="";vistaSec();return;}
   if(!registrando)asegurarCartera(u);
@@ -1627,7 +1631,7 @@ function pintarTel(){
   setTel("telN",datosReal.length?datosReal.length.toLocaleString("es-AR"):"-");
   setTel("telNota",actualizado?"Precios de las "+actualizado.toLocaleTimeString("es-AR",{timeZone:TZ,hour:"2-digit",minute:"2-digit",hour12:false}):"Cargando precios…");
 }
-pintarTel();setInterval(pintarTel,1000);
+pintarTel();setInterval(()=>{if(secActual==="inicio")pintarTel();},1000);
 
 /* ---------- INICIO: módulos, carruseles y banda inferior (ajustes post Etapa 2) ---------- */
 const MODS=[
@@ -1886,6 +1890,7 @@ function tvAmpliar(on){
 }
 $("tvAmp").onclick=()=>tvAmpliar(!$("tvc").classList.contains("tv-fullscreen"));
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("tvc").classList.contains("tv-fullscreen"))tvAmpliar(false);});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("navp").classList.contains("abierto")){$("navp").classList.remove("abierto");$("navBtn").setAttribute("aria-expanded","false");$("navBtn").focus();}});
 </script>
 </body>
 </html>
