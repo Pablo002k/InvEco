@@ -345,7 +345,8 @@ small{opacity:1;color:#475569}
 .l th{position:sticky;top:0;z-index:2}
 tr.k:hover{background:#F1F5F9}
 tr.s{background:#EDF4FC}
-.reloj{margin:0 0 10px;padding:8px 12px;font-size:.88rem;font-variant-numeric:tabular-nums;color:#334155;background:#EDF4FC;border-left:3px solid #1D4ED8;border-radius:0 6px 6px 0}
+.reloj{display:inline-flex;align-items:center;gap:8px;margin:0 0 12px;padding:6px 10px;font-size:.82rem;font-variant-numeric:tabular-nums;color:#334155;background:#F1F5F9;border-radius:6px}
+.reloj .punto{width:8px;height:8px;margin-right:0;border-radius:50%;display:inline-block}
 #estado{font-size:.85rem;color:#475569}
 #det{margin:0 0 10px;padding:12px 14px;line-height:1.6;background:#fff;border:1px solid #E2E8F0;border-radius:8px;scroll-margin-top:64px}
 .res>div{padding:10px 12px;background:#fff;border:1px solid #E2E8F0;border-radius:8px}
@@ -376,7 +377,7 @@ tr.s{background:#EDF4FC}
 @media(max-width:768px){
   #zona button,#demoPuerta button{min-height:44px}
   #zona input,#zona select,#zona textarea{font-size:16px}
-  .c>.l{max-height:260px}
+  .c .l{max-height:260px}
   .l td:first-child,.l th:first-child{position:sticky;left:0;z-index:1;background:#fff}
   .l th:first-child{z-index:3;background:#F1F5F9}
   tr.s td:first-child{background:#EDF4FC}
@@ -446,6 +447,64 @@ tr.s{background:#EDF4FC}
   #zona .wallet-logout,#zona .auth-input,#zona .auth-primary,#zona .auth-secondary{transition:none}
   #zona .auth-primary:active,#zona .auth-secondary:active{transform:none}
   .sec-hero::before,.sec-hero::after{display:none}
+}
+/* Rediseño del Simulador y la Demo: partes 4 a 7 */
+/* Demo: gato animado y mensajes */
+.demo-cat{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 0 8px}
+.demo-cat.hide{display:none}
+.demo-cat .catContainer{display:flex;align-items:center;justify-content:center;position:relative}
+.demo-cat .catbody{width:140px}
+.demo-cat .tail{position:absolute;width:30px;top:50%;animation:tailSleep .5s ease-in infinite alternate-reverse;transform-origin:top}
+.demo-cat.surprise .tail{animation:tailSurprise .3s ease-in infinite alternate-reverse}
+.demo-cat.surprise .catContainer{animation:catBounce 1.2s ease-in-out infinite}
+@keyframes tailSleep{0%{transform:rotateZ(60deg)}50%{transform:rotateZ(0deg)}100%{transform:rotateZ(-20deg)}}
+@keyframes tailSurprise{0%{transform:rotateZ(80deg)}50%{transform:rotateZ(0deg)}100%{transform:rotateZ(-40deg)}}
+@keyframes catBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.demo-cat .wall{width:520px;max-width:100%}
+.demo-cat .zzzBox{position:absolute;margin:0 0 100px 200px;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.demo-cat .zzz{color:#1D4ED8;font-weight:700;font-size:22px;animation:zzzAnim 2s linear infinite}
+.demo-cat .bigzzz{color:#1D4ED8;font-weight:700;font-size:36px;margin-left:10px;animation:zzzAnim 2.3s linear infinite}
+.demo-cat .bang{color:#B91C1C;font-weight:800;font-size:48px;line-height:1;animation:bangAnim 1.1s ease-in-out infinite}
+@keyframes zzzAnim{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+@keyframes bangAnim{0%{opacity:0;transform:scale(.85)}50%{opacity:1;transform:scale(1.05)}100%{opacity:0;transform:scale(.85)}}
+#demoPuertaInfo{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0 16px}
+.demo-msg{margin:0;font-size:1rem;line-height:1.5;color:#1E293B;text-align:center;max-width:36em}
+.demo-nota{margin:6px 0 0;font-size:.9rem;color:#475569;text-align:center}
+.demo-msg-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;width:100%;padding:0 8px;box-sizing:border-box}
+.demo-actions{display:flex;flex-wrap:wrap;gap:10px}
+#demoPuerta .demo-msg-row button{min-height:44px;padding:0 20px;border-radius:10px;background:#0F2942;color:#fff;border:1px solid #0F2942;font-weight:600;cursor:pointer;transition:background-color .15s,border-color .15s}
+#demoPuerta .demo-msg-row button:hover:not(:disabled){background:#1D4ED8;border-color:#1D4ED8;color:#fff}
+#demoPuerta .demo-msg-row button.demo-secondary{background:#fff;color:#0F2942;border-color:#E2E8F0}
+#demoPuerta .demo-msg-row button.demo-secondary:hover:not(:disabled){background:#fff;border-color:#B91C1C;color:#B91C1C}
+@media(max-width:768px){.demo-msg-row{flex-direction:column;align-items:stretch}.demo-actions{flex-direction:column}}
+@media(max-width:480px){.demo-cat .catbody{width:110px}.demo-cat .tail{width:24px}.demo-cat .zzzBox{margin:0 0 80px 150px}}
+/* Mercado: nuevo orden de columnas */
+.c>div{min-width:0}
+.c #det{margin:10px 0}
+.c #libro,.c #tvc{margin:0 0 10px}
+/* Libro de ofertas como tabla */
+.libro-header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px}
+.libro-info{color:#475569;font-size:.85rem}
+.libro-vacio{margin:0;padding:6px 0;font-size:.9rem;color:#475569}
+.libro-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.libro-side{border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;background:#fff}
+.libro-side h5{margin:0;padding:8px 10px;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;text-align:center}
+.libro-bids h5{background:#0D7A3E}
+.libro-asks h5{background:#B91C1C}
+#zona .libro-tabla{width:100%;border-collapse:collapse;font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:.85rem}
+#zona .libro-tabla th,#zona .libro-tabla td{padding:6px 10px;text-align:right;border-bottom:1px solid #EEF2F7}
+#zona .libro-tabla th{background:#F1F5F9;color:#334155;font-weight:600;font-size:.75rem;border-bottom:1px solid #E2E8F0}
+#zona .libro-tabla tr:last-child td{border-bottom:none}
+#zona .libro-bids .libro-tabla td:first-child{color:#0D7A3E}
+#zona .libro-asks .libro-tabla td:first-child{color:#B91C1C}
+@media(max-width:800px){.libro-grid{grid-template-columns:1fr}}
+/* Información de activos al pie */
+.info-activos{max-width:1400px;margin:24px auto 12px;padding:10px 16px;text-align:center;font-size:.82rem;color:#64748B;line-height:1.5;font-variant-numeric:tabular-nums}
+#zona .info-activos .link-admin{min-height:0;margin-left:8px;padding:0;background:none;border:0;border-radius:0;color:#1D4ED8;text-decoration:underline;font-size:inherit;font-weight:400;cursor:pointer}
+#zona .info-activos .link-admin:hover:not(:disabled){color:#1E40AF;background:none;border:0}
+@media(prefers-reduced-motion:reduce){
+  .demo-cat .tail,.demo-cat.surprise .tail,.demo-cat.surprise .catContainer,.demo-cat .zzz,.demo-cat .bigzzz,.demo-cat .bang{animation:none;opacity:1}
+  #demoPuerta .demo-msg-row button{transition:none}
 }
 </style>
 </head>
@@ -542,11 +601,11 @@ tr.s{background:#EDF4FC}
 
   <section id="t-mercado">
     <p class="reloj"></p>
-    <div style="margin-bottom:8px"><button id="btn">Actualizar ahora</button> <button id="btnTodos" class="hide">Actualizar para todos</button> <span id="estado">Cargando…</span></div>
     <details class="card"><summary>Ayuda rápida: ¿qué estoy mirando?</summary>
       <p><b>Pesos y dólares.</b> Muchos activos aparecen repetidos: la versión simple se cotiza en pesos y las que terminan en C o D, en dólares. Los activos en dólares se compran con dólares, que se obtienen en "Cambio de Divisas": los terminados en D usan dólares MEP y los terminados en C, dólares CCL.</p>
       <p><b>Acción:</b> una parte de una empresa. <b>CEDEAR:</b> un certificado que representa acciones de empresas del exterior y se compra en pesos. <b>ETF:</b> una canasta de activos que se compra como una sola acción.</p>
       <p><b>Bono:</b> un préstamo que le hacés al Estado a cambio de intereses. <b>Letra:</b> un bono de corto plazo. <b>Obligación negociable:</b> un bono emitido por una empresa. Los bonos se cotizan por cada 100 de valor nominal: si el precio es de $80.000, comprar 100 nominales cuesta $80.000 y 1 nominal cuesta $800. Ya se pueden operar los bonos AL30, GD30, AL35 y GD35 y las obligaciones negociables de Banco Macro (Clase G) y de Edenor (Clase 7); sus pagos de intereses y devoluciones de capital figuran en el Calendario de bonos y ONs. Los demás bonos y obligaciones se muestran como referencia y se irán habilitando. Las letras se habilitarán más adelante: momentáneamente no se pueden operar porque la plataforma que nos provee los precios presenta una falla en su lista de letras.</p>
+      <p><b>Horario del mercado.</b> La rueda funciona de lunes a viernes, de 10:45 a 18:00 (hora de Buenos Aires). Fuera de ese horario no se pueden publicar órdenes ni cambiar divisas, pero podés mirar los precios, tu cartera, los calendarios y el ranking. El indicador de arriba de la tabla te muestra si el mercado está abierto o cerrado. Los precios se actualizan solos, aproximadamente cada minuto, y al pie de la página ves la hora de los últimos datos.</p>
       <p>Para profundizar en cualquiera de estos conceptos, podés consultar fuentes especializadas o conversarlo con tu docente.</p>
     </details>
     <div class="g f">
@@ -555,8 +614,8 @@ tr.s{background:#EDF4FC}
       <select id="fmon"><option value="">Todas las monedas</option></select>
     </div>
     <div class="g c">
-      <div class="l"><table><thead><tr><th>Símbolo</th><th>Tipo</th><th class="n">Último</th><th class="n">Var. %</th></tr></thead><tbody id="filas"></tbody></table></div>
       <div>
+      <div class="l"><table><thead><tr><th>Símbolo</th><th>Tipo</th><th class="n">Último</th><th class="n">Var. %</th></tr></thead><tbody id="filas"></tbody></table></div>
         <p id="det">Elegí un activo de la lista.</p>
         <div id="op" class="hide card"><b>Nueva orden</b>
           <div class="g f" style="margin:8px 0"><select id="olado"><option value="C">Comprar</option><option value="V">Vender</option></select>
@@ -566,6 +625,8 @@ tr.s{background:#EDF4FC}
             <input id="olim" type="number" min="0" step="0.01" placeholder="Precio límite" class="hide">
             <input id="ostop" type="number" min="0" step="0.01" placeholder="Precio stop" class="hide"></div>
           <p id="oest"></p><button id="pub">Publicar orden</button> <span id="omsg"></span></div>
+      </div>
+      <div>
         <div id="libro" class="card hide"></div>
         <div id="tvc" class="card"><div class="tvh"><b>Gráfico del activo</b><button id="tvAmp" type="button" aria-pressed="false">Ampliar gráfico</button></div><div id="tv"></div></div>
       </div>
@@ -612,6 +673,7 @@ tr.s{background:#EDF4FC}
       <textarea id="ntxt" rows="4" maxlength="1500"></textarea><br><br><button id="npub">Publicar nota</button> <span id="nmsg"></span></div>
     <div id="nlista"></div>
   </section>
+  <div id="infoActivos" class="info-activos"></div>
 </div>
 </div>
 </section>
@@ -623,7 +685,11 @@ tr.s{background:#EDF4FC}
       <h2>Demo</h2>
     </div>
   </div>
-  <div id="demoPuerta" class="card hide"></div>
+  <div id="demoPuerta" class="card hide">
+    <div id="demoCatSleep" class="demo-cat hide" aria-hidden="true"></div>
+    <div id="demoCatSurprise" class="demo-cat surprise hide" aria-hidden="true"></div>
+    <div id="demoPuertaInfo"></div>
+  </div>
 </section>
 
 <section id="sec-guia" class="sec hide">
@@ -692,7 +758,7 @@ tr.s{background:#EDF4FC}
         </div>
         <div class="gc"><h4>Actualización de precios</h4>
           <p>Mientras la rueda está abierta, los precios se actualizan <b>aproximadamente cada minuto</b>. La página busca los datos nuevos sola, sin que tengas que recargarla.</p>
-          <p>Debajo del botón "Actualizar ahora" ves la hora de los datos y la última verificación. Fuera del horario de mercado los precios no cambian: es normal.</p>
+          <p>Al pie de la página del simulador ves la hora de los datos y la última verificación. Fuera del horario de mercado los precios no cambian: es normal.</p>
         </div>
         <div class="gc"><h4>Cuándo se ejecutan tus órdenes</h4>
           <p>Una orden no se ejecuta en el instante en que la publicás: se evalúa en cada actualización de precios, es decir, aproximadamente cada minuto. Mientras tanto figura como <b>pendiente</b>.</p>
@@ -1006,7 +1072,9 @@ function conservar(el,ctx,fn){  // conserva lo que se está escribiendo mientras
 const TASA=d=>d.tipo==="letras"?0.003:0.0071;   // comisión + IVA (aprox.)
 function ba(){const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:TZ,weekday:"short",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date()).map(x=>[x.type,x.value]));
   const m=+p.hour*60+ +p.minute;return{dia:`${p.year}-${p.month}-${p.day}`,hora:`${p.hour}:${p.minute}:${p.second}`,abierto:demoActiva||(!["Sat","Sun"].includes(p.weekday)&&m>=645&&m<1080)};}
-function relojBA(){const b=ba(),t=`Buenos Aires ${b.hora} · `+(demoActiva?"Demo: mercado simulado, abierto todo el día":b.abierto?"Mercado abierto":"Mercado cerrado (abre a las 10:45, de lunes a viernes)");document.querySelectorAll(".reloj").forEach(e=>e.textContent=t);$("pub").disabled=!b.abierto;$("fxc").disabled=$("fxv").disabled=!b.abierto;}
+function relojBA(){const b=ba(),h=`<span class="punto ${b.abierto?"on":"off"}" aria-hidden="true"></span>${demoActiva?"Demo · ":""}${b.abierto?"Abierto":"Cerrado"} · ${b.hora} hs`;
+  document.querySelectorAll(".reloj").forEach(e=>{if(e._h!==h){e.innerHTML=h;e._h=h;}});
+  $("pub").disabled=!b.abierto;$("fxc").disabled=$("fxv").disabled=!b.abierto;}
 let user=null,esAdmin=false,datos=[],actualizado=null,elegido=null,habilitadoDesde=0,todos=[],notas=[],coment=[],ordenes=[],novs=[],ver=null,verAlu=null,editNov=null,ultCheck=null,calBon=null,fxMed=null,resps=[],evo=[],calDiv=null,libro=null,unsubLibro=null,tab="mercado";
 /* ---------- DEMO (version de prueba con datos temporales) ---------- */
 let demoActiva=false,demoCfg=null,demoCfgListo=false,demoPx=null,datosReal=[],demoOcupado=false,demoNota="";
@@ -1026,8 +1094,6 @@ function pintarPrinc(){
     h=`<b>Demo activa.</b> Simulación con datos temporales: no afecta las cuentas reales. Avances de 10 minutos: ${demoPx?.paso||0}. Hora simulada: ${demoCfg?fh(tAhora()):"-"}.`;
     if(esAdmin)h+=` <button id="dAv">Avanzar 10 minutos</button> <button id="dFin">Terminar demo</button>`;
     h+=`<details><summary>Ayuda rápida de la demo</summary><p>Cada alumno opera con su propia cuenta y empieza con ${$$(CAPITAL)} ficticios. Las compras, las ventas y los cambios de moneda se ejecutan al instante, a los precios simulados, cualquier día y a cualquier hora. Las órdenes con precio límite o stop quedan pendientes hasta que el precio las alcance. Cuando el docente toca "Avanzar 10 minutos", todos los precios cambian al azar (hasta 3 % hacia arriba o hacia abajo) y se actualizan las carteras, el ranking y el gráfico de evolución. Al terminar la demo se borran todos los datos temporales y todos vuelven al simulador real, que no se modifica.</p></details>`;
-  }else if(demoCfg?.activo){
-    h=`Hay una demo activa. <button id="dEnt">Entrar a la Demo</button>${esAdmin?` <button id="dFin">Terminar demo</button>`:""}`;
   }
   if(demoNota)h+=(h?"<br>":"")+esc(demoNota);
   if(B._h!==h){B.innerHTML=h;B._h=h;}
@@ -1149,13 +1215,16 @@ function vistaSec(){   // decide dónde se ve el acceso o la aplicación y cuán
   zona.classList.toggle("hide",puerta);
   pta.classList.toggle("hide",!puerta);
   if(!puerta)return;
-  const h="<b>Demo</b>"+(!demoCfgListo?'<p>Conectando con la Demo…</p>':demoCfg?.activo
-    ?'<p>Hay una demo activa en este momento.</p><button data-pd="entrar">Entrar a la Demo</button>'
-    :esAdmin
-      ?'<p>No hay una demo activa.</p><button data-pd="iniciar">Iniciar demo</button>'
-      :'<p>No hay una demo activa en este momento. Cuando el docente la inicie, vas a poder entrar desde esta sección.</p>')
-    +(demoNota?`<p>${esc(demoNota)}</p>`:"");
-  if(pta._h!==h){pta.innerHTML=h;pta._h=h;}
+  const lis=demoCfgListo,act=!!demoCfg?.activo;
+  $("demoCatSleep").classList.toggle("hide",!lis||act);
+  $("demoCatSurprise").classList.toggle("hide",!lis||!act);
+  const nota=demoNota?`<p class="demo-nota">${esc(demoNota)}</p>`:"";
+  const h=!lis?'<p class="demo-msg">Conectando con la Demo…</p>'
+    :act?`<div class="demo-msg-row"><p class="demo-msg">Hay una demo activa.</p><div class="demo-actions"><button data-pd="entrar">Entrar a la Demo</button>${esAdmin?'<button data-pd="terminar" class="demo-secondary">Terminar demo</button>':""}</div></div>`
+    :esAdmin?'<div class="demo-msg-row"><p class="demo-msg">No hay una demo activa.</p><button data-pd="iniciar">Iniciar demo</button></div>'
+    :'<p class="demo-msg">No hay una demo activa en este momento. Cuando el docente la inicie, vas a poder entrar desde esta sección.</p>';
+  const inf=$("demoPuertaInfo");
+  if(inf._h!==h+nota){inf.innerHTML=h+nota;inf._h=h+nota;}
 }
 function mostrarSec(s){   // muestra una sección y oculta las demás, sin tocar la URL ni pedir datos
   secActual=s;
@@ -1179,7 +1248,12 @@ function irSec(s){
 $("marca").onclick=()=>irSec("inicio");
 $("navp").onclick=e=>{const b=e.target.closest("button");if(b&&b.dataset.sec)irSec(b.dataset.sec);};
 $("navBtn").onclick=()=>{const a=$("navp").classList.toggle("abierto");$("navBtn").setAttribute("aria-expanded",String(a));};
-$("demoPuerta").onclick=e=>{const a=e.target.dataset.pd;if(a==="entrar")entrarDemo();if(a==="iniciar"&&confirm("¿Querés iniciar la demo? Se borran los datos temporales anteriores y todos empiezan con el capital inicial."))iniciarDemo();};
+$("demoPuerta").onclick=e=>{const a=e.target.dataset.pd;if(a==="entrar")entrarDemo();if(a==="terminar")terminarDemo();if(a==="iniciar"&&confirm("¿Querés iniciar la demo? Se borran los datos temporales anteriores y todos empiezan con el capital inicial."))iniciarDemo();};
+/* Gato de la Demo (dibujo original de vinodjangid07, con los colores de InvEco) */
+const PARED=[[50,3,450,3],[100,85,400,85],[125,122,375,122],[0,43,500,43],[115.5,2,115.5,43],[189,2,189,43],[262.5,2,262.5,43],[336,2,336,43],[409.5,2,409.5,43],[153,43,153,84],[228,43,228,84],[303,43,303,84],[378,43,378,84],[192,84,192,125],[267,84,267,125],[342,84,342,125]];
+const gatoHTML=z=>`<div class="catContainer"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 733 673" class="catbody"><path fill="#0F2942" d="M111.002 139.5C270.502 -24.5001 471.503 2.4997 621.002 139.5C770.501 276.5 768.504 627.5 621.002 649.5C473.5 671.5 246 687.5 111.002 649.5C-23.9964 611.5 -48.4982 303.5 111.002 139.5Z"></path><path fill="#0F2942" d="M184 9L270.603 159H97.3975L184 9Z"></path><path fill="#0F2942" d="M541 0L627.603 150H454.397L541 0Z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 158 564" class="tail"><path fill="#0A1F33" d="M5.97602 76.066C-11.1099 41.6747 12.9018 0 51.3036 0V0C71.5336 0 89.8636 12.2558 97.2565 31.0866C173.697 225.792 180.478 345.852 97.0691 536.666C89.7636 553.378 73.0672 564 54.8273 564V564C16.9427 564 -5.4224 521.149 13.0712 488.085C90.2225 350.15 87.9612 241.089 5.97602 76.066Z"></path></svg><div class="zzzBox">${z}</div></div><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 500 126" class="wall">${PARED.map(([a,b,c,d])=>`<line stroke-width="6" stroke="#CBD5E1" x1="${a}" y1="${b}" x2="${c}" y2="${d}"></line>`).join("")}</svg>`;
+$("demoCatSleep").innerHTML=gatoHTML('<span class="bigzzz">Z</span><span class="zzz">Z</span>');
+$("demoCatSurprise").innerHTML=gatoHTML('<span class="bang">!</span>');
 mostrarSec(secActual);
 $("demoBar").onclick=e=>{const i=e.target.id;if(i==="dAv")avanzarDemo();if(i==="dFin")terminarDemo();if(i==="dEnt")entrarDemo();};
 /* ---------- DEMO: ejecucion de ordenes en el navegador (Etapa 6) ---------- */
@@ -1306,7 +1380,7 @@ onAuthStateChanged(auth,u=>{
   $("simHero").classList.toggle("hide",!!u);$("demoHero").classList.toggle("hide",!!u);
   if(!u){$("p").value="";$("msg").textContent="";vistaSec();return;}
   if(!registrando)asegurarCartera(u);
-  esAdmin=u.email===correo(ADMIN);$("btnTodos").classList.toggle("hide",!esAdmin);
+  esAdmin=u.email===correo(ADMIN);
   suscribir();
   irA("mercado");
 });
@@ -1585,9 +1659,16 @@ fetch("https://raw.githubusercontent.com/Pablo002k/InvEco/main/data/dividendos.j
 function pedirLibro(s){if(demoActiva)return;setDoc(doc(db,"libro_pedidos",s),{s,t:Date.now()}).catch(()=>{});}
 function pintarLibro(){
   const el=$("libro");el.classList.remove("hide");
-  if(!libro){el.innerHTML="<b>Libro de ofertas</b><br><small>Consultando el libro de ofertas real de IOL. Puede demorar unos segundos.</small>";return;}
-  const n=Math.max(libro.bids.length,libro.asks.length),c=(x)=>x?`${$$(x.p)} · ${x.c}`:"",f=Array.from({length:n},(_,i)=>`<tr><td class="n">${c(libro.bids[i])}</td><td class="n">${c(libro.asks[i])}</td></tr>`).join("");
-  el.innerHTML=`<b>Libro de ofertas de ${esc(libro.s)}</b> <small>${libro.vacio&&libro.tl?`Último libro registrado el ${fh(libro.tl)} (ahora no hay ofertas en el mercado)`:`Actualizado ${fh(libro.t)}`}</small><table><thead><tr><th class="n">Compra: precio · cantidad</th><th class="n">Venta: precio · cantidad</th></tr></thead><tbody>${f||"<tr><td colspan=2>No hay ofertas en este momento. En el mercado real las órdenes se cancelan al cierre (18:00), por eso fuera de horario el libro está vacío.</td></tr>"}</tbody></table>`;}
+  if(!libro){el.innerHTML='<div class="libro-header"><b>Libro de ofertas</b></div><small class="libro-info">Consultando el libro de ofertas real de IOL. Puede demorar unos segundos.</small>';return;}
+  const info=libro.vacio&&libro.tl?`Último libro registrado el ${fh(libro.tl)} (ahora no hay ofertas en el mercado)`:`Actualizado ${fh(libro.t)}`;
+  const cab=`<div class="libro-header"><b>Libro de ofertas de ${esc(libro.s)}</b><small class="libro-info">${info}</small></div>`;
+  const B=libro.bids||[],A=libro.asks||[];
+  if(!B.length&&!A.length){el.innerHTML=cab+'<p class="libro-vacio">No hay ofertas en este momento. En el mercado real las órdenes se cancelan al cierre (18:00), por eso fuera de horario el libro está vacío.</p>';return;}
+  const d=datos.find(x=>x.s===libro.s),M=d?monDe(d):"ARS",n=Math.max(5,B.length,A.length);
+  const fila=x=>x?`<tr><td class="n">${mon(M,x.p)}</td><td class="n">${x.c}</td></tr>`:'<tr><td class="n">&nbsp;</td><td class="n">&nbsp;</td></tr>';
+  const lado=(t,k,L)=>`<div class="libro-side ${k}"><h5>${t}</h5><table class="libro-tabla"><thead><tr><th class="n">Precio</th><th class="n">Cantidad</th></tr></thead><tbody>${Array.from({length:n},(_,i)=>fila(L[i])).join("")}</tbody></table></div>`;
+  el.innerHTML=cab+`<div class="libro-grid">${lado("Compra","libro-bids",B)}${lado("Venta","libro-asks",A)}</div>`;
+}
 function verLibro(s){unsubLibro&&unsubLibro();libro=null;if(demoActiva){$("libro").classList.add("hide");return;}pintarLibro();pedirLibro(s);
   unsubLibro=onSnapshot(doc(db,"libros",s),x=>{libro=x.data()||null;pintarLibro();});}
 function elegir(s){elegido=s;verLibro(s);detalle();pintar();$("omsg").textContent="";$("tv").innerHTML="";
@@ -1605,10 +1686,16 @@ async function cargar(){
   pintar();detalle();pintarTodo();pintarDiv();pintarFx();return true;
 }
 function reloj(){
+  const el=$("infoActivos");if(!el)return;
+  if(demoActiva){if(el._h!=="d"){el.innerHTML="Demo: los precios son simulados.";el._h="d";}return;}
   if(!actualizado)return;
   const h=actualizado.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hour12:false});
-  $("btn").disabled=false;
-  $("estado").textContent=`${datos.length} activos · Datos de las ${h} · Última verificación a las ${ultCheck?ultCheck.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}):"-"} · Se verifican solos cada minuto.`;
+  const u=ultCheck?ultCheck.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}):"-";
+  const btn=esAdmin?' <button id="btnTodos" class="link-admin">Actualizar precios para todos</button>':"";
+  const t=`${datos.length} activos · Datos de las ${h} · Última verificación: ${u}${btn}`;
+  if(el._h===t)return;   // solo se redibuja si cambió el texto, para que el botón no se recree cada segundo
+  el.innerHTML=t;el._h=t;
+  const bt=$("btnTodos");if(bt)bt.onclick=()=>setDoc(doc(db,"estado","forzar"),{t:Date.now()});
 }
 let reint=null;
 function sincronizar(act){   // el servidor avisa que publicó precios nuevos: todos los usuarios los buscan a la vez
@@ -1616,8 +1703,6 @@ function sincronizar(act){   // el servidor avisa que publicó precios nuevos: t
   const f=async()=>{try{await cargar();}catch{}if((actualizado&&actualizado.getTime()>=meta)||++n>=16)clearInterval(reint);};
   f();reint=setInterval(f,15000);
 }
-$("btn").onclick=async()=>{$("btn").disabled=true;$("estado").textContent="Buscando precios nuevos…";
-  try{if(!(await cargar()))habilitadoDesde=Date.now()+20000;}catch{habilitadoDesde=Date.now()+20000;}};
 ["buscar","ftipo","fmon"].forEach(i=>$(i).addEventListener(i==="buscar"?"input":"change",pintar));
 $("filas").onclick=e=>{const tr=e.target.closest("tr");if(!tr)return;elegir(tr.dataset.s);if(MQM.matches)$("det").scrollIntoView({behavior:MQ.matches?"auto":"smooth",block:"start"});};
 
@@ -1653,9 +1738,8 @@ document.addEventListener("input",e=>{if(e.target.tagName==="TEXTAREA")ajustar(e
 new MutationObserver(()=>document.querySelectorAll("textarea").forEach(t=>{if(t.value&&t.scrollHeight>t.clientHeight)ajustar(t);})).observe(document.body,{childList:true,subtree:true});
 document.addEventListener("click",()=>setTimeout(()=>document.querySelectorAll("textarea").forEach(t=>{if(!t.value)t.style.height="";}),400));
 setInterval(()=>{if(!document.hidden)cargar().catch(()=>{});},60000);
-cargar().catch(()=>{$("estado").textContent="Todavía no hay precios. Ejecutá primero la acción en GitHub.";});
+cargar().catch(()=>{$("infoActivos").textContent="Todavía no hay precios. Ejecutá primero la acción en GitHub.";});
 setInterval(()=>{reloj();relojBA();},1000);relojBA();
-$("btnTodos").onclick=()=>setDoc(doc(db,"estado","forzar"),{t:Date.now()});
 $("fxc").onclick=()=>cambio("CD");$("fxv").onclick=()=>cambio("VD");$("fxn").addEventListener("input",estFx);$("fxt").addEventListener("change",estFx);
 setInterval(()=>{if(elegido&&tab==="mercado")pedirLibro(elegido);},120000);
 /* ---------- INICIO: hero animado y telemetría (Etapa 2) ---------- */
