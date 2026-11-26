@@ -240,20 +240,6 @@ td.n,.dvr .n,.telf b{font-family:var(--f-mono);font-variant-numeric:tabular-nums
 #ctHero h2{font-size:2rem;line-height:1.15;margin:6px 0 10px}
 #ctHero .sub{max-width:46em;margin:0;font-size:1.05rem;line-height:1.55;color:#1E293B}
 #ctBody{padding:32px 28px 64px}
-.ctg{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:start}
-.ctc{background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:22px;box-shadow:0 1px 3px rgba(15,41,66,.06)}
-.ctc h3{margin:0 0 12px;font-size:1.2rem;color:#0F2942}
-.ctc p{margin:0 0 10px;font-size:.97rem;line-height:1.55;color:#1E293B}
-.ctd{display:grid;grid-template-columns:max-content 1fr;gap:8px 18px;margin:0 0 14px}
-.ctd dt{font-size:.8rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#475569}
-.ctd dd{margin:0;font-size:.97rem;color:#0F2942}
-.cics{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
-.cic{position:relative;display:flex;align-items:center;justify-content:center;width:48px;height:48px;border:1px solid #E2E8F0;border-radius:50%;background:#fff;color:#0F2942;transition:background-color .15s,color .15s,border-color .15s}
-.cic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.cic:hover,.cic:focus-visible{background:#1D4ED8;border-color:#1D4ED8;color:#fff}
-.cic:focus-visible{outline:2px solid #1D4ED8;outline-offset:3px}
-.cic::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);padding:4px 9px;border-radius:4px;background:#0F2942;color:#fff;font-size:.78rem;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s}
-.cic:hover::after,.cic:focus-visible::after{opacity:1}
 /* Pie de página */
 #pie{background:#0F2942;color:#CBD5E1;padding:36px 28px 28px}
 .pin{max-width:1400px;margin-inline:auto;display:grid;grid-template-columns:1.4fr 1fr;gap:28px}
@@ -265,8 +251,8 @@ td.n,.dvr .n,.telf b{font-family:var(--f-mono);font-variant-numeric:tabular-nums
 #pie nav button:hover{color:#fff;text-decoration:underline}
 #pie nav button:focus-visible{outline:2px solid #fff;outline-offset:2px}
 #pie .pc{grid-column:1/-1;margin:0;padding-top:16px;border-top:1px solid #1E3A5F;font-size:.82rem;color:#94A3B8}
-@media(max-width:800px){#ctHero{padding:28px 16px 20px}#ctHero h2{font-size:1.6rem}#ctBody{padding:20px 16px 48px}.ctg{grid-template-columns:1fr}.ctd{grid-template-columns:1fr;gap:2px}.ctd dd{margin-bottom:10px}#pie{padding:28px 16px 22px}.pin{grid-template-columns:1fr}}
-@media(prefers-reduced-motion:reduce){#navp button,.cic,.cic::after{transition:none}}
+@media(max-width:800px){#ctHero{padding:28px 16px 20px}#ctHero h2{font-size:1.6rem}#ctBody{padding:20px 16px 48px}#pie{padding:28px 16px 22px}.pin{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){#navp button{transition:none}}
 /* Pie de página compacto (Etapa 6, parte 2) */
 #pie{padding:18px 28px 14px}
 .pin{grid-template-columns:1fr auto;gap:6px 28px;align-items:center}
@@ -676,23 +662,21 @@ tr.s{background:#EDF4FC}
 .ct-tab-btn:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
 .ct-tab-panels{position:relative;flex:1;display:flex;flex-direction:column}
 .ct-tab-panel{display:none;animation:ctPanelEnter .42s cubic-bezier(.16,1,.3,1) forwards}
-.ct-tab-panel.is-active{display:block}
+.ct-tab-panel.is-active{display:flex;flex-direction:column;gap:14px;flex:1}
 @keyframes ctPanelEnter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.ct-capital{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 16px;border-radius:14px;background:#EDF4FC;border:1px solid #BFD3F6;margin-bottom:14px}
+.ct-capital{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 20px;border-radius:14px;background:#EDF4FC;border:1px solid #BFD3F6}
 .ct-capital-caption{font-size:.78rem;color:#475569;font-weight:500}
 .ct-capital-amount{font-family:var(--f-titulo);font-size:1.45rem;font-weight:800;color:#0F2942;font-variant-numeric:tabular-nums;line-height:1.15}
 .ct-pills{display:flex;flex-wrap:wrap;gap:6px}
 .ct-pill{font-size:.74rem;font-weight:600;padding:4px 10px;border-radius:999px;background:#FFFFFF;border:1px solid #E2E8F0;color:#0F2942;transition:transform .2s cubic-bezier(.34,1.56,.64,1),border-color .2s ease,color .2s ease}
 .ct-pill:hover{transform:translateY(-2px);border-color:#1D4ED8;color:#1D4ED8}
-.ct-copy{font-size:.94rem;color:#1E293B;line-height:1.65;margin:0}
-.ct-disclaimer{padding:16px 18px;border-radius:14px;background:color-mix(in srgb,#B45309 7%,#FFFFFF);border:1px solid color-mix(in srgb,#B45309 28%,transparent);margin-bottom:14px}
+.ct-copy{flex:1;display:flex;align-items:center;font-size:.94rem;color:#1E293B;line-height:1.65;margin:0;padding:16px 18px;border-radius:14px;background:#F8FAFC;border:1px solid #EEF2F7}
+.ct-disclaimer{padding:18px 20px;border-radius:14px;background:color-mix(in srgb,#B45309 7%,#FFFFFF);border:1px solid color-mix(in srgb,#B45309 28%,transparent)}
 .ct-disclaimer-badge{display:inline-flex;align-items:center;gap:6px;font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#B45309;margin-bottom:8px}
 .ct-disclaimer p{font-size:.95rem;font-weight:500;color:#0F2942;line-height:1.6;margin:0}
-.ct-legal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.ct-legal-point{padding:10px 12px;border-radius:10px;background:#F8FAFC;border:1px solid #EEF2F7;font-size:.82rem;color:#475569}
+.ct-legal-grid{flex:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ct-legal-point{display:flex;flex-direction:column;justify-content:center;padding:12px 14px;border-radius:10px;background:#F8FAFC;border:1px solid #EEF2F7;font-size:.82rem;color:#475569}
 .ct-legal-point strong{display:block;color:#0F2942;margin-bottom:2px}
-.ct-footer-note{margin-top:auto;padding-top:16px;border-top:1px solid #EEF2F7;display:flex;align-items:center;gap:9px;font-size:.8rem;color:#64748B}
-.ct-footer-note svg{color:#B45309;flex-shrink:0}
 @media(max-width:580px){
   .ct-identity{grid-template-columns:1fr;gap:10px}
   .ct-photo-card{min-height:240px;height:240px;max-width:240px;width:100%;margin:0 auto}
@@ -728,15 +712,17 @@ tr.s{background:#EDF4FC}
 .ct-preview-handle{font-size:.8rem;color:#64748B;font-weight:500;overflow-wrap:anywhere}
 .ct-preview-tag{font-size:.72rem;font-weight:600;padding:4px 10px;border-radius:999px;background:#FFFFFF;border:1px solid #E2E8F0;color:#334155;white-space:nowrap}
 .ct-preview-desc{font-size:.9rem;color:#475569;line-height:1.55;margin:0 0 18px}
-.ct-preview-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.ct-btn-primary{flex:1;min-width:170px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-radius:11px;background:#1D4ED8;color:#F8FAFC;font-size:.88rem;font-weight:600;text-decoration:none;border:none;cursor:pointer;transition:background-color .22s ease,transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease}
+.ct-preview-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:stretch}
+.ct-btn-primary{min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 12px;border-radius:11px;background:#1D4ED8;color:#F8FAFC;font-size:.86rem;font-weight:600;text-decoration:none;white-space:nowrap;border:none;cursor:pointer;transition:background-color .22s ease,transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease}
 .ct-btn-primary:hover{background:#1E40AF;transform:translateY(-2px);box-shadow:0 8px 18px rgba(29,78,216,.24)}
 .ct-btn-primary:focus-visible,.ct-btn-copy:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
 .ct-btn-primary svg{transition:transform .25s cubic-bezier(.16,1,.3,1)}
 .ct-btn-primary:hover svg{transform:translate(2px,-2px)}
-.ct-btn-copy{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 14px;border-radius:11px;background:#FFFFFF;border:1px solid #CBD5E1;color:#0F2942;font-family:inherit;font-size:.84rem;font-weight:600;cursor:pointer;transition:background-color .2s ease,border-color .2s ease,color .2s ease}
+.ct-btn-copy{min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 12px;border-radius:11px;background:#FFFFFF;border:1px solid #CBD5E1;color:#0F2942;font-family:inherit;font-size:.86rem;font-weight:600;white-space:nowrap;cursor:pointer;transition:background-color .2s ease,border-color .2s ease,color .2s ease}
 .ct-btn-copy:hover{background:#F5F9FF;border-color:#1D4ED8;color:#1D4ED8}
 .ct-btn-copy.is-copied{background:#DCFCE7;border-color:#0D7A3E;color:#0D7A3E}
+@media(min-width:921px) and (max-width:1100px){.ct-btn-primary svg{display:none}}
+@media(max-width:440px){.ct-preview-actions{grid-template-columns:1fr}}
 @media(max-width:580px){
   .ct-channel-selector{gap:6px}
   .ct-channel-pill{padding:10px 4px}
@@ -1288,10 +1274,6 @@ tr.s{background:#EDF4FC}
           </div>
         </div>
 
-        <div class="ct-footer-note">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span>Proyecto desarrollado en el marco de la cátedra Tecnología Educativa II · UTN Facultad Regional Tucumán.</span>
-        </div>
       </article>
 
       <aside class="ct-card" data-accent="emerald" aria-label="Canales de contacto">
