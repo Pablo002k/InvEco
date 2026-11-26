@@ -316,9 +316,6 @@ td.n,.dvr .n,.telf b{font-family:var(--f-mono);font-variant-numeric:tabular-nums
 #nwTV{border-radius:12px;box-shadow:0 12px 32px -12px rgba(15,41,66,.18)}
 @media(prefers-reduced-motion:reduce){.gc,.nwc{transition:none}.gc:hover,.nwc:hover{transform:none}}
 /* Simulador (Etapa 6, parte 3) */
-#app>div:first-child{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 14px;background:#fff;border:1px solid #E2E8F0;border-radius:10px}
-#resumen{font-family:var(--f-mono);font-size:.88rem;color:#334155}
-#sal{margin-left:auto}
 .card{padding:14px;background:#fff;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 3px rgba(15,41,66,.06)}
 .card.nota{border-left:4px solid #1D4ED8}.card.consejo{border-left:4px solid #B45309}.card.resp{border-left:4px solid #CBD5E1}
 details.card summary{cursor:pointer;font-weight:600}
@@ -393,6 +390,63 @@ tr.s{background:#EDF4FC}
   #ticker{overflow-x:auto}
   #zona button,#demoPuerta button{transition:none}
 }
+/* Rediseño del Simulador y la Demo: partes 1 a 3 */
+#sec-simulador.sec,#sec-demo.sec{max-width:none;margin:0;padding:0}
+#zona{max-width:1150px;margin-inline:auto;padding:14px}
+#demoPuerta{box-sizing:border-box;width:calc(100% - 28px);max-width:1122px;margin:14px auto}
+/* Tarjeta de cuenta */
+.wallet-card{background:#fff;border:1px solid #E2E8F0;border-radius:16px;box-shadow:0 8px 24px rgba(15,41,66,.06);overflow:hidden;margin:0 0 12px}
+.wallet-header{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:16px 20px;border-bottom:1px solid #E2E8F0}
+.wallet-brand{display:flex;align-items:center;gap:14px;min-width:0}
+.wallet-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#EDF4FC;color:#1D4ED8;flex:0 0 auto}
+.wallet-info{display:flex;flex-direction:column;min-width:0}
+.wallet-label{font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#64748B}
+.wallet-name{font-family:var(--f-titulo);font-size:1.15rem;font-weight:700;color:#0F2942;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#zona .wallet-logout{flex:0 0 auto;min-height:40px;padding:0 20px;border-radius:999px;background:#0F2942;color:#fff;border:1px solid #0F2942;font-weight:600;cursor:pointer;transition:background-color .15s,border-color .15s}
+#zona .wallet-logout:hover:not(:disabled){background:#1D4ED8;border-color:#1D4ED8;color:#fff}
+#zona .wallet-logout:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
+.wallet-data{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#E2E8F0}
+.wallet-item{display:flex;flex-direction:column;gap:4px;padding:14px 18px;background:#fff}
+.wallet-item small{font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#64748B;opacity:1}
+.wallet-item b{font-family:var(--f-mono);font-size:1.05rem;font-variant-numeric:tabular-nums;color:#0F2942}
+.wallet-item b .up,.wallet-item b .dn{font-size:.88em;font-weight:500}
+/* Tarjeta de login */
+.auth-card{width:100%;max-width:400px;margin:40px auto;padding:32px 28px;box-sizing:border-box;background:#fff;border:1px solid #E2E8F0;border-radius:16px;box-shadow:0 8px 24px rgba(15,41,66,.08)}
+.auth-title{margin:0 0 6px;font-family:var(--f-titulo);font-size:1.55rem;font-weight:700;color:#0F2942;text-align:center}
+.auth-sub{margin:0 0 22px;font-size:.92rem;line-height:1.5;color:#475569;text-align:center}
+#zona .auth-input{width:100%;box-sizing:border-box;padding:13px 16px;margin-bottom:12px;font-size:1rem;color:#0F2942;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;transition:border-color .15s,background-color .15s}
+#zona .auth-input::placeholder{color:#94A3B8}
+#zona .auth-input:focus-visible{outline:none;border-color:#1D4ED8;background:#fff;box-shadow:0 0 0 3px rgba(29,78,216,.18)}
+.auth-actions{display:grid;gap:10px;margin-top:8px}
+#zona .auth-primary,#zona .auth-secondary{min-height:46px;padding:0 20px;font-size:1rem;font-weight:600;border-radius:10px;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s,transform .1s}
+#zona #ent.auth-primary{color:#fff;background:#1D4ED8;border:1px solid #1D4ED8}
+#zona #ent.auth-primary:hover:not(:disabled){color:#fff;background:#1E40AF;border-color:#1E40AF}
+#zona .auth-secondary{color:#0F2942;background:#fff;border:1px solid #E2E8F0}
+#zona .auth-secondary:hover:not(:disabled){border-color:#1D4ED8;color:#1D4ED8}
+#zona .auth-primary:active,#zona .auth-secondary:active{transform:scale(.97)}
+#zona .auth-primary:focus-visible,#zona .auth-secondary:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
+.auth-msg{min-height:1.2em;margin:14px 0 0;font-size:.9rem;color:#B91C1C;text-align:center}
+/* Hero mini del Simulador y la Demo */
+.sec-hero{position:relative;overflow:hidden;background:#EDF4FC;border-bottom:1px solid #E2E8F0;padding:36px 28px 24px}
+.sec-hero::before{content:"";position:absolute;top:-70px;right:-40px;width:220px;height:220px;border-radius:50%;background:#1D4ED8;filter:blur(60px);opacity:.14;pointer-events:none}
+.sec-hero::after{content:"";position:absolute;bottom:-80px;left:8%;width:180px;height:180px;border-radius:50%;background:#0D7A3E;filter:blur(60px);opacity:.1;pointer-events:none}
+.sec-hero-in{position:relative;z-index:1;max-width:1400px;margin-inline:auto}
+.sec-hero h2{font-size:1.85rem;line-height:1.15;margin:6px 0 0;color:#0F2942}
+@media(max-width:768px){
+  .wallet-data{grid-template-columns:repeat(2,1fr)}
+  .wallet-header{padding:14px 16px;gap:12px}
+  .wallet-name{font-size:1.05rem}
+  #zona .wallet-logout{min-height:44px;padding:0 16px}
+  .auth-card{margin:20px auto;padding:24px 20px}
+  .auth-title{font-size:1.35rem}
+  .sec-hero{padding:24px 16px 18px}
+  .sec-hero h2{font-size:1.55rem}
+}
+@media(prefers-reduced-motion:reduce){
+  #zona .wallet-logout,#zona .auth-input,#zona .auth-primary,#zona .auth-secondary{transition:none}
+  #zona .auth-primary:active,#zona .auth-secondary:active{transform:none}
+  .sec-hero::before,.sec-hero::after{display:none}
+}
 </style>
 </head>
 <body>
@@ -439,18 +493,49 @@ tr.s{background:#EDF4FC}
 </section>
 
 <section id="sec-simulador" class="sec hide">
+<div id="simHero" class="sec-hero">
+  <div class="sec-hero-in">
+    <p class="eyebrow">SIMULADOR BURSÁTIL</p>
+    <h2>Simulador de Mercado</h2>
+  </div>
+</div>
 <div id="zona">
-<div id="auth" class="card" style="max-width:380px;margin:40px auto">
-  <h1>Simulador de inversiones</h1>
-  <p>Ingresá con tu usuario y contraseña, o creá una cuenta nueva.</p>
-  <input id="u" placeholder="Usuario (letras y números)" autocomplete="username"><br><br>
-  <input id="p" type="password" placeholder="Contraseña (mínimo 6 caracteres)" autocomplete="current-password"><br><br>
-  <button id="ent">Ingresar</button> <button id="reg">Crear cuenta</button>
-  <p id="msg"></p>
+<div id="auth" class="auth-card">
+  <h1 class="auth-title">Ingresar a tu cuenta</h1>
+  <p class="auth-sub">Ingresá con tu usuario y contraseña, o creá una cuenta nueva.</p>
+  <input id="u" type="text" class="auth-input" placeholder="Usuario (letras y números)" autocomplete="username">
+  <input id="p" type="password" class="auth-input" placeholder="Contraseña (mínimo 6 caracteres)" autocomplete="current-password">
+  <div class="auth-actions">
+    <button id="ent" class="auth-primary">Ingresar</button>
+    <button id="reg" class="auth-secondary">Crear cuenta</button>
+  </div>
+  <p id="msg" class="auth-msg"></p>
 </div>
 
 <div id="app" class="hide">
-  <div><b id="yo"></b> · <span id="resumen"></span> <button id="sal">Salir</button></div>
+  <div id="walletCard" class="wallet-card">
+    <header class="wallet-header">
+      <div class="wallet-brand">
+        <div class="wallet-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path>
+            <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path>
+          </svg>
+        </div>
+        <div class="wallet-info">
+          <span class="wallet-label">Cuenta</span>
+          <b id="yo" class="wallet-name"></b>
+        </div>
+      </div>
+      <button id="sal" class="wallet-logout">Salir</button>
+    </header>
+    <div class="wallet-data">
+      <div class="wallet-item"><small>ARS</small><b id="walletArs">-</b></div>
+      <div class="wallet-item"><small>USD MEP</small><b id="walletUsd">-</b></div>
+      <div class="wallet-item"><small>USD CCL</small><b id="walletCcl">-</b></div>
+      <div class="wallet-item"><small>Total</small><b id="resumen">-</b></div>
+    </div>
+  </div>
   <div id="ticker" class="hide" aria-label="Cotizaciones de los principales activos"><div id="tkTrack"></div></div>
   <div id="demoBar" class="card hide"></div>
   <nav id="tabs"></nav>
@@ -532,6 +617,12 @@ tr.s{background:#EDF4FC}
 </section>
 
 <section id="sec-demo" class="sec hide">
+  <div id="demoHero" class="sec-hero">
+    <div class="sec-hero-in">
+      <p class="eyebrow">SIMULACIÓN TEMPORAL</p>
+      <h2>Demo</h2>
+    </div>
+  </div>
   <div id="demoPuerta" class="card hide"></div>
 </section>
 
@@ -1207,11 +1298,12 @@ const escuchar=(ref,fn)=>unsubs.push(onSnapshot(ref,fn,e=>console.warn("Firestor
 function limpiarSesion(){   // cierra las conexiones y borra lo que quedó de la sesión anterior
   unsubs.forEach(f=>f());unsubs=[];if(unsubLibro){unsubLibro();unsubLibro=null;}
   todos=[];notas=[];coment=[];ordenes=[];novs=[];resps=[];evo=[];ver=null;verAlu=null;editNov=null;elegido=null;libro=null;
-  tvAmpliar(false);$("tv").innerHTML="";$("det").textContent="Elegí un activo de la lista.";$("op").classList.add("hide");$("libro").classList.add("hide");$("resumen").textContent="";
+  tvAmpliar(false);$("tv").innerHTML="";$("det").textContent="Elegí un activo de la lista.";$("op").classList.add("hide");$("libro").classList.add("hide");$("resumen").textContent="-";["walletArs","walletUsd","walletCcl"].forEach(i=>{$(i).textContent="-";});
 }
 onAuthStateChanged(auth,u=>{
   limpiarSesion();demoActiva=false;demoPx=null;demoCfg=null;demoCfgListo=false;datos=datosReal;
   user=u;$("auth").classList.toggle("hide",!!u);$("app").classList.toggle("hide",!u);
+  $("simHero").classList.toggle("hide",!!u);$("demoHero").classList.toggle("hide",!!u);
   if(!u){$("p").value="";$("msg").textContent="";vistaSec();return;}
   if(!registrando)asegurarCartera(u);
   esAdmin=u.email===correo(ADMIN);$("btnTodos").classList.toggle("hide",!esAdmin);
@@ -1319,8 +1411,14 @@ function pintarTodo(){
   if(!user)return;
   pintarPrinc();
   const yo=todos.find(u=>u.id===user.uid);
-  $("yo").textContent=yo?nom(yo):"";
-  if(yo)$("resumen").textContent=`Efectivo ${$$(yo.cash)}${yo.usd?` · ${us(yo.usd)} MEP`:""}${yo.ccl?` · ${us(yo.ccl)} CCL`:""} · Total ${$$(valor(yo))} (${pct(valor(yo)).toFixed(2)} %)`;
+$("yo").textContent=yo?nom(yo):"";
+if(yo){
+  $("walletArs").textContent=$$(yo.cash);
+  $("walletUsd").textContent=us(yo.usd||0);
+  $("walletCcl").textContent=us(yo.ccl||0);
+  const t=valor(yo),p=pct(t);
+  $("resumen").innerHTML=`${$$(t)} <span class="${p>=0?"up":"dn"}">(${p.toFixed(2)} %)</span>`;
+}
   if(tab==="cartera")$("t-cartera").innerHTML=ficha(yo,false,true);
   if(tab==="ranking"){
     const keep=$("ctxt")?{v:$("ctxt").value,f:document.activeElement===$("ctxt")}:null;
