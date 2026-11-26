@@ -506,6 +506,39 @@ tr.s{background:#EDF4FC}
   .demo-cat .tail,.demo-cat.surprise .tail,.demo-cat.surprise .catContainer,.demo-cat .zzz,.demo-cat .bigzzz,.demo-cat .bang{animation:none;opacity:1}
   #demoPuerta .demo-msg-row button{transition:none}
 }
+/* Rediseño del Simulador y la Demo: ajustes y partes 8 a 10 */
+/* Tarjeta de cuenta: indicador de mercado entre el nombre y "Salir" */
+.wallet-header{display:grid;grid-template-columns:1fr auto 1fr;gap:16px}
+.wallet-header .reloj{margin:0;justify-self:center}
+.wallet-header .wallet-logout{justify-self:end}
+@media(max-width:768px){
+  .wallet-header{grid-template-columns:1fr auto;gap:10px 12px}
+  .wallet-header .reloj{grid-column:1/-1;grid-row:2;justify-self:center}
+}
+/* Novedades */
+.novf-form{display:grid;gap:10px;margin-top:10px}
+#zona .novf-form input,#zona .novf-form textarea{padding:10px 12px;font-size:.95rem;background:#fff;border:1px solid #CBD5E1;border-radius:8px;color:#0F2942}
+#zona .novf-form input:focus-visible,#zona .novf-form textarea:focus-visible{outline:2px solid #1D4ED8;outline-offset:1px;border-color:#1D4ED8}
+.novf-form button{justify-self:flex-start}
+.pv span{min-width:0;overflow-wrap:anywhere}
+.nov-desc{margin:8px 0 0;white-space:pre-wrap;line-height:1.5;color:#1E293B}
+/* Alumnos */
+.alumnos-wrap{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(15,41,66,.06);margin-bottom:14px}
+.alumnos-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.alumnos-header b{font-size:1.05rem;color:#0F2942}
+.alumnos-count{display:block;color:#475569;font-size:.82rem;margin-top:2px}
+#zona .alumnos-search{width:100%;box-sizing:border-box;padding:10px 12px;margin-bottom:12px;font-size:.95rem;border:1px solid #E2E8F0;border-radius:8px;background:#F8FAFC;color:#0F2942}
+#zona .alumnos-search:focus-visible{outline:2px solid #1D4ED8;outline-offset:1px;border-color:#1D4ED8;background:#fff}
+.alumnos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+#zona .alumno-card{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;text-align:left;cursor:pointer;transition:border-color .15s,background-color .15s,transform .15s;font:inherit;color:inherit}
+#zona .alumno-card:hover:not(:disabled){border-color:#1D4ED8;background:#EDF4FC;transform:translateY(-1px)}
+#zona .alumno-card.on{border-color:#1D4ED8;background:#EDF4FC}
+#zona .alumno-card:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
+.alumno-avatar{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#0F2942;color:#fff;font-family:var(--f-titulo);font-weight:700;font-size:.95rem;flex:0 0 auto;text-transform:uppercase}
+.alumno-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+.alumno-info b{font-size:.92rem;color:#0F2942;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alumno-info small{font-size:.78rem;color:#475569;font-variant-numeric:tabular-nums}
+@media(prefers-reduced-motion:reduce){#zona .alumno-card{transition:none}#zona .alumno-card:hover:not(:disabled){transform:none}}
 </style>
 </head>
 <body>
@@ -586,6 +619,7 @@ tr.s{background:#EDF4FC}
           <b id="yo" class="wallet-name"></b>
         </div>
       </div>
+      <div class="reloj wallet-reloj"></div>
       <button id="sal" class="wallet-logout">Salir</button>
     </header>
     <div class="wallet-data">
@@ -600,12 +634,11 @@ tr.s{background:#EDF4FC}
   <nav id="tabs"></nav>
 
   <section id="t-mercado">
-    <p class="reloj"></p>
     <details class="card"><summary>Ayuda rápida: ¿qué estoy mirando?</summary>
       <p><b>Pesos y dólares.</b> Muchos activos aparecen repetidos: la versión simple se cotiza en pesos y las que terminan en C o D, en dólares. Los activos en dólares se compran con dólares, que se obtienen en "Cambio de Divisas": los terminados en D usan dólares MEP y los terminados en C, dólares CCL.</p>
       <p><b>Acción:</b> una parte de una empresa. <b>CEDEAR:</b> un certificado que representa acciones de empresas del exterior y se compra en pesos. <b>ETF:</b> una canasta de activos que se compra como una sola acción.</p>
       <p><b>Bono:</b> un préstamo que le hacés al Estado a cambio de intereses. <b>Letra:</b> un bono de corto plazo. <b>Obligación negociable:</b> un bono emitido por una empresa. Los bonos se cotizan por cada 100 de valor nominal: si el precio es de $80.000, comprar 100 nominales cuesta $80.000 y 1 nominal cuesta $800. Ya se pueden operar los bonos AL30, GD30, AL35 y GD35 y las obligaciones negociables de Banco Macro (Clase G) y de Edenor (Clase 7); sus pagos de intereses y devoluciones de capital figuran en el Calendario de bonos y ONs. Los demás bonos y obligaciones se muestran como referencia y se irán habilitando. Las letras se habilitarán más adelante: momentáneamente no se pueden operar porque la plataforma que nos provee los precios presenta una falla en su lista de letras.</p>
-      <p><b>Horario del mercado.</b> La rueda funciona de lunes a viernes, de 10:45 a 18:00 (hora de Buenos Aires). Fuera de ese horario no se pueden publicar órdenes ni cambiar divisas, pero podés mirar los precios, tu cartera, los calendarios y el ranking. El indicador de arriba de la tabla te muestra si el mercado está abierto o cerrado. Los precios se actualizan solos, aproximadamente cada minuto, y al pie de la página ves la hora de los últimos datos.</p>
+      <p><b>Horario del mercado.</b> La rueda funciona de lunes a viernes, de 10:45 a 18:00 (hora de Buenos Aires). Fuera de ese horario no se pueden publicar órdenes ni cambiar divisas, pero podés mirar los precios, tu cartera, los calendarios y el ranking. El indicador ubicado dentro de tu billetera te muestra si el mercado está abierto o cerrado, junto con la hora de Buenos Aires. Los precios se actualizan solos, aproximadamente cada minuto, y al pie de la página ves la hora de los últimos datos.</p>
       <p>Para profundizar en cualquiera de estos conceptos, podés consultar fuentes especializadas o conversarlo con tu docente.</p>
     </details>
     <div class="g f">
@@ -644,7 +677,6 @@ tr.s{background:#EDF4FC}
     <div id="bontab"></div>
   </section>
   <section id="t-fx" class="hide">
-    <p class="reloj"></p>
     <div class="card"><b>Cambio de Divisas</b>
       <p>En esta sección se pueden cambiar pesos por dólares y dólares por pesos. Existen dos tipos de dólar financiero: el <b>dólar MEP</b>, que queda depositado en una cuenta en Argentina y sirve para operar los activos cuyo símbolo termina en D, y el <b>dólar CCL</b> (contado con liquidación), que queda en el exterior y sirve para los activos que terminan en C.</p></div>
     <div class="card"><b>¿Cómo se lee la cotización?</b>
@@ -660,10 +692,29 @@ tr.s{background:#EDF4FC}
   <section id="t-divs" class="hide"><div class="card"><b>Calendario de dividendos</b>
     <p>Un dividendo es la parte de las ganancias que una empresa reparte entre sus accionistas. Para cobrarlo hay que tener el activo antes de la fecha de corte, y el dinero se acredita en la fecha de pago. En este simulador se acredita en dólares, igual que en la realidad, con una retención estimada (30 % para empresas de Estados Unidos). Para pasarlos a pesos, se pueden vender en "Cambio de Divisas". Las fechas marcadas como estimadas se calculan con la periodicidad habitual de cada empresa y pueden variar.</p><p><i>Este calendario se está ampliando: próximamente se cargarán las fechas de más empresas.</i></p></div>
     <div id="divtab"></div></section>
-  <section id="t-alumnos" class="hide"><div id="alu-lista"></div><div id="alu-ficha"></div></section>
+  <section id="t-alumnos" class="hide">
+    <div class="alumnos-wrap">
+      <div class="alumnos-header">
+        <div><b>Alumnos</b><small id="aluCount" class="alumnos-count"></small></div>
+        <button id="xls">Descargar planilla Excel</button>
+      </div>
+      <input id="aluBuscar" type="search" placeholder="Buscar alumno…" class="alumnos-search" aria-label="Buscar alumno">
+      <div id="aluGrid" class="alumnos-grid"></div>
+    </div>
+    <div id="alu-ficha"></div>
+  </section>
   <section id="t-novedades" class="hide">
-    <div id="novf" class="card hide"><b>Nueva novedad</b> <small>Podés incluir enlaces a videos, noticias o publicaciones: se mostrará una vista previa.</small><br><br>
-      <textarea id="ntx2" rows="3" maxlength="1500"></textarea><br><br><button id="npub2">Publicar novedad</button></div>
+    <div id="novf" class="card hide">
+      <b>Nueva novedad</b>
+      <small>Publicá un título, una URL (se mostrará la miniatura) y una descripción.</small>
+      <div class="novf-form">
+        <input id="nvTitulo" type="text" placeholder="Título" maxlength="120" aria-label="Título">
+        <input id="nvUrl" type="url" placeholder="URL del video, noticia o publicación" aria-label="URL">
+        <textarea id="nvDesc" rows="3" maxlength="600" placeholder="Descripción (opcional)" aria-label="Descripción"></textarea>
+        <button id="npub2">Publicar novedad</button>
+        <small id="nvMsg"></small>
+      </div>
+    </div>
     <div id="nov-lista"></div>
   </section>
   <section id="t-ranking" class="hide"><div id="rank"></div><div id="ficha"></div></section>
@@ -753,7 +804,7 @@ tr.s{background:#EDF4FC}
       <div class="gcs">
         <div class="gc"><h4>Horario de la rueda</h4>
           <p>El mercado funciona de <b>lunes a viernes, de 10:45 a 18:00</b> (hora de Buenos Aires). En ese horario podés publicar órdenes y cambiar dólares.</p>
-          <p>Fuera de él, los botones de operar se desactivan, pero podés mirar los precios, tu cartera, los calendarios y el ranking. En la pestaña Mercado, un reloj te indica si la rueda está abierta o cerrada.</p>
+          <p>Fuera de él, los botones de operar se desactivan, pero podés mirar los precios, tu cartera, los calendarios y el ranking. En la tarjeta de tu cuenta, un indicador te muestra si la rueda está abierta o cerrada.</p>
           <p class="gej">El simulador no distingue feriados. En un día feriado la bolsa real está cerrada y los precios no se mueven.</p>
         </div>
         <div class="gc"><h4>Actualización de precios</h4>
@@ -1236,9 +1287,7 @@ function mostrarSec(s){   // muestra una sección y oculta las demás, sin tocar
 }
 function irSec(s){
   if(s==="demo"){
-    try{sessionStorage.setItem("enDemo","1");}catch{}
-    mostrarSec("demo");
-    if(user&&!demoActiva&&demoCfg?.activo)entrarDemo();
+    mostrarSec("demo");   // con una demo activa, la puerta muestra el gato y el botón "Entrar a la Demo"; no se entra solo
     return;
   }
   if(!demoActiva){try{sessionStorage.removeItem("enDemo");}catch{}}
@@ -1481,6 +1530,26 @@ function ficha(u,herr,sinMsg){
   return`<div class="card"><h3>${esc(nom(u))}</h3>${u.id===user.uid?proxDiv(u):""}${estado(u)}<h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul>${sinMsg?"":`<h4>Mensajes</h4>${historial(u,herr)}`}${adm}</div>`;
 }
 
+/* Miniaturas de Novedades (proxy gratuito images.weserv.nl para Facebook e Instagram) */
+function proxificar(u){
+  if(!u)return"";
+  if(/img\.youtube\.com|ytimg\.com/i.test(u))return u;   // las de YouTube no necesitan proxy
+  return"https://images.weserv.nl/?url="+encodeURIComponent(u);
+}
+function ytId(url){const m=String(url).match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/);return m?m[1]:"";}
+function miniatura(url,previews){
+  const y=ytId(url);let src="";
+  if(y)src=`https://img.youtube.com/vi/${y}/hqdefault.jpg`;
+  else{const p=(previews||[]).find(x=>x.url===url);if(p&&p.imagen)src=proxificar(p.imagen);}
+  return src?`<img src="${esc(src)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:"";
+}
+/* Búsqueda de alumnos (filtro local, sin Firestore) */
+function filtrarAlumnos(){
+  const sin=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  const q=sin($("aluBuscar").value.trim());
+  document.querySelectorAll("#aluGrid .alumno-card").forEach(b=>{b.style.display=!q||sin(b.querySelector("b").textContent).includes(q)?"":"none";});
+}
+$("aluBuscar").addEventListener("input",filtrarAlumnos);
 function pintarTodo(){
   if(!user)return;
   pintarPrinc();
@@ -1508,18 +1577,29 @@ if(yo){
   if(tab==="bonos")pintarBon();
   if(tab==="alumnos"){
     const L=todos.filter(u=>(u.usuario||"")!==ADMIN).sort((a,b)=>nom(a).localeCompare(nom(b),"es",{sensitivity:"base"}));
-    $("alu-lista").innerHTML=`<div class="card"><b>Alumnos</b> <small>${L.length} registrados, en orden alfabético.</small> <button id="xls">Descargar planilla Excel</button><div class="g" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-top:8px">${L.map(u=>`<button data-alu="${u.id}" class="${u.id===verAlu?"on":""}">${esc(nom(u))}</button>`).join("")}</div></div>`;
+    $("aluCount").textContent=`${L.length} registrados, en orden alfabético.`;
+    $("aluGrid").innerHTML=L.map(u=>{const n=nom(u),v=valor(u),p=pct(v),ini=(n||u.usuario||"?").trim().charAt(0);
+      return`<button class="alumno-card${u.id===verAlu?" on":""}" data-alu="${u.id}"><span class="alumno-avatar" aria-hidden="true">${esc(ini)}</span><span class="alumno-info"><b>${esc(n)}</b><small>${$$(v)} · <span class="${cls(p)}">(${p.toFixed(2)} %)</span></small></span></button>`;}).join("");
+    filtrarAlumnos();
     conservar($("alu-ficha"),verAlu,()=>{$("alu-ficha").innerHTML=ficha(todos.find(u=>u.id===verAlu),true)||"<p>Elegí un alumno para ver su registro completo.</p>";});
   }
   if(tab==="novedades"){
     $("novf").classList.toggle("hide",!esAdmin);
     const enl=x=>esc(x).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
     conservar($("nov-lista"),"nov",()=>{$("nov-lista").innerHTML=novs.map(n=>{
-      const tarj=(n.texto.match(/https?:\/\/[^\s<]+/g)||[]).slice(0,3).map(u=>{const p=(n.previews||[]).find(x=>x.url===u);
+      const fch=`<small>${fh(n.t)}${n.editado?` · <i>Editado</i>`:""}</small>`;
+      const btns=esAdmin?`<button data-edn="${n.id}">Editar</button> <button data-del="novedades/${n.id}">Eliminar</button>`:"";
+      if(n.url&&n.titulo){   // formato nuevo: título, URL y descripción
+        if(editNov===n.id)return`<div class="card"><b>Editar novedad</b><div class="novf-form"><input data-ed="${n.id}:t" type="text" maxlength="120" value="${esc(n.titulo)}" placeholder="Título" aria-label="Título"><input data-ed="${n.id}:u" type="url" value="${esc(n.url)}" placeholder="URL" aria-label="URL"><textarea data-ed="${n.id}:d" rows="3" maxlength="600" placeholder="Descripción (opcional)" aria-label="Descripción">${esc(n.descripcion||"")}</textarea><div><button data-gedn="${n.id}">Guardar cambios</button> <button data-cedn="1">Cancelar</button></div></div></div>`;
+        const href=/^https?:\/\//i.test(n.url)?n.url:"#";
+        return`<div class="card">${fch}<a class="pv" href="${esc(href)}" target="_blank" rel="noopener">${miniatura(n.url,n.previews)}<span><b>${esc(n.titulo)}</b><small>${esc(n.url)}</small></span></a>${n.descripcion?`<p class="nov-desc">${esc(n.descripcion)}</p>`:""}${hiloNov(n)}${btns}</div>`;
+      }
+      // formato viejo: texto libre con vistas previas
+      const tarj=((n.texto||"").match(/https?:\/\/[^\s<]+/g)||[]).slice(0,3).map(u=>{const p=(n.previews||[]).find(x=>x.url===u);
         if(!p)return n.previews?"":"<small>Preparando la vista previa del enlace…</small>";
-        return p.titulo||p.imagen?`<a class="pv" href="${esc(u)}" target="_blank" rel="noopener">${p.imagen?`<img src="${esc(p.imagen)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:""}<span><b>${esc(p.titulo||u)}</b><small>${esc(p.sitio||"")}</small></span></a>`:"";}).join("");
-      if(editNov===n.id)return`<div class="card"><b>Editar novedad</b><br><br><textarea data-ed="${n.id}" rows="4" maxlength="1500">${esc(n.texto)}</textarea><br><br><button data-gedn="${n.id}">Guardar cambios</button> <button data-cedn="1">Cancelar</button></div>`;
-      return`<div class="card"><small>${fh(n.t)}${n.editado?` · <i>Editado</i>`:""}</small><p style="white-space:pre-wrap">${enl(n.texto)}</p>${tarj}${hiloNov(n)}${esAdmin?`<button data-edn="${n.id}">Editar</button> <button data-del="novedades/${n.id}">Eliminar</button>`:""}</div>`;}).join("")||"<p>Todavía no hay novedades.</p>";});
+        return p.titulo||p.imagen?`<a class="pv" href="${esc(u)}" target="_blank" rel="noopener">${p.imagen?`<img src="${esc(proxificar(p.imagen))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:""}<span><b>${esc(p.titulo||u)}</b><small>${esc(p.sitio||"")}</small></span></a>`:"";}).join("");
+      if(editNov===n.id)return`<div class="card"><b>Editar novedad</b><br><br><textarea data-ed="${n.id}" rows="4" maxlength="1500">${esc(n.texto||"")}</textarea><br><br><button data-gedn="${n.id}">Guardar cambios</button> <button data-cedn="1">Cancelar</button></div>`;
+      return`<div class="card">${fch}<p style="white-space:pre-wrap">${enl(n.texto||"")}</p>${tarj}${hiloNov(n)}${btns}</div>`;}).join("")||"<p>Todavía no hay novedades.</p>";});
   }
   if(tab==="notas"){const yo=todos.find(u=>u.id===user.uid);$("nlista").innerHTML=yo?`<h4>Mi historial</h4>${historial(yo,false,true)}`:"";}
 }
@@ -1529,7 +1609,13 @@ document.body.addEventListener("click",async e=>{
   if(t.dataset.del&&confirm("¿Seguro que querés borrarlo?"))await deleteDoc(doc(db,...t.dataset.del.split("/").map((x,i)=>i?x:C(x))));
   if(t.dataset.com&&$("ctxt").value.trim()){const x=$("ctxt").value.trim().slice(0,600);$("ctxt").value="";
     await addDoc(collection(db,C("comentarios")),{para:t.dataset.com,texto:x,t:Date.now()});}
-  if(t.id==="npub2"){const x=$("ntx2").value.trim();if(x){$("ntx2").value="";await addDoc(collection(db,C("novedades")),{texto:x.slice(0,1500),t:Date.now(),...(demoActiva?{previews:[]}:{})});}}
+  if(t.id==="npub2"){
+    const titulo=$("nvTitulo").value.trim(),url=$("nvUrl").value.trim(),desc=$("nvDesc").value.trim(),m=$("nvMsg");
+    if(!titulo||!url){m.textContent="Completá el título y la URL.";return;}
+    if(!/^https?:\/\/\S+$/i.test(url)){m.textContent="La URL debe empezar con http:// o https://";return;}
+    m.textContent="";$("nvTitulo").value="";$("nvUrl").value="";$("nvDesc").value="";
+    await addDoc(collection(db,C("novedades")),{titulo:titulo.slice(0,120),url,descripcion:desc.slice(0,600),t:Date.now(),...(demoActiva?{previews:[]}:{})});
+  }
   if(t.dataset.nresp){const ta=document.querySelector(`[data-nr="${t.dataset.nresp}"]`),x=ta.value.trim();
     if(x){ta.value="";
       if(esAdmin)await addDoc(collection(db,C("comentarios")),{para:"novedad",notaId:t.dataset.nresp,texto:x.slice(0,600),t:Date.now()});
@@ -1537,10 +1623,19 @@ document.body.addEventListener("click",async e=>{
   if(t.dataset.tf){evoRes=t.dataset.tf;pintarTodo();}
   if(t.dataset.edn){editNov=t.dataset.edn;pintarTodo();}
   if(t.dataset.cedn){editNov=null;pintarTodo();}
-  if(t.dataset.gedn){const id=t.dataset.gedn,x=document.querySelector(`[data-ed="${id}"]`).value.trim();
-    if(x){editNov=null;await updateDoc(doc(db,C("novedades"),id),{texto:x.slice(0,1500),editado:Date.now(),previews:demoActiva?[]:null});}}
+  if(t.dataset.gedn){
+    const id=t.dataset.gedn,n=novs.find(z=>z.id===id),q=s=>document.querySelector(`[data-ed="${id}${s}"]`);
+    if(n&&n.url&&n.titulo){   // formato nuevo: título, URL y descripción
+      const titulo=q(":t").value.trim(),url=q(":u").value.trim(),desc=q(":d").value.trim();
+      if(titulo&&/^https?:\/\/\S+$/i.test(url)){editNov=null;await updateDoc(doc(db,C("novedades"),id),{titulo:titulo.slice(0,120),url,descripcion:desc.slice(0,600),editado:Date.now(),previews:demoActiva?[]:null});}
+    }else{   // formato viejo: texto libre
+      const x=q("").value.trim();
+      if(x){editNov=null;await updateDoc(doc(db,C("novedades"),id),{texto:x.slice(0,1500),editado:Date.now(),previews:demoActiva?[]:null});}
+    }
+  }
   if(t.id==="xls")exportar();
-  if(t.dataset.alu){verAlu=t.dataset.alu;pintarTodo();}
+  const alc=t.closest("[data-alu]");
+  if(alc){verAlu=alc.dataset.alu;pintarTodo();}
   if(t.dataset.resp){const ta=document.querySelector(`[data-rt="${t.dataset.resp}"]`),x=ta.value.trim();
     if(x){ta.value="";await addDoc(collection(db,C("comentarios")),{para:t.dataset.para,notaId:t.dataset.resp,texto:x.slice(0,600),t:Date.now()});}}
   if(t.dataset.sresp){const ta=document.querySelector(`[data-sr="${t.dataset.sresp}"]`),x=ta.value.trim();
