@@ -640,6 +640,113 @@ tr.s{background:#EDF4FC}
 #zona #xls{display:inline-flex;align-items:center;gap:8px;color:#0D7A3E;background:#ECFDF3;border:1px solid #A7E3BF;border-radius:8px;font-weight:600}
 #zona #xls:hover:not(:disabled){color:#fff;background:#0D7A3E;border-color:#0D7A3E}
 @media(prefers-reduced-motion:reduce){.nvc-card{transition:none}#zona button[data-del],#zona button[data-edn],#zona button[data-resp],#zona button[data-gedn]{transition:none}}
+/* Contacto: rediseño bento (ct-) */
+.ct-bento{display:grid;grid-template-columns:1.28fr 0.92fr;gap:24px;align-items:stretch;max-width:1120px;margin-inline:auto}
+.ct-card{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:20px;padding:28px;box-shadow:0 10px 28px rgba(15,41,66,.08);position:relative;overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .45s cubic-bezier(.16,1,.3,1),border-color .3s ease,transform .45s cubic-bezier(.16,1,.3,1)}
+.ct-card:hover{box-shadow:0 16px 36px rgba(15,41,66,.1);border-color:#BFD3F6}
+.ct-card::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(420px circle at var(--mouse-x,50%) var(--mouse-y,30%),var(--card-glow,rgba(29,78,216,.14)),transparent 68%);transition:opacity .4s ease;z-index:0}
+.ct-card:hover::before{opacity:1}
+.ct-card[data-accent="emerald"]{--card-glow:rgba(13,122,62,.12)}
+.ct-card>*{position:relative;z-index:1}
+@media(max-width:920px){.ct-bento{grid-template-columns:1fr}}
+@media(max-width:580px){.ct-card{padding:20px}}
+.ct-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.ct-eyebrow{display:block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1D4ED8;margin-bottom:4px}
+.ct-card-title{font-family:var(--f-titulo);font-size:1.38rem;font-weight:700;color:#0F2942;letter-spacing:-.015em;margin:0}
+.ct-identity{display:grid;grid-template-columns:188px minmax(0,1fr);gap:12px;margin-bottom:18px}
+.ct-photo-card{position:relative;min-height:196px;border-radius:16px;overflow:hidden;border:1px solid #BFD3F6;background:linear-gradient(155deg,#0F2942 0%,#1E40AF 100%);box-shadow:0 4px 16px rgba(15,41,66,.06);display:flex;align-items:center;justify-content:center}
+.ct-photo-mono{width:56px;height:56px;border-radius:14px;border:1px solid rgba(191,211,246,.35);background:rgba(10,31,51,.45);color:#F8FAFC;display:grid;place-items:center;font-family:var(--f-titulo);font-weight:700;font-size:1.25rem;letter-spacing:.04em;transform:translateY(-14px)}
+.ct-photo-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 20%;display:block;z-index:1;transition:transform .55s cubic-bezier(.16,1,.3,1),opacity .3s ease}
+.ct-photo-card:hover img{transform:scale(1.05)}
+.ct-photo-card.is-fallback img{opacity:0;pointer-events:none}
+.ct-photo-overlay{position:absolute;inset:auto 0 0 0;z-index:2;padding:36px 13px 12px;background:linear-gradient(to top,rgba(10,31,51,.92) 0%,rgba(15,41,66,.64) 55%,transparent 100%);pointer-events:none}
+.ct-photo-role{display:block;font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#BFD3F6;margin-bottom:2px}
+.ct-photo-name{font-family:var(--f-titulo);font-size:.96rem;font-weight:700;color:#F8FAFC;line-height:1.22;text-shadow:0 1px 2px rgba(10,31,51,.45)}
+.ct-meta-stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;align-content:stretch}
+.ct-meta{background:#F8FAFC;border:1px solid #EEF2F7;border-radius:12px;padding:10px 13px;display:flex;flex-direction:column;justify-content:center;transition:background-color .25s ease,border-color .25s ease,transform .25s cubic-bezier(.16,1,.3,1)}
+.ct-meta:hover{background:#F5F9FF;border-color:#BFD3F6;transform:translateY(-2px)}
+.ct-meta--span{grid-column:1/-1}
+.ct-meta-label{display:block;font-size:.66rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#64748B;margin-bottom:2px}
+.ct-meta-value{font-size:.88rem;font-weight:600;color:#0F2942;line-height:1.32}
+.ct-tabs{position:relative;display:inline-grid;grid-template-columns:repeat(2,1fr);width:100%;padding:4px;background:#F1F5F9;border:1px solid #E2E8F0;border-radius:12px;margin-bottom:16px;box-sizing:border-box}
+.ct-tab-glider{position:absolute;top:4px;left:4px;height:calc(100% - 8px);width:calc(50% - 4px);background:#FFFFFF;border-radius:9px;box-shadow:0 2px 8px rgba(15,41,66,.08);transition:transform .38s cubic-bezier(.16,1,.3,1);z-index:0}
+.ct-tab-btn{position:relative;z-index:1;border:none;background:transparent;padding:9px 12px;border-radius:9px;font-family:inherit;font-size:.85rem;font-weight:600;color:#475569;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:color .25s ease}
+.ct-tab-btn:hover{color:#0F2942}
+.ct-tab-btn[aria-selected="true"]{color:#1D4ED8}
+.ct-tab-btn:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
+.ct-tab-panels{position:relative;flex:1;display:flex;flex-direction:column}
+.ct-tab-panel{display:none;animation:ctPanelEnter .42s cubic-bezier(.16,1,.3,1) forwards}
+.ct-tab-panel.is-active{display:block}
+@keyframes ctPanelEnter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.ct-capital{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 16px;border-radius:14px;background:#EDF4FC;border:1px solid #BFD3F6;margin-bottom:14px}
+.ct-capital-caption{font-size:.78rem;color:#475569;font-weight:500}
+.ct-capital-amount{font-family:var(--f-titulo);font-size:1.45rem;font-weight:800;color:#0F2942;font-variant-numeric:tabular-nums;line-height:1.15}
+.ct-pills{display:flex;flex-wrap:wrap;gap:6px}
+.ct-pill{font-size:.74rem;font-weight:600;padding:4px 10px;border-radius:999px;background:#FFFFFF;border:1px solid #E2E8F0;color:#0F2942;transition:transform .2s cubic-bezier(.34,1.56,.64,1),border-color .2s ease,color .2s ease}
+.ct-pill:hover{transform:translateY(-2px);border-color:#1D4ED8;color:#1D4ED8}
+.ct-copy{font-size:.94rem;color:#1E293B;line-height:1.65;margin:0}
+.ct-disclaimer{padding:16px 18px;border-radius:14px;background:color-mix(in srgb,#B45309 7%,#FFFFFF);border:1px solid color-mix(in srgb,#B45309 28%,transparent);margin-bottom:14px}
+.ct-disclaimer-badge{display:inline-flex;align-items:center;gap:6px;font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#B45309;margin-bottom:8px}
+.ct-disclaimer p{font-size:.95rem;font-weight:500;color:#0F2942;line-height:1.6;margin:0}
+.ct-legal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ct-legal-point{padding:10px 12px;border-radius:10px;background:#F8FAFC;border:1px solid #EEF2F7;font-size:.82rem;color:#475569}
+.ct-legal-point strong{display:block;color:#0F2942;margin-bottom:2px}
+.ct-footer-note{margin-top:auto;padding-top:16px;border-top:1px solid #EEF2F7;display:flex;align-items:center;gap:9px;font-size:.8rem;color:#64748B}
+.ct-footer-note svg{color:#B45309;flex-shrink:0}
+@media(max-width:580px){
+  .ct-identity{grid-template-columns:1fr;gap:10px}
+  .ct-photo-card{min-height:240px;height:240px;max-width:240px;width:100%;margin:0 auto}
+  .ct-photo-mono{transform:none}
+  .ct-legal-grid{grid-template-columns:1fr}
+}
+.ct-channels-sub{font-size:.92rem;color:#475569;margin:0 0 18px}
+.ct-channel-selector{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.ct-channel-pill{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px 6px;border-radius:14px;background:#F8FAFC;border:1px solid #E2E8F0;color:#0F2942;cursor:pointer;font-family:inherit;transition:transform .3s cubic-bezier(.34,1.56,.64,1),background-color .25s ease,border-color .25s ease,box-shadow .25s ease,color .25s ease}
+.ct-channel-pill svg{width:22px;height:22px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.ct-channel-pill span{font-size:.7rem;font-weight:600;color:#475569;transition:color .2s ease}
+.ct-channel-pill:hover{transform:translateY(-4px);background:#F5F9FF;border-color:#BFD3F6;box-shadow:0 4px 16px rgba(15,41,66,.06)}
+.ct-channel-pill:hover svg{transform:scale(1.1)}
+.ct-channel-pill.is-active{background:#EDF4FC;border-color:#1D4ED8;color:#1D4ED8;box-shadow:0 6px 16px rgba(29,78,216,.14);transform:translateY(-2px)}
+.ct-channel-pill.is-active span{color:#1D4ED8}
+.ct-channel-pill.is-active[data-tone="emerald"]{background:#DCFCE7;border-color:#0D7A3E;color:#0D7A3E;box-shadow:0 6px 16px rgba(13,122,62,.14)}
+.ct-channel-pill.is-active[data-tone="emerald"] span{color:#0D7A3E}
+.ct-channel-pill.is-active[data-tone="crimson"]{background:#FEE2E2;border-color:#B91C1C;color:#B91C1C;box-shadow:0 6px 16px rgba(185,28,28,.12)}
+.ct-channel-pill.is-active[data-tone="crimson"] span{color:#B91C1C}
+.ct-channel-pill.is-active[data-tone="amber"]{background:color-mix(in srgb,#B45309 12%,#FFFFFF);border-color:#B45309;color:#B45309}
+.ct-channel-pill.is-active[data-tone="amber"] span{color:#B45309}
+.ct-channel-pill:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
+.ct-channel-preview{flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:20px;border-radius:16px;background:#F8FAFC;border:1px solid #E2E8F0}
+.ct-channel-preview-inner{transition:opacity .22s ease,transform .28s cubic-bezier(.16,1,.3,1)}
+.ct-channel-preview-inner.is-switching{opacity:0;transform:translateY(6px)}
+.ct-preview-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.ct-preview-name-wrap{display:flex;align-items:center;gap:10px}
+.ct-preview-badge{width:38px;height:38px;border-radius:10px;background:#EDF4FC;color:#1D4ED8;display:grid;place-items:center;border:1px solid #BFD3F6;flex:0 0 auto}
+.ct-preview-badge[data-tone="emerald"]{background:#DCFCE7;color:#0D7A3E;border-color:#0D7A3E}
+.ct-preview-badge[data-tone="crimson"]{background:#FEE2E2;color:#B91C1C;border-color:#B91C1C}
+.ct-preview-badge[data-tone="amber"]{background:color-mix(in srgb,#B45309 12%,#FFFFFF);color:#B45309;border-color:#B45309}
+.ct-preview-title{font-family:var(--f-titulo);font-size:1.05rem;font-weight:700;color:#0F2942;line-height:1.2}
+.ct-preview-handle{font-size:.8rem;color:#64748B;font-weight:500;overflow-wrap:anywhere}
+.ct-preview-tag{font-size:.72rem;font-weight:600;padding:4px 10px;border-radius:999px;background:#FFFFFF;border:1px solid #E2E8F0;color:#334155;white-space:nowrap}
+.ct-preview-desc{font-size:.9rem;color:#475569;line-height:1.55;margin:0 0 18px}
+.ct-preview-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ct-btn-primary{flex:1;min-width:170px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-radius:11px;background:#1D4ED8;color:#F8FAFC;font-size:.88rem;font-weight:600;text-decoration:none;border:none;cursor:pointer;transition:background-color .22s ease,transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease}
+.ct-btn-primary:hover{background:#1E40AF;transform:translateY(-2px);box-shadow:0 8px 18px rgba(29,78,216,.24)}
+.ct-btn-primary:focus-visible,.ct-btn-copy:focus-visible{outline:2px solid #1D4ED8;outline-offset:2px}
+.ct-btn-primary svg{transition:transform .25s cubic-bezier(.16,1,.3,1)}
+.ct-btn-primary:hover svg{transform:translate(2px,-2px)}
+.ct-btn-copy{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 14px;border-radius:11px;background:#FFFFFF;border:1px solid #CBD5E1;color:#0F2942;font-family:inherit;font-size:.84rem;font-weight:600;cursor:pointer;transition:background-color .2s ease,border-color .2s ease,color .2s ease}
+.ct-btn-copy:hover{background:#F5F9FF;border-color:#1D4ED8;color:#1D4ED8}
+.ct-btn-copy.is-copied{background:#DCFCE7;border-color:#0D7A3E;color:#0D7A3E}
+@media(max-width:580px){
+  .ct-channel-selector{gap:6px}
+  .ct-channel-pill{padding:10px 4px}
+  .ct-channel-pill span{font-size:.64rem}
+}
+@media(prefers-reduced-motion:reduce){
+  .ct-card,.ct-card::before,.ct-meta,.ct-photo-card img,.ct-tab-glider,.ct-tab-btn,.ct-tab-panel,.ct-pill,.ct-channel-pill,.ct-channel-pill svg,.ct-channel-preview-inner,.ct-btn-primary,.ct-btn-primary svg,.ct-btn-copy{transition:none;animation:none}
+  .ct-card::before{display:none}
+  .ct-meta:hover,.ct-pill:hover,.ct-channel-pill:hover,.ct-channel-pill.is-active,.ct-btn-primary:hover,.ct-photo-card:hover img,.ct-channel-pill:hover svg,.ct-btn-primary:hover svg{transform:none}
+}
 </style>
 </head>
 <body>
@@ -1104,34 +1211,127 @@ tr.s{background:#EDF4FC}
     <h2>Contacto</h2>
     <p class="sub">InvEco es un proyecto educativo desarrollado por Pablo Agustín Cejas para enseñar cómo funciona el mercado de capitales argentino. Si tenés consultas, sugerencias o comentarios, podés comunicarte por cualquiera de los medios que figuran en esta página.</p>
   </div></div>
-  <div id="ctBody"><div class="cin ctg">
-    <div class="ctc">
-      <h3>Acerca del proyecto</h3>
-      <dl class="ctd">
-        <dt>Docente</dt><dd>Pablo Agustín Cejas</dd>
-        <dt>Área</dt><dd>Economía</dd>
-        <dt>Ubicación</dt><dd>Tucumán, Argentina</dd>
-        <dt>Cátedra</dt><dd>Tecnología Educativa II</dd>
-        <dt>Institución</dt><dd>Universidad Tecnológica Nacional – Facultad Regional Tucumán</dd>
-      </dl>
-      <p>El simulador permite practicar inversiones con $ 500.000 ficticios sobre precios reales del mercado argentino. Su propósito es que los estudiantes comprendan, sin ningún riesgo, cómo se compran y venden acciones, bonos y dólares, y cómo se leen los resultados de una cartera.</p>
-      <p>El dinero y las operaciones son simulados. Nada de lo que se muestra constituye una recomendación de inversión.</p>
-    </div>
-    <div class="ctc">
-      <h3>Canales de contacto</h3>
-      <p>Elegí el medio que prefieras. Cada ícono abre una pestaña nueva.</p>
-      <div class="cics">
-        <!-- COMPLETAR: reemplazar COMPLETAR_TELEFONO por el número con código de país, sin signos ni espacios (ejemplo: 5493810000000) -->
-        <a class="cic" href="https://wa.me/+543815265708" target="_blank" rel="noopener" aria-label="WhatsApp" data-tip="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.3l-4.5 1.2z"/><path d="M9.2 8.6c-.3.7-.1 1.8 1 3.1 1.1 1.3 2.3 2 3.2 2 .6 0 1.1-.5 1.3-1l-1.7-.9-.7.6c-.9-.3-1.7-1.1-2.1-2l.6-.7-.8-1.7c-.4.1-.7.3-.9.6z"/></svg></a>
-        <!-- COMPLETAR: reemplazar COMPLETAR_EMAIL por la dirección de correo -->
-        <a class="cic" href="mailto:agustincejas2@gmail.com" aria-label="Correo electrónico" data-tip="Correo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></svg></a>
-        <!-- COMPLETAR: reemplazar COMPLETAR_FACEBOOK por el nombre de la página o del perfil -->
-        <a class="cic" href="https://www.facebook.com/pabloagustin.cejas" target="_blank" rel="noopener" aria-label="Facebook" data-tip="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 3.5h-2.4a4 4 0 0 0-4 4V10H7.5v3.6h2.6v7h3.6v-7h2.5l.7-3.6h-3.2V8c0-.4.3-.7.7-.7h2.1z"/></svg></a>
-        <!-- COMPLETAR: reemplazar COMPLETAR_CANAL_YOUTUBE por el nombre del canal (sin la arroba) -->
-        <a class="cic" href="https://www.youtube.com/@agustincejas7291" target="_blank" rel="noopener" aria-label="YouTube" data-tip="YouTube"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.2 9.4v5.2l4.6-2.6z" fill="currentColor"/></svg></a>
-        <!-- COMPLETAR: reemplazar COMPLETAR_INSTAGRAM por el nombre de usuario (sin la arroba) -->
-        <a class="cic" href="https://www.instagram.com/asdasd" target="_blank" rel="noopener" aria-label="Instagram" data-tip="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor"/></svg></a>
-      </div>
+  <div id="ctBody"><div class="cin">
+    <div class="ct-bento">
+
+      <article class="ct-card" data-accent="cobalt">
+        <div class="ct-card-top">
+          <div>
+            <span class="ct-eyebrow">Ficha institucional</span>
+            <h2 class="ct-card-title">Acerca del proyecto</h2>
+          </div>
+        </div>
+
+        <div class="ct-identity">
+          <div class="ct-photo-card">
+            <div class="ct-photo-mono" aria-hidden="true">PC</div>
+            <img id="ctTeacherPhoto" src="./assets/img/pablo-cejas.jpg" alt="Foto de perfil de Pablo Agustín Cejas" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('is-fallback')">
+            <div class="ct-photo-overlay">
+              <span class="ct-photo-role">Docente</span>
+              <div class="ct-photo-name">Pablo Agustín Cejas</div>
+            </div>
+          </div>
+          <div class="ct-meta-stack">
+            <div class="ct-meta ct-meta--span">
+              <span class="ct-meta-label">Área</span>
+              <div class="ct-meta-value">Economía (nivel secundario)</div>
+            </div>
+            <div class="ct-meta">
+              <span class="ct-meta-label">Cátedra</span>
+              <div class="ct-meta-value">Tecnología Educativa II</div>
+            </div>
+            <div class="ct-meta">
+              <span class="ct-meta-label">Ubicación</span>
+              <div class="ct-meta-value">Tucumán, Argentina</div>
+            </div>
+            <div class="ct-meta ct-meta--span">
+              <span class="ct-meta-label">Institución</span>
+              <div class="ct-meta-value">Universidad Tecnológica Nacional – Facultad Regional Tucumán</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ct-tabs" role="tablist" aria-label="Detalles del proyecto">
+          <div class="ct-tab-glider" id="ctTabGlider" aria-hidden="true"></div>
+          <button type="button" class="ct-tab-btn" role="tab" id="ctTabProposito" aria-controls="ctPanelProposito" aria-selected="true" data-tab-index="0">Propósito educativo</button>
+          <button type="button" class="ct-tab-btn" role="tab" id="ctTabLegal" aria-controls="ctPanelLegal" aria-selected="false" data-tab-index="1">Marco de simulación</button>
+        </div>
+
+        <div class="ct-tab-panels">
+          <div class="ct-tab-panel is-active" role="tabpanel" id="ctPanelProposito" aria-labelledby="ctTabProposito">
+            <div class="ct-capital">
+              <div>
+                <div class="ct-capital-caption">Capital inicial de práctica</div>
+                <div class="ct-capital-amount">$ 500.000</div>
+              </div>
+              <div class="ct-pills" aria-label="Instrumentos disponibles">
+                <span class="ct-pill">Acciones</span>
+                <span class="ct-pill">Bonos</span>
+                <span class="ct-pill">Dólares</span>
+              </div>
+            </div>
+            <p class="ct-copy">El simulador permite practicar inversiones con $ 500.000 ficticios sobre precios reales del mercado argentino. Su propósito es que los estudiantes comprendan, sin ningún riesgo, cómo se compran y venden acciones, bonos y dólares, y cómo se leen los resultados de una cartera.</p>
+          </div>
+
+          <div class="ct-tab-panel" role="tabpanel" id="ctPanelLegal" aria-labelledby="ctTabLegal">
+            <div class="ct-disclaimer">
+              <div class="ct-disclaimer-badge">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Aviso importante
+              </div>
+              <p>El dinero y las operaciones son simulados. Nada de lo que se muestra constituye una recomendación de inversión.</p>
+            </div>
+            <div class="ct-legal-grid">
+              <div class="ct-legal-point"><strong>Entorno 100% pedagógico</strong>Diseñado para clases de Economía de nivel secundario.</div>
+              <div class="ct-legal-point"><strong>Precios reales, saldo ficticio</strong>Cotizaciones de referencia sin exposición patrimonial real.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ct-footer-note">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Proyecto desarrollado en el marco de la cátedra Tecnología Educativa II · UTN Facultad Regional Tucumán.</span>
+        </div>
+      </article>
+
+      <aside class="ct-card" data-accent="emerald" aria-label="Canales de contacto">
+        <div class="ct-card-top" style="margin-bottom:10px">
+          <div>
+            <span class="ct-eyebrow">Comunicación directa</span>
+            <h2 class="ct-card-title">Canales de contacto</h2>
+          </div>
+        </div>
+        <p class="ct-channels-sub">Elegí el medio que prefieras. Cada ícono abre una pestaña nueva.</p>
+
+        <div class="ct-channel-selector" id="ctChannelSelector" role="tablist" aria-label="Seleccionar canal de contacto"></div>
+
+        <div class="ct-channel-preview" id="ctPreview" role="tabpanel" aria-live="polite">
+          <div class="ct-channel-preview-inner" id="ctPreviewInner">
+            <div class="ct-preview-header">
+              <div class="ct-preview-name-wrap">
+                <div class="ct-preview-badge" id="ctPreviewBadge" aria-hidden="true"></div>
+                <div>
+                  <div class="ct-preview-title" id="ctPreviewTitle">WhatsApp</div>
+                  <div class="ct-preview-handle" id="ctPreviewHandle">+54 9 381 526-5708</div>
+                </div>
+              </div>
+              <span class="ct-preview-tag" id="ctPreviewTag">Respuesta ágil</span>
+            </div>
+            <p class="ct-preview-desc" id="ctPreviewDesc">Ideal para consultas rápidas de estudiantes sobre el simulador, consignas de clase o lectura de cartera.</p>
+          </div>
+          <div class="ct-preview-actions">
+            <a id="ctPreviewLink" class="ct-btn-primary" href="https://wa.me/543815265708" target="_blank" rel="noopener noreferrer">
+              <span id="ctPreviewBtnLabel">Abrir WhatsApp</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+            </a>
+            <button type="button" class="ct-btn-copy" id="ctCopyBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              <span id="ctCopyBtnLabel">Copiar número</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
     </div>
   </div></div>
 </section>
@@ -2394,6 +2594,110 @@ function tvAmpliar(on){
 $("tvAmp").onclick=()=>tvAmpliar(!$("tvc").classList.contains("tv-fullscreen"));
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("tvc").classList.contains("tv-fullscreen"))tvAmpliar(false);});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("navp").classList.contains("abierto")){$("navp").classList.remove("abierto");$("navBtn").setAttribute("aria-expanded","false");$("navBtn").focus();}});
+/* ---------- CONTACTO: rediseño bento (ct-) ---------- */
+(()=>{
+  const g=id=>document.getElementById(id);
+  const reduce=window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  /* Glow que sigue al cursor */
+  document.querySelectorAll(".ct-card").forEach(card=>{
+    card.addEventListener("pointermove",e=>{
+      const r=card.getBoundingClientRect();
+      card.style.setProperty("--mouse-x",(((e.clientX-r.left)/r.width)*100).toFixed(2)+"%");
+      card.style.setProperty("--mouse-y",(((e.clientY-r.top)/r.height)*100).toFixed(2)+"%");
+    });
+  });
+
+  /* Pestañas de la ficha con glider */
+  const tabBtns=document.querySelectorAll(".ct-tabs .ct-tab-btn"),glider=g("ctTabGlider"),panels=document.querySelectorAll(".ct-tab-panel");
+  function selTab(btn){
+    const idx=Number(btn.dataset.tabIndex||0),id=btn.getAttribute("aria-controls");
+    glider.style.transform=`translateX(${idx*100}%)`;
+    tabBtns.forEach(b=>b.setAttribute("aria-selected",b===btn?"true":"false"));
+    panels.forEach(p=>p.classList.toggle("is-active",p.id===id));
+  }
+  tabBtns.forEach(b=>b.addEventListener("click",()=>selTab(b)));
+
+  /* Canales con vista previa dinámica */
+  const IA=' aria-hidden="true"';
+  const CH={
+    whatsapp:{short:"WhatsApp",title:"WhatsApp",handle:"+54 9 381 526-5708",tag:"Respuesta ágil",desc:"Ideal para consultas rápidas de estudiantes sobre el simulador, consignas de clase o lectura de cartera.",url:"https://wa.me/543815265708",btnLabel:"Abrir WhatsApp",copyValue:"+54 9 381 526-5708",copyLabel:"Copiar número",tone:"emerald",icon:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"${IA}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`},
+    email:{short:"Correo",title:"Correo electrónico",handle:"agustincejas2@gmail.com",tag:"Institucional",desc:"Canal recomendado para consultas formales, intercambio entre docentes, cátedras o propuestas educativas.",url:"mailto:agustincejas2@gmail.com",btnLabel:"Enviar correo",copyValue:"agustincejas2@gmail.com",copyLabel:"Copiar email",tone:"cobalt",icon:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"${IA}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`},
+    facebook:{short:"Facebook",title:"Facebook",handle:"pabloagustin.cejas",tag:"Comunidad",desc:"Espacio para compartir novedades del proyecto, recursos complementarios y avisos para la comunidad educativa.",url:"https://www.facebook.com/pabloagustin.cejas",btnLabel:"Ir a Facebook",copyValue:"https://www.facebook.com/pabloagustin.cejas",copyLabel:"Copiar enlace",tone:"cobalt",icon:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"${IA}><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>`},
+    youtube:{short:"YouTube",title:"YouTube",handle:"@agustincejas7291",tag:"Videotutoriales",desc:"Guías visuales paso a paso para aprender a operar en el simulador e interpretar indicadores bursátiles.",url:"https://www.youtube.com/@agustincejas7291",btnLabel:"Ver en YouTube",copyValue:"https://www.youtube.com/@agustincejas7291",copyLabel:"Copiar enlace",tone:"crimson",icon:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"${IA}><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3v6z"/></svg>`},
+    instagram:{short:"Instagram",title:"Instagram",handle:"@asdasd",tag:"Contenido breve",desc:"Cápsulas visuales sobre educación financiera, actualidad económica argentina y mensajes directos.",url:"https://www.instagram.com/asdasd",btnLabel:"Abrir Instagram",copyValue:"@asdasd",copyLabel:"Copiar usuario",tone:"amber",icon:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"${IA}><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>`}
+  };
+  const keys=Object.keys(CH),selector=g("ctChannelSelector"),inner=g("ctPreviewInner"),copyBtn=g("ctCopyBtn");
+  let actual=null,tSwitch=null,tCopy=null;
+
+  selector.innerHTML=keys.map(k=>`<button type="button" class="ct-channel-pill" role="tab" id="ctPill-${k}" data-channel="${k}" data-tone="${CH[k].tone}" aria-selected="false" aria-controls="ctPreview" aria-label="${CH[k].title}" tabindex="-1">${CH[k].icon}<span>${CH[k].short}</span></button>`).join("");
+
+  function copiarReset(){
+    clearTimeout(tCopy);copyBtn.classList.remove("is-copied");
+    g("ctCopyBtnLabel").textContent=CH[actual].copyLabel;
+  }
+  function pintarTextos(k){
+    const c=CH[k],b=g("ctPreviewBadge");
+    b.innerHTML=c.icon;b.dataset.tone=c.tone;
+    g("ctPreviewTitle").textContent=c.title;
+    g("ctPreviewHandle").textContent=c.handle;
+    g("ctPreviewTag").textContent=c.tag;
+    g("ctPreviewDesc").textContent=c.desc;
+    g("ctPreviewBtnLabel").textContent=c.btnLabel;
+  }
+  function elegirCanal(k,foco){
+    if(!CH[k]||k===actual)return;
+    const c=CH[k],ant=actual===null;
+    actual=k;
+    selector.querySelectorAll(".ct-channel-pill").forEach(p=>{
+      const on=p.dataset.channel===k;
+      p.classList.toggle("is-active",on);p.setAttribute("aria-selected",String(on));p.tabIndex=on?0:-1;
+      if(on&&foco)p.focus();
+    });
+    const a=g("ctPreviewLink");
+    a.href=c.url;
+    if(/^https?:/i.test(c.url)){a.target="_blank";a.rel="noopener noreferrer";}else{a.removeAttribute("target");a.removeAttribute("rel");}
+    copiarReset();
+    clearTimeout(tSwitch);
+    if(ant||reduce.matches){pintarTextos(k);inner.classList.remove("is-switching");}
+    else{
+      inner.classList.add("is-switching");
+      tSwitch=setTimeout(()=>{pintarTextos(k);inner.classList.remove("is-switching");},180);
+    }
+  }
+  selector.addEventListener("click",e=>{const p=e.target.closest(".ct-channel-pill");if(p)elegirCanal(p.dataset.channel,false);});
+  selector.addEventListener("pointerover",e=>{
+    if(e.pointerType!=="mouse")return;
+    const p=e.target.closest(".ct-channel-pill");if(p)elegirCanal(p.dataset.channel,false);
+  });
+  selector.addEventListener("keydown",e=>{
+    const d=e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:0;
+    if(!d)return;
+    e.preventDefault();
+    elegirCanal(keys[(keys.indexOf(actual)+d+keys.length)%keys.length],true);
+  });
+
+  async function copiar(t){
+    try{await navigator.clipboard.writeText(t);return true;}
+    catch{
+      try{
+        const ta=document.createElement("textarea");
+        ta.value=t;ta.setAttribute("readonly","");ta.style.cssText="position:fixed;top:0;left:0;opacity:0";
+        document.body.appendChild(ta);ta.select();
+        const ok=document.execCommand("copy");ta.remove();return ok;
+      }catch{return false;}
+    }
+  }
+  copyBtn.addEventListener("click",async()=>{
+    const ok=await copiar(CH[actual].copyValue),l=g("ctCopyBtnLabel");
+    clearTimeout(tCopy);
+    copyBtn.classList.toggle("is-copied",ok);
+    l.textContent=ok?"¡Copiado!":"No se pudo copiar";
+    tCopy=setTimeout(copiarReset,1800);
+  });
+
+  elegirCanal("whatsapp",false);
+})();
 </script>
 </body>
 </html>
