@@ -416,7 +416,7 @@ def vistas_previas(db):
         n = dd.to_dict()
         if n.get("previews") is not None:
             continue
-        urls = re.findall(r"https?://[^\s<]+", n.get("texto", ""))[:3]
+        urls = [n["url"]] if n.get("url") else re.findall(r"https?://[^\s<]+", n.get("texto", ""))[:3]
         dd.reference.update({"previews": [og(u) for u in urls]})
 
 
@@ -450,7 +450,7 @@ def libros(db, tok):
         if bids or asks:
             ref.set({"s": s, "t": ahora, "tl": ahora, "vacio": False, "bids": bids, "asks": asks})
         else:   # sin ofertas (mercado cerrado): se conserva el último libro real y se marca como vacío
-            ref.set({"s": s, "t": ahora, "vacio": True, "bids": [], "asks": []}, merge=True)
+            ref.set({"s": s, "t": ahora, "vacio": True}, merge=True)
         time.sleep(0.3)
 
 
