@@ -733,6 +733,36 @@ tr.s{background:#EDF4FC}
   .ct-card::before{display:none}
   .ct-meta:hover,.ct-pill:hover,.ct-channel-pill:hover,.ct-channel-pill.is-active,.ct-btn-primary:hover,.ct-photo-card:hover img,.ct-channel-pill:hover svg,.ct-btn-primary:hover svg{transform:none}
 }
+/* Fichas (Mi cartera, Alumnos, Ranking): nombre, recuadros desplegables y conversación de los mensajes */
+.ficha-nom{margin:4px 0 14px;text-align:center;font-size:1.35rem;font-weight:700}
+details.card[data-ab]{margin:14px 0}
+details.card[data-ab]>ul{margin:10px 0 0;padding-left:20px}
+.fd-n{display:inline-block;min-width:22px;margin-left:6px;padding:1px 8px;border-radius:11px;background:#EDF4FC;color:#1D4ED8;font-size:.78rem;font-weight:600;text-align:center}
+/* indicador de comentarios de cada mensaje */
+#zona button.msg-com{display:inline-flex;align-items:center;gap:10px;min-height:var(--bh);margin:10px 0 0;padding:0 16px 0 10px;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:999px;font-size:.88rem;font-weight:600;cursor:pointer}
+#zona button.msg-com.tiene{color:#1D4ED8;background:#EDF4FC;border-color:#BFD3F6}
+#zona button.msg-com:hover:not(:disabled){color:#fff;background:#1D4ED8;border-color:#1D4ED8}
+.mc-ic{position:relative;display:inline-flex;align-items:center;justify-content:center;width:28px;height:26px}
+.mc-ic .ic{display:inline-flex}
+.mc-ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mc-ic b{position:absolute;top:-7px;right:-7px;min-width:17px;height:17px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:#CBD5E1;color:#334155;font:700 .66rem/17px var(--f-mono);text-align:center}
+.msg-com.tiene .mc-ic b{background:#1D4ED8;color:#fff}
+#zona button.msg-com:hover .mc-ic b{background:#fff;color:#1D4ED8}
+/* ventana de conversación */
+body.mm-abierto{overflow:hidden}
+#msgModal{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,41,66,.55)}
+#msgModal.hide{display:none}
+.mm-panel{width:100%;max-width:640px;max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow-y:auto;background:#F8FAFC;border-radius:16px;box-shadow:0 24px 60px -12px rgba(15,41,66,.45);animation:mmEnt .25s ease-out}
+@keyframes mmEnt{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+.mm-head{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;background:#fff;border-bottom:1px solid #E2E8F0}
+.mm-head b{font-family:var(--f-titulo);font-size:1.05rem;color:#0F2942}
+#zona .mm-x{display:grid;place-items:center;width:40px;height:40px;min-height:40px;padding:0;border-radius:50%;color:#475569;background:#F1F5F9;border:1px solid #E2E8F0}
+#zona .mm-x svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+#zona .mm-x:hover:not(:disabled){color:#fff;background:#B91C1C;border-color:#B91C1C}
+.mm-body{padding:6px 16px 18px}
+.mm-body .foro{margin-top:14px;padding:0;background:none;border:0}
+@media(max-width:768px){#msgModal{padding:0;align-items:flex-end}.mm-panel{max-width:none;max-height:92vh;max-height:92dvh;border-radius:18px 18px 0 0}}
+@media(prefers-reduced-motion:reduce){.mm-panel{animation:none}}
 </style>
 </head>
 <body>
@@ -919,6 +949,7 @@ tr.s{background:#EDF4FC}
     <div id="nlista"></div>
   </section>
   <div id="infoActivos" class="info-activos"></div>
+  <div id="msgModal" class="hide" role="dialog" aria-modal="true" aria-labelledby="msgModalT"><div id="msgPanel" class="mm-panel"></div></div>
 </div>
 </div>
 </section>
@@ -1336,7 +1367,7 @@ tr.s{background:#EDF4FC}
 </div></footer>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1383,14 +1414,17 @@ async function cambio(l){
   catch{m.textContent="No se pudo publicar la orden. Probá de nuevo.";}
 }
 const cab=(autor,tit,t)=>`<b>${esc(autor)}</b><br><small>${tit} · ${fh(t)}</small>`;
-const hilo=(id,u,herr,siempre,puede)=>{   // respuestas debajo del mensaje, en orden cronológico
-  const it=[...coment.filter(c=>c.notaId===id).map(c=>({t:c.t,a:"Docente",x:c.texto,d:herr?"comentarios/"+c.id:""})),...resps.filter(r=>r.root===id).map(r=>({t:r.t,a:r.usuario,x:r.texto,d:herr?"respuestas/"+r.id:""}))].sort((a,b)=>a.t-b.t);
+const hilo=(id,u,herr,siempre,puede)=>{   // conversación completa de un mensaje (se muestra en la ventana de conversación)
+  const it=[...coment.filter(c=>c.notaId===id).map(c=>({t:c.t,a:"Docente",doc:true,x:c.texto,d:herr?"comentarios/"+c.id:""})),...resps.filter(r=>r.root===id).map(r=>({t:r.t,a:r.usuario||"Alumno",doc:false,x:r.texto,d:herr?"respuestas/"+r.id:""}))].sort((a,b)=>a.t-b.t);
   const dr=coment.some(c=>c.notaId===id);
-  return it.map(i=>`<div class="card resp">${cab(i.a,"Respuesta",i.t)}<p style="white-space:pre-wrap">${esc(i.x)}</p>${i.d?`<button data-del="${i.d}">Borrar</button>`:""}</div>`).join("")
-   +(herr?`<div><textarea data-rt="${id}" rows="2" placeholder="Respondé a este mensaje"></textarea><br><br><button data-resp="${id}" data-para="${u.id}">Enviar respuesta</button></div>`:"")
-   +(puede&&!esAdmin&&u.id===user.uid&&(siempre||dr)?`<div><textarea data-sr="${id}" rows="2" placeholder="Escribí tu respuesta"></textarea><br><br><button data-sresp="${id}">Responder</button></div>`:"");};
-function msgNota(n,u,herr,puede){return`<div class="card nota">${cab(nom(u),"Nota semanal · "+esc(n.semana),n.t)}<p style="white-space:pre-wrap">${esc(n.texto)}</p>${n.puntaje!=null&&(esAdmin||n.uid===user.uid)?`<b>Evaluada: ${n.puntaje}/10</b>`:""}${herr?`<div><input type="number" min="0" max="10" step="0.5" data-pt="${n.id}" value="${n.puntaje??""}" style="width:90px" placeholder="Puntaje"> <button data-ev="${n.id}">Guardar puntaje</button></div>`:""}${hilo(n.id,u,herr,false,puede)}</div>`;}
-function msgConsejo(c,u,herr,puede){return`<div class="card consejo">${cab("Docente","Consejo del docente",c.t)}<p style="white-space:pre-wrap">${esc(c.texto)}</p>${herr?`<button data-del="comentarios/${c.id}">Borrar</button>`:""}${hilo(c.id,u,herr,true,puede)}</div>`;}
+  const L=it.map(i=>`<div class="foro-msg${i.doc?" doc":""}"><span class="foro-av" aria-hidden="true">${esc(String(i.a).trim().charAt(0))}</span><div class="foro-cu"><div class="foro-cab"><b>${esc(i.a)}</b>${i.doc?'<span class="foro-tag">Docente</span>':""}<small>${notFecha(i.t)}</small></div><p>${esc(i.x)}</p>${i.d?`<button data-del="${i.d}">Borrar</button>`:""}</div></div>`).join("");
+  const F=herr?`<div class="foro-form"><textarea data-rt="${id}" rows="3" maxlength="600" placeholder="Respondé a este mensaje" aria-label="Respuesta del docente"></textarea><button data-resp="${id}" data-para="${u.id}">Enviar respuesta</button></div>`
+    :(puede&&!esAdmin&&u.id===user.uid&&(siempre||dr)?`<div class="foro-form"><textarea data-sr="${id}" rows="3" maxlength="600" placeholder="Escribí tu respuesta" aria-label="Tu respuesta"></textarea><button data-sresp="${id}">Responder</button></div>`:"");
+  return`<section class="foro"><h4>Conversación <span class="foro-n">${it.length}</span></h4>${L||'<p class="foro-vacio">Todavía no hay comentarios en este mensaje.</p>'}${F}</section>`;
+};
+const btnConv=id=>{const k=nCom(id);return`<button type="button" class="msg-com${k?" tiene":""}" data-msg="${id}" aria-label="Ver la conversación: ${k} comentario${k===1?"":"s"}"><span class="mc-ic"><i class="ic">${IC.com}</i><b>${k>99?"99+":k}</b></span><span>Ver conversación</span></button>`;};
+function msgNota(n,u,herr,puede,full){return`<div class="card nota">${cab(nom(u),"Nota semanal · "+esc(n.semana),n.t)}<p style="white-space:pre-wrap">${esc(n.texto)}</p>${n.puntaje!=null&&(esAdmin||n.uid===user.uid)?`<b>Evaluada: ${n.puntaje}/10</b>`:""}${herr&&!full?`<div><input type="number" min="0" max="10" step="0.5" data-pt="${n.id}" value="${n.puntaje??""}" style="width:90px" placeholder="Puntaje"> <button data-ev="${n.id}">Guardar puntaje</button></div>`:""}${full?hilo(n.id,u,herr,false,puede):btnConv(n.id)}</div>`;}
+function msgConsejo(c,u,herr,puede,full){return`<div class="card consejo">${cab("Docente","Consejo del docente",c.t)}<p style="white-space:pre-wrap">${esc(c.texto)}</p>${herr&&!full?`<button data-del="comentarios/${c.id}">Borrar</button>`:""}${full?hilo(c.id,u,herr,true,puede):btnConv(c.id)}</div>`;}
 function historial(u,herr,puede){   // los mensajes más recientes primero; las respuestas quedan dentro de su mensaje
   const it=[...notas.filter(n=>n.uid===u.id).map(n=>({t:n.t,h:msgNota(n,u,herr,puede)})),...coment.filter(c=>c.para===u.id&&!c.notaId).map(c=>({t:c.t,h:msgConsejo(c,u,herr,puede)}))].sort((a,b)=>b.t-a.t);
   return it.map(i=>i.h).join("")||"<p>Todavía no hay mensajes.</p>";}
@@ -1706,6 +1740,7 @@ function limpiarSesion(){   // cierra las conexiones y borra lo que quedó de la
   todos=[];notas=[];coment=[];ordenes=[];novs=[];resps=[];evo=[];ver=null;verAlu=null;editNov=null;elegido=null;libro=null;
   tvAmpliar(false);$("tv").innerHTML="";$("det").textContent="Elegí un activo de la lista.";$("op").classList.add("hide");$("libro").classList.add("hide");$("resumen").textContent="-";["walletArs","walletUsd","walletCcl"].forEach(i=>{$(i).textContent="-";});
 novAbierta=null;novFoco=null;$("nov-lista")._sig=null;
+msgAb=null;$("msgModal").classList.add("hide");$("msgModal")._sig=null;document.body.classList.remove("mm-abierto");
 }
 onAuthStateChanged(auth,u=>{
   limpiarSesion();demoActiva=false;demoPx=null;demoCfg=null;demoCfgListo=false;datos=datosReal;
@@ -1782,6 +1817,8 @@ function estado(u){
   <h4>Libro de operaciones</h4>${L?`<div class="l"><table><thead><tr><th>Fecha y hora</th><th>Operación</th><th>Activo</th><th class="n">Cantidad</th><th class="n">Precio</th><th class="n">Importe bruto</th><th class="n">Comisión</th><th class="n">Importe neto</th></tr></thead><tbody>${L}</tbody></table></div><small>Importe neto: lo que se pagó (en una compra, con la comisión incluida) o lo que se recibió (en una venta, ya descontada la comisión).</small>`:"<p>Todavía no hay operaciones.</p>"}`;
 }
 const abPx=new Set();
+const abFic=new Set();
+document.body.addEventListener("toggle",e=>{const d=e.target;if(d.dataset&&d.dataset.ab)d.open?abFic.add(d.dataset.ab):abFic.delete(d.dataset.ab);},true);
 function proxDiv(u){
   const hoy=ba().dia,G={};
   const dias=f=>Math.round((Date.parse(f+"T00:00:00Z")-Date.parse(hoy+"T00:00:00Z"))/864e5);
@@ -1811,7 +1848,9 @@ function ficha(u,herr,sinMsg){
   const TT={mercado:"a precio de mercado",limite:"límite",stop_limite:"stop límite"};
   const ords=ordenes.filter(o=>o.uid===u.id).slice(0,15).map(o=>`<li>${fh(o.t)} · ${{C:"Compra",V:"Venta",CD:"Compra de dólares",VD:"Venta de dólares"}[o.lado]} de ${o.cant} ${esc(o.s)} (${TT[o.tipo]}${o.limite?` ${$$(o.limite)}`:""}${o.stop?`, stop ${$$(o.stop)}`:""}; ${o.vigencia==="dia"?"por el día":"hasta cancelar"}) · <b>${esc(o.estado.charAt(0).toUpperCase()+o.estado.slice(1))}</b>${o.fill?` a ${$$(o.fill.px)}`:""}${o.motivo?` · ${esc(o.motivo)}`:""} ${o.estado==="pendiente"&&u.id===user.uid?`<button data-canc="${o.id}">Cancelar</button>`:""}</li>`).join("");
     const adm=herr?`<div class="card"><b>Consejo general para este alumno</b><br><br><textarea id="ctxt" rows="2" placeholder="Escribí un consejo general para este alumno (lo verán todos)"></textarea><br><br><button data-com="${u.id}">Publicar consejo</button> <button data-reset="${u.id}">Reiniciar cartera</button></div>`:"";
-  return`<div class="card"><h3>${esc(nom(u))}</h3>${u.id===user.uid?proxDiv(u):""}${estado(u)}<h4>Órdenes</h4><ul>${ords||"<li>Sin órdenes.</li>"}</ul>${sinMsg?"":`<h4>Mensajes</h4>${historial(u,herr)}`}${adm}</div>`;
+  const nOrd=Math.min(ordenes.filter(o=>o.uid===u.id).length,15),nMsg=notas.filter(n=>n.uid===u.id).length+coment.filter(c=>c.para===u.id&&!c.notaId).length;
+  const ab=k=>abFic.has(k)?" open":"";
+  return`<div class="card"><h3 class="ficha-nom">${esc(nom(u))}</h3>${u.id===user.uid?proxDiv(u):""}${estado(u)}<details class="card" data-ab="ord"${ab("ord")}><summary>Órdenes <span class="fd-n">${nOrd}</span></summary><ul>${ords||"<li>Sin órdenes.</li>"}</ul></details>${sinMsg?"":`<details class="card" data-ab="msg"${ab("msg")}><summary>Mensajes <span class="fd-n">${nMsg}</span></summary>${historial(u,herr)}</details>`}${adm}</div>`;
 }
 
 /* Miniaturas de Novedades (proxy gratuito images.weserv.nl para Facebook e Instagram) */
@@ -1869,10 +1908,13 @@ if(yo){
   }
   if(tab==="novedades")pintarNov();
   if(tab==="notas"){const yo=todos.find(u=>u.id===user.uid);$("nlista").innerHTML=yo?`<h4>Mi historial</h4>${historial(yo,false,true)}`:"";}
+  pintarMsg();
 }
 document.body.addEventListener("click",async e=>{
   const t=e.target,tr=t.closest("tr[data-ver]");
   if(tr){ver=tr.dataset.ver;pintarTodo();}
+  const mc=t.closest("[data-msg]");if(mc)abrirMsg(mc.dataset.msg,mc);
+  if(t.closest("[data-mclose]")||t.id==="msgModal")cerrarMsg();
   if(t.dataset.del&&confirm("¿Seguro que querés borrarlo?"))await deleteDoc(doc(db,...t.dataset.del.split("/").map((x,i)=>i?x:C(x))));
   if(t.dataset.com&&$("ctxt").value.trim()){const x=$("ctxt").value.trim().slice(0,600);$("ctxt").value="";
     await addDoc(collection(db,C("comentarios")),{para:t.dataset.com,texto:x,t:Date.now()});}
@@ -1915,19 +1957,42 @@ document.body.addEventListener("click",async e=>{
     await updateDoc(doc(db,C("users"),t.dataset.reset),{cash:CAPITAL,usd:0,ccl:0,pos:{},ops:[]});
 });
 
-function exportar(){
-  if(typeof XLSX==="undefined")return alert("No se pudo cargar la herramienta de Excel. Revisá tu conexión e intentá de nuevo.");
-  const L=todos.filter(u=>(u.usuario||"")!==ADMIN).sort((a,b)=>nom(a).localeCompare(nom(b),"es",{sensitivity:"base"}));
-  const R=[["Alumno","Efectivo ($)","Dólares MEP (US$)","Dólares CCL (US$)","Valor de las tenencias","Patrimonio total","Resultado ($)","Resultado (%)","Resultado realizado","Resultado no realizado","Dividendos cobrados","Comisiones pagadas","Notas publicadas","Notas evaluadas","Puntaje promedio"]];
-  const O=[["Alumno","Fecha y hora","Operación","Activo","Cantidad","Precio","Comisión","Importe neto"]];
+/* Datos para la planilla: se arman a partir de lo que la página ya tiene cargado */
+function datosExcel(){
+  const L=todos.filter(u=>(u.usuario||"")!==ADMIN),mep=fxMEP(),ccl=fxCCL();
+  const alumnos=[],ops=[],tenencias=[];
   for(const u of L){
-    const c=contable(u),ns=notas.filter(n=>n.uid===u.id),ev=ns.filter(n=>n.puntaje!=null),res=c.pat-CAPITAL;
-    R.push([nom(u),u.cash,u.usd||0,u.ccl||0,c.ten,c.pat,res,+(res/CAPITAL*100).toFixed(2),c.re,c.nr,c.dv,c.cm,ns.length,ev.length,ev.length?+(ev.reduce((a,n)=>a+n.puntaje,0)/ev.length).toFixed(2):""]);
-    for(const o of [...(u.ops||[])].sort((a,b)=>a.t-b.t))O.push([nom(u),fh(o.t),{C:"Compra",V:"Venta",D:"Dividendo"}[o.l],o.s,o.c,o.p,o.com||0,o.l==="C"?o.c*o.p+(o.com||0):o.l==="V"?o.c*o.p-(o.com||0):o.monto]);
+    const c=contable(u),ns=notas.filter(n=>n.uid===u.id),ev=ns.filter(n=>n.puntaje!=null),nombre=nom(u);
+    alumnos.push({nombre,cash:u.cash||0,usd:u.usd||0,ccl:u.ccl||0,ten:c.ten,pat:c.pat,re:c.re,nr:c.nr,dv:c.dv,cm:c.cm,nPub:ns.length,nEva:ev.length,prom:ev.length?ev.reduce((a,n)=>a+n.puntaje,0)/ev.length:null});
+    for(const o of u.ops||[]){
+      const k=o.k||1,cambio=o.l==="CD"||o.l==="VD";
+      if(!cambio&&!["C","V","D"].includes(o.l))continue;
+      const cat=o.l==="C"?"Compra":o.l==="V"?"Venta":o.l==="D"?"Cobro":"Cambio de divisas";
+      const op=o.l==="D"?(o.det||"Dividendo cobrado"):cambio?(o.l==="CD"?"Compra":"Venta")+" de dólares "+(o.tc||"MEP"):cat;
+      const bruto=o.l==="D"?null:o.c*o.p*k;
+      const neto=(o.l==="C"||o.l==="CD")?bruto+(o.com||0):(o.l==="V"||o.l==="VD")?bruto-(o.com||0):(o.monto||0);
+      ops.push({alumno:nombre,t:o.t,cat,op,activo:cambio?"Dólares "+(o.tc||"MEP"):o.s,mon:o.m||"ARS",c:o.c,p:o.p,bruto,com:o.com||0,neto});
+    }
+    for(const[s,p]of Object.entries(u.pos||{})){
+      const q=precio(s),d=datos.find(z=>z.s===s),unit=q!=null?q*(p.k||1):(p.c?p.costo/p.c:0);
+      tenencias.push({alumno:nombre,activo:s,tipo:nt((d&&d.tipo)||"Otros"),c:p.c,mon:p.m||"ARS",px:q!=null?q:(p.c?p.costo/p.c/(p.k||1):0),val:p.c*unit*fxOf(p.m)});
+    }
   }
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(R),"Resumen");XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(O),"Operaciones");
-  XLSX.writeFile(wb,"alumnos_"+ba().dia+".xlsx");
+  alumnos.sort((a,b)=>b.pat-a.pat);
+  ops.sort((a,b)=>a.alumno.localeCompare(b.alumno,"es",{sensitivity:"base"})||a.t-b.t);
+  tenencias.sort((a,b)=>a.alumno.localeCompare(b.alumno,"es",{sensitivity:"base"})||a.activo.localeCompare(b.activo));
+  return{fechaTxt:fh(Date.now()),origen:demoActiva?"la Demo (datos temporales y precios simulados)":"las cuentas reales del simulador",capital:CAPITAL,capitalTxt:$$(CAPITAL),mep,ccl,alumnos,ops,tenencias};
+}
+async function exportar(){
+  if(typeof JSZip==="undefined")return alert("No se pudo cargar la herramienta de Excel. Revisá tu conexión e intentá de nuevo.");
+  if(!todos.some(u=>(u.usuario||"")!==ADMIN))return alert("Todavía no hay alumnos registrados.");
+  const btn=$("xls"),txt=btn.textContent;btn.disabled=true;btn.textContent="Preparando la planilla…";
+  try{
+    const blob=await xlsxCrear(JSZip,datosExcel()),url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download=`alumnos_${demoActiva?"demo_":""}${ba().dia}.xlsx`;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+  }catch(e){console.warn(e);alert("No se pudo generar la planilla. Probá de nuevo.");}
+  finally{btn.disabled=false;btn.textContent=txt;}
 }
 
 /* ---------- Notas ---------- */
@@ -2566,6 +2631,218 @@ NL.addEventListener("keydown",e=>{
   else if(e.key==="Enter"||e.key===" "){e.preventDefault();const c=nvCards()[Math.round(nv.f)];if(c)nvAbrir(c.dataset.nid);}
 });
 new ResizeObserver(()=>{const st=$("nvStage");if(st&&st.clientWidth){nvMedir();nvPos(nv.f,false);}}).observe(NL);   // también se acomoda al volver a mostrar la pestaña
+/* ---------- MENSAJES: ventana de conversación ---------- */
+let msgAb=null,msgOp=null;
+const SVG_X='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+function msgBuscar(id){   // encuentra el mensaje principal (nota del alumno o consejo del docente) y su dueño
+  const n=notas.find(x=>x.id===id);
+  if(n){const u=todos.find(z=>z.id===n.uid);return u?{u,n}:null;}
+  const c=coment.find(x=>x.id===id&&!x.notaId);
+  if(c){const u=todos.find(z=>z.id===c.para);return u?{u,c}:null;}
+  return null;
+}
+function pintarMsg(){
+  const M=$("msgModal");
+  if(!msgAb){if(!M.classList.contains("hide")){M.classList.add("hide");document.body.classList.remove("mm-abierto");}return;}
+  const r=msgBuscar(msgAb.id);
+  if(!r){cerrarMsg();return;}
+  const herr=msgAb.herr&&esAdmin,k=nCom(msgAb.id);
+  const sig=JSON.stringify([msgAb.id,herr,msgAb.puede,esAdmin,r.n?[r.n.texto,r.n.puntaje==null?null:r.n.puntaje]:[r.c.texto],[...coment.filter(c=>c.notaId===msgAb.id),...resps.filter(x=>x.root===msgAb.id)].map(x=>x.id)]);
+  if(M._sig===sig&&!M.classList.contains("hide"))return;   // si no cambió nada, no se redibuja (no se pierde lo que se escribe)
+  M._sig=sig;
+  const subio=M._k!=null&&k>M._k;M._k=k;
+  const msg=r.n?msgNota(r.n,r.u,herr,msgAb.puede,true):msgConsejo(r.c,r.u,herr,msgAb.puede,true);
+  conservar($("msgPanel"),"m"+msgAb.id,()=>{$("msgPanel").innerHTML=`<div class="mm-head"><b id="msgModalT">Conversación</b><button type="button" class="mm-x" data-mclose aria-label="Cerrar">${SVG_X}</button></div><div class="mm-body">${msg}</div>`;});
+  M.classList.remove("hide");document.body.classList.add("mm-abierto");
+  if(subio)$("msgPanel").scrollTop=$("msgPanel").scrollHeight;   // llegó un comentario nuevo: se baja hasta el final
+}
+function abrirMsg(id,op){
+  msgOp=op||null;msgAb={id,herr:tab==="alumnos",puede:tab==="notas"};   // en Ranking la conversación es de solo lectura
+  const M=$("msgModal");M._sig=null;M._k=null;M.classList.add("hide");
+  pintarMsg();
+  const x=M.querySelector(".mm-x");if(x)x.focus();
+}
+function cerrarMsg(){
+  msgAb=null;const M=$("msgModal");M.classList.add("hide");M._sig=null;M._k=null;
+  document.body.classList.remove("mm-abierto");
+  if(msgOp&&document.contains(msgOp))msgOp.focus();
+  msgOp=null;
+}
+$("msgModal").addEventListener("keydown",e=>{   // el foco se queda dentro de la ventana mientras está abierta
+  if(e.key!=="Tab")return;
+  const f=[...$("msgModal").querySelectorAll("button,textarea,input,a[href]")].filter(x=>!x.disabled&&x.offsetParent!==null);
+  if(!f.length)return;
+  const a=f[0],z=f[f.length-1];
+  if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();}
+  else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&msgAb)cerrarMsg();});
+/* ---------- EXCEL DEL DOCENTE: planilla con panel, gráficos y tablas de análisis ---------- */
+function xlsxCrear(JSZip,D,salida){
+  const esc=s=>String(s==null?"":s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const col=i=>{let s="";for(i++;i>0;i=Math.floor((i-1)/26))s=String.fromCharCode(65+(i-1)%26)+s;return s;};
+  const ok=n=>typeof n==="number"&&isFinite(n);
+  /* ----- estilos ----- */
+  const fonts=['<font><sz val="11"/><name val="Calibri"/></font>'],fills=['<fill><patternFill patternType="none"/></fill>','<fill><patternFill patternType="gray125"/></fill>'],bords=['<border><left/><right/><top/><bottom/><diagonal/></border>'],nfs=[],xfs=['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'],mapa={};
+  const ix=(a,x)=>{let i=a.indexOf(x);if(i<0){a.push(x);i=a.length-1;}return i;};
+  const NF={money:'"$ "#,##0.00',usd:'"US$ "#,##0.00',int:'#,##0',pct:'0.00%',fecha:'dd/mm/yyyy hh:mm',dia:'dd/mm/yyyy',num:'#,##0.00',nota:'0.0'};
+  const S=(o={})=>{const k=JSON.stringify(o);if(k in mapa)return mapa[k];
+    const f=ix(fonts,`<font>${o.b?"<b/>":""}${o.i?"<i/>":""}<sz val="${o.sz||11}"/><color rgb="FF${o.c||"0F2942"}"/><name val="Calibri"/></font>`);
+    const fl=o.bg?ix(fills,`<fill><patternFill patternType="solid"><fgColor rgb="FF${o.bg}"/><bgColor indexed="64"/></patternFill></fill>`):0;
+    const bd=o.bd?ix(bords,`<border><left style="thin"><color rgb="FF${o.bd}"/></left><right style="thin"><color rgb="FF${o.bd}"/></right><top style="thin"><color rgb="FF${o.bd}"/></top><bottom style="thin"><color rgb="FF${o.bd}"/></bottom><diagonal/></border>`):0;
+    const nf=o.nf?164+ix(nfs,NF[o.nf]):0;
+    const al=(o.al||o.va||o.wrap)?`<alignment${o.al?` horizontal="${o.al}"`:""} vertical="${o.va||"center"}"${o.wrap?' wrapText="1"':""}/>`:"";
+    xfs.push(`<xf numFmtId="${nf}" fontId="${f}" fillId="${fl}" borderId="${bd}" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"${al?` applyAlignment="1">${al}</xf>`:"/>"}`);
+    return mapa[k]=xfs.length-1;};
+  const ENC={b:1,c:"FFFFFF",bg:"0F2942",al:"center",wrap:1,bd:"0F2942"};
+  const CEL=(nf,x)=>S(Object.assign({bd:"E2E8F0"},nf?{nf}:{},x||{}));
+  /* ----- hojas ----- */
+  const hojas=[];
+  const hoja=(nombre,o)=>{const h=Object.assign({nombre,filas:{},anchos:[],cf:[],fusion:[],alto:{},prio:1},o||{});hojas.push(h);return h;};
+  const poner=(h,r,c,v,s,f)=>{(h.filas[r]=h.filas[r]||{})[c]={v,s,f};};
+  const fusionar=(h,r1,c1,r2,c2)=>{h.fusion.push(`${col(c1)}${r1}:${col(c2)}${r2}`);};
+  const A=D.alumnos,n=A.length,O=D.ops,m=O.length,T=D.tenencias;
+  const ult=n+1;   // última fila de la hoja Alumnos
+  /* Panel */
+  const P=hoja("Panel",{tab:true,sinGrilla:true,color:"1D4ED8",dibujo:true,anchos:Array(12).fill(13)});
+  const Al=hoja("Alumnos",{color:"0F2942",filtro:`A1:P${ult}`,congelar:{x:2,y:1}});
+  const An=hoja("Análisis",{color:"0D7A3E"});
+  const Op=hoja("Operaciones",{color:"B45309",filtro:`A1:L${m+1}`,congelar:{x:1,y:1}});
+  const Te=hoja("Tenencias",{color:"64748B",filtro:`A1:G${T.length+1}`,congelar:{x:0,y:1}});
+  /* Alumnos */
+  const encA=["Puesto","Alumno","Efectivo ($)","Dólares MEP (US$)","Dólares CCL (US$)","Valor de las tenencias ($)","Patrimonio total ($)","Resultado ($)","Resultado (%)","Resultado realizado ($)","Resultado no realizado ($)","Dividendos y pagos cobrados ($)","Comisiones pagadas ($)","Notas publicadas","Notas evaluadas","Puntaje promedio"];
+  Al.anchos=[8,22,16,16,16,18,18,16,14,18,18,20,18,12,12,12];Al.alto[1]=44;
+  encA.forEach((t,i)=>poner(Al,1,i,t,S(ENC)));
+  A.forEach((a,i)=>{const r=i+2,res=a.pat-D.capital;
+    poner(Al,r,0,i+1,CEL("int",{al:"center"}));poner(Al,r,1,a.nombre,CEL(0,{b:1}));
+    poner(Al,r,2,a.cash,CEL("money"));poner(Al,r,3,a.usd,CEL("usd"));poner(Al,r,4,a.ccl,CEL("usd"));
+    poner(Al,r,5,a.ten,CEL("money"));poner(Al,r,6,a.pat,CEL("money",{b:1}));
+    poner(Al,r,7,res,CEL("money"),`G${r}-CapitalInicial`);poner(Al,r,8,res/D.capital,CEL("pct"),`H${r}/CapitalInicial`);
+    poner(Al,r,9,a.re,CEL("money"));poner(Al,r,10,a.nr,CEL("money"));poner(Al,r,11,a.dv,CEL("money"));poner(Al,r,12,a.cm,CEL("money"));
+    poner(Al,r,13,a.nPub,CEL("int",{al:"center"}));poner(Al,r,14,a.nEva,CEL("int",{al:"center"}));
+    poner(Al,r,15,a.prom==null?null:a.prom,CEL("nota",{al:"center"}));});
+  Al.cf.push(`<conditionalFormatting sqref="G2:G${ult}"><cfRule type="dataBar" priority="${Al.prio++}"><dataBar><cfvo type="num" val="0"/><cfvo type="max"/><color rgb="FF93C5FD"/></dataBar></cfRule></conditionalFormatting>`);
+  Al.cf.push(`<conditionalFormatting sqref="I2:I${ult}"><cfRule type="colorScale" priority="${Al.prio++}"><colorScale><cfvo type="min"/><cfvo type="num" val="0"/><cfvo type="max"/><color rgb="FFF8696B"/><color rgb="FFFFFFFF"/><color rgb="FF63BE7B"/></colorScale></cfRule></conditionalFormatting>`);
+  Al.cf.push(`<conditionalFormatting sqref="P2:P${ult}"><cfRule type="dataBar" priority="${Al.prio++}"><dataBar><cfvo type="num" val="0"/><cfvo type="num" val="10"/><color rgb="FF86EFAC"/></dataBar></cfRule></conditionalFormatting>`);
+  /* Operaciones */
+  const encO=["Alumno","Fecha y hora","Categoría","Operación","Activo","Moneda","Cantidad","Precio","Importe bruto","Comisión","Importe neto","Día"];
+  Op.anchos=[22,18,18,26,14,10,12,14,16,14,16,12];Op.alto[1]=30;
+  encO.forEach((t,i)=>poner(Op,1,i,t,S(ENC)));
+  O.forEach((o,i)=>{const r=i+2,ser=o.t/864e5+25569-3/24;
+    poner(Op,r,0,o.alumno,CEL(0,{b:1}));poner(Op,r,1,ser,CEL("fecha",{al:"center"}));poner(Op,r,2,o.cat,CEL());poner(Op,r,3,o.op,CEL());
+    poner(Op,r,4,o.activo,CEL());poner(Op,r,5,o.mon,CEL(0,{al:"center"}));poner(Op,r,6,o.c,CEL("num"));poner(Op,r,7,o.p,CEL("num"));
+    poner(Op,r,8,o.bruto,CEL("num"));poner(Op,r,9,o.com,CEL("num"));poner(Op,r,10,o.neto,CEL("num",{b:1}));poner(Op,r,11,Math.floor(ser),CEL("dia",{al:"center"}));});
+  /* Tenencias */
+  const encT=["Alumno","Activo","Tipo","Cantidad","Moneda","Precio actual","Valor actual ($)"];
+  Te.anchos=[22,14,24,12,10,16,18];Te.alto[1]=30;
+  encT.forEach((t,i)=>poner(Te,1,i,t,S(ENC)));
+  T.forEach((t,i)=>{const r=i+2;poner(Te,r,0,t.alumno,CEL(0,{b:1}));poner(Te,r,1,t.activo,CEL());poner(Te,r,2,t.tipo,CEL());poner(Te,r,3,t.c,CEL("num"));poner(Te,r,4,t.mon,CEL(0,{al:"center"}));poner(Te,r,5,t.px,CEL("num"));poner(Te,r,6,t.val,CEL("money",{b:1}));});
+  /* Análisis */
+  An.anchos=[22,12,12,12,18,10,3,14,14,3,34,18,14,3,22,14,14,3,22,16,16,16];
+  const TIT={b:1,sz:12,c:"0F2942"};
+  poner(An,1,0,"Análisis de la clase",S({b:1,sz:16,c:"FFFFFF",bg:"0F2942",va:"center"}));for(let c=1;c<22;c++)poner(An,1,c,null,S({bg:"0F2942"}));fusionar(An,1,0,1,21);An.alto[1]=30;
+  poner(An,2,0,"Estas tablas se calculan con fórmulas a partir de las hojas Alumnos, Operaciones y Tenencias: funcionan como una tabla dinámica y se actualizan si modificás los datos.",S({i:1,c:"64748B",sz:10}));fusionar(An,2,0,2,21);
+  /* A: operaciones por alumno y categoría */
+  poner(An,3,0,"Operaciones por alumno y categoría",S(TIT));
+  const cats=["Compra","Venta","Cobro","Cambio de divisas"];
+  ["Alumno",...cats,"Total"].forEach((t,i)=>poner(An,4,i,t,S(ENC)));An.alto[4]=30;
+  const cnt=(al,cat)=>O.filter(o=>o.alumno===al&&o.cat===cat).length;
+  A.forEach((a,i)=>{const r=i+5;poner(An,r,0,a.nombre,CEL(0,{b:1}));
+    cats.forEach((c,j)=>poner(An,r,j+1,cnt(a.nombre,c),CEL("int",{al:"center"}),`COUNTIFS(Operaciones!$A:$A,$A${r},Operaciones!$C:$C,${col(j+1)}$4)`));
+    poner(An,r,5,cats.reduce((s,c)=>s+cnt(a.nombre,c),0),CEL("int",{al:"center",b:1}),`SUM(B${r}:E${r})`);});
+  An.cf.push(`<conditionalFormatting sqref="B5:E${n+4}"><cfRule type="colorScale" priority="${An.prio++}"><colorScale><cfvo type="min"/><cfvo type="max"/><color rgb="FFFFFFFF"/><color rgb="FF60A5FA"/></colorScale></cfRule></conditionalFormatting>`);
+  /* B: actividad por día */
+  poner(An,3,7,"Actividad por día",S(TIT));
+  ["Día","Operaciones"].forEach((t,i)=>poner(An,4,7+i,t,S(ENC)));
+  const dias={};O.forEach(o=>{const d=Math.floor(o.t/864e5+25569-3/24);dias[d]=(dias[d]||0)+1;});
+  const DL=Object.keys(dias).map(Number).sort((a,b)=>a-b).slice(-31);
+  DL.forEach((d,i)=>{const r=i+5;poner(An,r,7,d,CEL("dia",{al:"center"}));poner(An,r,8,dias[d],CEL("int",{al:"center"}),`COUNTIFS(Operaciones!$L:$L,H${r})`);});
+  if(!DL.length)poner(An,5,7,"Sin operaciones",S({i:1,c:"64748B"}));
+  /* C: composición */
+  poner(An,3,10,"Composición de las carteras",S(TIT));
+  ["Concepto","Valor ($)","Participación"].forEach((t,i)=>poner(An,4,10+i,t,S(ENC)));
+  const sum=k=>A.reduce((s,a)=>s+a[k],0);
+  const tipos=[...new Set(T.map(t=>t.tipo))].sort();
+  const CO=[["Efectivo en pesos",sum("cash"),`SUM(Alumnos!C2:C${ult})`],["Dólares MEP y CCL (en pesos)",sum("usd")*D.mep+sum("ccl")*D.ccl,`SUM(Alumnos!D2:D${ult})*DolarMEP+SUM(Alumnos!E2:E${ult})*DolarCCL`]];
+  tipos.forEach((t,i)=>CO.push([t,T.filter(x=>x.tipo===t).reduce((s,x)=>s+x.val,0),`SUMIFS(Tenencias!$G:$G,Tenencias!$C:$C,K${5+2+i})`]));
+  const totCo=CO.reduce((s,x)=>s+x[1],0),fCo=4+CO.length;
+  CO.forEach((c,i)=>{const r=i+5;poner(An,r,10,c[0],CEL(0,{b:1}));poner(An,r,11,c[1],CEL("money"),c[2]);poner(An,r,12,totCo?c[1]/totCo:0,CEL("pct",{al:"center"}),`IF(SUM(L$5:L$${fCo})=0,0,L${r}/SUM(L$5:L$${fCo}))`);});
+  /* D: resultado por alumno (base del gráfico) */
+  poner(An,3,14,"Resultado por alumno (base del gráfico)",S(TIT));
+  ["Alumno","Ganancia","Pérdida"].forEach((t,i)=>poner(An,4,14+i,t,S(ENC)));
+  A.forEach((a,i)=>{const r=i+5,ra=i+2,res=(a.pat-D.capital)/D.capital;
+    poner(An,r,14,a.nombre,CEL(0,{b:1}),`Alumnos!B${ra}`);
+    poner(An,r,15,Math.max(res,0),CEL("pct",{al:"center"}),`MAX(Alumnos!I${ra},0)`);
+    poner(An,r,16,Math.min(res,0),CEL("pct",{al:"center"}),`MIN(Alumnos!I${ra},0)`);});
+  /* E: composición del patrimonio por alumno (base del gráfico) */
+  poner(An,3,18,"Composición por alumno (base del gráfico)",S(TIT));
+  ["Alumno","Efectivo","Dólares (en $)","Tenencias"].forEach((t,i)=>poner(An,4,18+i,t,S(ENC)));
+  A.forEach((a,i)=>{const r=i+5,ra=i+2;
+    poner(An,r,18,a.nombre,CEL(0,{b:1}),`Alumnos!B${ra}`);
+    poner(An,r,19,a.cash,CEL("money"),`Alumnos!C${ra}`);
+    poner(An,r,20,a.usd*D.mep+a.ccl*D.ccl,CEL("money"),`Alumnos!D${ra}*DolarMEP+Alumnos!E${ra}*DolarCCL`);
+    poner(An,r,21,a.ten,CEL("money"),`Alumnos!F${ra}`);});
+  /* Panel */
+  const k0=S({b:1,sz:18,c:"FFFFFF",bg:"0F2942",va:"center"}),k1=S({i:1,c:"64748B",sz:10,va:"center"});
+  poner(P,1,0,"InvEco · Panel de resultados de la clase",k0);for(let c=1;c<12;c++)poner(P,1,c,null,S({bg:"0F2942"}));fusionar(P,1,0,1,11);P.alto[1]=36;
+  poner(P,2,0,`Generado el ${D.fechaTxt}. Los datos corresponden a ${D.origen}. Capital inicial por alumno: ${D.capitalTxt}.`,k1);fusionar(P,2,0,2,11);
+  const KL={sz:10,c:"64748B",bg:"F1F5F9",al:"center",bd:"E2E8F0"},KV=(nf)=>S({b:1,sz:16,c:"0F2942",bg:"FFFFFF",al:"center",bd:"E2E8F0",nf});
+  const rg=(l,r)=>`Alumnos!${l}2:${l}${r}`;
+  const pm=A.length?A.reduce((s,a)=>s+a.pat,0)/n:0,rs=A.map(a=>(a.pat-D.capital)/D.capital);
+  const KP=[["Alumnos registrados",n,"int",`COUNTA(${rg("B",ult)})`],["Patrimonio promedio",pm,"money",`AVERAGE(${rg("G",ult)})`],["Mejor resultado",rs.length?Math.max(...rs):0,"pct",`MAX(${rg("I",ult)})`],["Peor resultado",rs.length?Math.min(...rs):0,"pct",`MIN(${rg("I",ult)})`],["Operaciones realizadas",m,"int",`COUNTA(Operaciones!A2:A${Math.max(m+1,2)})`],["Comisiones pagadas",sum("cm"),"money",`SUM(${rg("M",ult)})`]];
+  KP.forEach((k,i)=>{const c=i*2;poner(P,4,c,k[0],S(KL));poner(P,4,c+1,null,S(KL));fusionar(P,4,c,4,c+1);
+    poner(P,5,c,k[1],KV(k[2]),k[3]);poner(P,5,c+1,null,KV(k[2]));fusionar(P,5,c,5,c+1);});
+  P.alto[4]=22;P.alto[5]=36;
+  const RL=S({b:1,c:"334155",bg:"F8FAFC",bd:"E2E8F0",al:"right"}),RV=nf=>S({b:1,c:"1D4ED8",bg:"FFFFFF",bd:"E2E8F0",al:"center",nf});
+  poner(P,7,0,"Dólar MEP",RL);poner(P,7,1,D.mep,RV("money"));poner(P,7,2,"Dólar CCL",RL);poner(P,7,3,D.ccl,RV("money"));poner(P,7,4,"Capital",RL);poner(P,7,5,D.capital,RV("money"));
+  poner(P,7,6,"Si cambiás el capital o una cotización (celdas azules), se recalculan el resultado y la composición de las carteras.",S({i:1,c:"64748B",sz:10,wrap:1}));fusionar(P,7,6,7,11);P.alto[7]=30;
+  /* ----- gráficos ----- */
+  const rf=(h,c1,r1,c2,r2)=>`'${h}'!$${col(c1)}$${r1}`+(r2?`:$${col(c2)}$${r2}`:"");
+  const cache=(vals,txt)=>txt?`<c:strCache><c:ptCount val="${vals.length}"/>${vals.map((v,i)=>`<c:pt idx="${i}"><c:v>${esc(v)}</c:v></c:pt>`).join("")}</c:strCache>`:`<c:numCache><c:formatCode>General</c:formatCode><c:ptCount val="${vals.length}"/>${vals.map((v,i)=>`<c:pt idx="${i}"><c:v>${ok(v)?v:0}</c:v></c:pt>`).join("")}</c:numCache>`;
+  const rpr=(sz,b)=>`<a:defRPr sz="${sz}" b="${b?1:0}"><a:solidFill><a:srgbClr val="334155"/></a:solidFill></a:defRPr>`;
+  const titulo=t=>`<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:pPr>${rpr(1300,1)}</a:pPr><a:r><a:rPr lang="es-AR" sz="1300" b="1"><a:solidFill><a:srgbClr val="0F2942"/></a:solidFill></a:rPr><a:t>${esc(t)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title><c:autoTitleDeleted val="0"/>`;
+  const txPr=sz=>`<c:txPr><a:bodyPr/><a:lstStyle/><a:p><a:pPr>${rpr(sz)}</a:pPr><a:endParaRPr lang="es-AR"/></a:p></c:txPr>`;
+  const serie=(i,s)=>`<c:ser><c:idx val="${i}"/><c:order val="${i}"/><c:tx><c:strRef><c:f>${esc(s.nomRef)}</c:f>${cache([s.nom],1)}</c:strRef></c:tx><c:spPr><a:solidFill><a:srgbClr val="${s.color}"/></a:solidFill></c:spPr><c:invertIfNegative val="0"/>${s.lbl?`<c:dLbls><c:numFmt formatCode="${esc(s.lbl)}" sourceLinked="0"/><c:spPr><a:noFill/><a:ln><a:noFill/></a:ln></c:spPr>${txPr(900)}<c:dLblPos val="outEnd"/><c:showLegendKey val="0"/><c:showVal val="1"/><c:showCatName val="0"/><c:showSerName val="0"/><c:showPercent val="0"/><c:showBubbleSize val="0"/></c:dLbls>`:""}<c:cat>${s.catNum?`<c:numRef><c:f>${esc(s.catRef)}</c:f><c:numCache><c:formatCode>dd/mm/yyyy</c:formatCode><c:ptCount val="${s.cat.length}"/>${s.cat.map((v,j)=>`<c:pt idx="${j}"><c:v>${v}</c:v></c:pt>`).join("")}</c:numCache></c:numRef>`:`<c:strRef><c:f>${esc(s.catRef)}</c:f>${cache(s.cat,1)}</c:strRef>`}</c:cat><c:val><c:numRef><c:f>${esc(s.valRef)}</c:f>${cache(s.val,0)}</c:numRef></c:val></c:ser>`;
+  const ejes=(horiz,fmt,catNum)=>`<c:catAx><c:axId val="5001"/><c:scaling><c:orientation val="${horiz?"maxMin":"minMax"}"/></c:scaling><c:delete val="0"/><c:axPos val="${horiz?"l":"b"}"/>${catNum?'<c:numFmt formatCode="dd/mm/yyyy" sourceLinked="0"/>':""}<c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="low"/><c:spPr><a:ln w="9525"><a:solidFill><a:srgbClr val="CBD5E1"/></a:solidFill></a:ln></c:spPr>${txPr(900)}<c:crossAx val="5002"/><c:crosses val="autoZero"/><c:auto val="0"/><c:lblAlgn val="ctr"/><c:lblOffset val="100"/><c:noMultiLvlLbl val="0"/></c:catAx><c:valAx><c:axId val="5002"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="${horiz?"b":"l"}"/><c:majorGridlines><c:spPr><a:ln w="6350"><a:solidFill><a:srgbClr val="E2E8F0"/></a:solidFill></a:ln></c:spPr></c:majorGridlines><c:numFmt formatCode="${esc(fmt)}" sourceLinked="0"/><c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/><c:spPr><a:ln><a:noFill/></a:ln></c:spPr>${txPr(900)}<c:crossAx val="5001"/><c:crosses val="${horiz?"max":"autoZero"}"/><c:crossBetween val="between"/></c:valAx>`;
+  const envoltura=(t,cuerpo,leyenda)=>`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><c:roundedCorners val="0"/><c:chart>${titulo(t)}<c:plotArea><c:layout/>${cuerpo}</c:plotArea>${leyenda?`<c:legend><c:legendPos val="${leyenda}"/><c:overlay val="0"/>${txPr(1000)}</c:legend>`:""}<c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/></c:chart><c:spPr><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:ln w="9525"><a:solidFill><a:srgbClr val="E2E8F0"/></a:solidFill></a:ln></c:spPr></c:chartSpace>`;
+  const barras=(t,series,o)=>envoltura(t,`<c:barChart><c:barDir val="${o.horiz?"bar":"col"}"/><c:grouping val="${o.apilado?"stacked":"clustered"}"/><c:varyColors val="0"/>${series.map((s,i)=>serie(i,s)).join("")}<c:gapWidth val="${o.gap||60}"/>${o.apilado?'<c:overlap val="100"/>':""}<c:axId val="5001"/><c:axId val="5002"/></c:barChart>${ejes(o.horiz,o.fmt,o.catNum)}`,o.leyenda);
+  const PAL=["1D4ED8","0D7A3E","B45309","B91C1C","0F2942","64748B","60A5FA","86EFAC","FCD34D","94A3B8"];
+  const dona=(t,s)=>envoltura(t,`<c:doughnutChart><c:varyColors val="1"/><c:ser><c:idx val="0"/><c:order val="0"/><c:tx><c:strRef><c:f>${esc(s.nomRef)}</c:f>${cache([s.nom],1)}</c:strRef></c:tx>${s.cat.map((_,i)=>`<c:dPt><c:idx val="${i}"/><c:bubble3D val="0"/><c:spPr><a:solidFill><a:srgbClr val="${PAL[i%PAL.length]}"/></a:solidFill><a:ln w="19050"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill></a:ln></c:spPr></c:dPt>`).join("")}<c:dLbls><c:numFmt formatCode="0.0%" sourceLinked="0"/><c:spPr><a:noFill/><a:ln><a:noFill/></a:ln></c:spPr><c:txPr><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz="900" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill></a:defRPr></a:pPr><a:endParaRPr lang="es-AR"/></a:p></c:txPr><c:showLegendKey val="0"/><c:showVal val="0"/><c:showCatName val="0"/><c:showSerName val="0"/><c:showPercent val="1"/><c:showBubbleSize val="0"/><c:showLeaderLines val="0"/></c:dLbls><c:cat><c:strRef><c:f>${esc(s.catRef)}</c:f>${cache(s.cat,1)}</c:strRef></c:cat><c:val><c:numRef><c:f>${esc(s.valRef)}</c:f>${cache(s.val,0)}</c:numRef></c:val></c:ser><c:firstSliceAng val="0"/><c:holeSize val="55"/></c:doughnutChart>`,"r");
+  const nombres=A.map(a=>a.nombre),gan=A.map(a=>Math.max((a.pat-D.capital)/D.capital,0)),per=A.map(a=>Math.min((a.pat-D.capital)/D.capital,0));
+  const charts=[];
+  const alto1=Math.max(18,n+7);
+  const cnom=rf("Análisis",18,5,18,n+4),ef=A.map(a=>a.cash),dl=A.map(a=>a.usd*D.mep+a.ccl*D.ccl),tn=A.map(a=>a.ten);
+  charts.push({xml:barras("Patrimonio por alumno y su composición ($)",[{nom:"Efectivo",nomRef:rf("Análisis",19,4),color:"93C5FD",cat:nombres,catRef:cnom,val:ef,valRef:rf("Análisis",19,5,19,n+4)},{nom:"Dólares (en $)",nomRef:rf("Análisis",20,4),color:"0D7A3E",cat:nombres,catRef:cnom,val:dl,valRef:rf("Análisis",20,5,20,n+4)},{nom:"Tenencias",nomRef:rf("Análisis",21,4),color:"1D4ED8",cat:nombres,catRef:cnom,val:tn,valRef:rf("Análisis",21,5,21,n+4)}],{horiz:1,apilado:1,fmt:'"$ "#,##0',gap:40,leyenda:"b"}),de:[0,9],a:[6,9+alto1]});
+  charts.push({xml:barras("Resultado (%) por alumno",[{nom:"Ganancia",nomRef:rf("Análisis",15,4),color:"0D7A3E",cat:nombres,catRef:rf("Análisis",14,5,14,n+4),val:gan,valRef:rf("Análisis",15,5,15,n+4)},{nom:"Pérdida",nomRef:rf("Análisis",16,4),color:"B91C1C",cat:nombres,catRef:rf("Análisis",14,5,14,n+4),val:per,valRef:rf("Análisis",16,5,16,n+4)}],{horiz:1,apilado:1,fmt:"0%",gap:40,leyenda:"b"}),de:[6,9],a:[12,9+alto1]});
+  const f2=9+alto1+1;
+  charts.push({xml:dona("Composición de las carteras",{nom:"Valor ($)",nomRef:rf("Análisis",11,4),cat:CO.map(c=>c[0]),catRef:rf("Análisis",10,5,10,fCo),val:CO.map(c=>c[1]),valRef:rf("Análisis",11,5,11,fCo)}),de:[0,f2],a:[6,f2+18]});
+  if(DL.length)charts.push({xml:barras("Operaciones por día",[{nom:"Operaciones",nomRef:rf("Análisis",8,4),color:"B45309",cat:DL,catNum:1,catRef:rf("Análisis",7,5,7,DL.length+4),val:DL.map(d=>dias[d]),valRef:rf("Análisis",8,5,8,DL.length+4),lbl:"0"}],{horiz:0,fmt:"0",gap:50,catNum:1}),de:[6,f2],a:[12,f2+18]});
+  /* ----- XML de hojas ----- */
+  const celdaXml=(c,r,i)=>{const ref=col(i)+r,s=c.s?` s="${c.s}"`:"";
+    if(c.f){const f=`<f>${esc(c.f)}</f>`;return ok(c.v)?`<c r="${ref}"${s}>${f}<v>${c.v}</v></c>`:`<c r="${ref}"${s} t="str">${f}<v>${esc(c.v)}</v></c>`;}
+    if(ok(c.v))return`<c r="${ref}"${s}><v>${c.v}</v></c>`;
+    if(c.v==null||c.v==="")return c.s?`<c r="${ref}"${s}/>`:"";
+    return`<c r="${ref}"${s} t="inlineStr"><is><t xml:space="preserve">${esc(c.v)}</t></is></c>`;};
+  const hojaXml=(h,k)=>{
+    const rows=Object.keys(h.filas).map(Number).sort((a,b)=>a-b).map(r=>{const cs=h.filas[r],cx=Object.keys(cs).map(Number).sort((a,b)=>a-b).map(i=>celdaXml(cs[i],r,i)).join("");
+      return`<row r="${r}"${h.alto[r]?` ht="${h.alto[r]}" customHeight="1"`:""}>${cx}</row>`;}).join("");
+    const cg=h.congelar,pane=cg?(cg.x?`<pane xSplit="${cg.x}" ySplit="${cg.y}" topLeftCell="${col(cg.x)}${cg.y+1}" activePane="bottomRight" state="frozen"/><selection pane="topRight" activeCell="${col(cg.x)}1" sqref="${col(cg.x)}1"/><selection pane="bottomLeft" activeCell="A${cg.y+1}" sqref="A${cg.y+1}"/><selection pane="bottomRight" activeCell="${col(cg.x)}${cg.y+1}" sqref="${col(cg.x)}${cg.y+1}"/>`:`<pane ySplit="${cg.y}" topLeftCell="A${cg.y+1}" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A${cg.y+1}" sqref="A${cg.y+1}"/>`):"";
+    return`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetPr><tabColor rgb="FF${h.color}"/><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView workbookViewId="0"${h.tab?' tabSelected="1"':""}${h.sinGrilla?' showGridLines="0"':""}>${pane}</sheetView></sheetViews><sheetFormatPr defaultRowHeight="15"/>${h.anchos.length?`<cols>${h.anchos.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("")}</cols>`:""}<sheetData>${rows}</sheetData>${h.filtro?`<autoFilter ref="${h.filtro}"/>`:""}${h.fusion.length?`<mergeCells count="${h.fusion.length}">${h.fusion.map(x=>`<mergeCell ref="${x}"/>`).join("")}</mergeCells>`:""}${h.cf.join("")}<pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/><pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/>${h.dibujo?'<drawing r:id="rId1"/>':""}</worksheet>`;};
+  const stylesXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${nfs.length?`<numFmts count="${nfs.length}">${nfs.map((f,i)=>`<numFmt numFmtId="${164+i}" formatCode="${esc(f)}"/>`).join("")}</numFmts>`:""}<fonts count="${fonts.length}">${fonts.join("")}</fonts><fills count="${fills.length}">${fills.join("")}</fills><borders count="${bords.length}">${bords.join("")}</borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="${xfs.length}">${xfs.join("")}</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  const R="http://schemas.openxmlformats.org/officeDocument/2006/relationships",XML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  const zip=new JSZip();
+  zip.file("[Content_Types].xml",`${XML}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${hojas.map((_,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("")}<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>${charts.map((_,i)=>`<Override PartName="/xl/charts/chart${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>`).join("")}</Types>`);
+  zip.file("_rels/.rels",`${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${R}/officeDocument" Target="xl/workbook.xml"/></Relationships>`);
+  zip.file("xl/workbook.xml",`${XML}<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="${R}"><bookViews><workbookView xWindow="0" yWindow="0" windowWidth="24000" windowHeight="12000"/></bookViews><sheets>${hojas.map((h,i)=>`<sheet name="${esc(h.nombre)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join("")}</sheets><definedNames><definedName name="CapitalInicial">Panel!$F$7</definedName><definedName name="DolarCCL">Panel!$D$7</definedName><definedName name="DolarMEP">Panel!$B$7</definedName></definedNames><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>`);
+  zip.file("xl/_rels/workbook.xml.rels",`${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${hojas.map((_,i)=>`<Relationship Id="rId${i+1}" Type="${R}/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join("")}<Relationship Id="rId${hojas.length+1}" Type="${R}/styles" Target="styles.xml"/></Relationships>`);
+  zip.file("xl/styles.xml",stylesXml);
+  hojas.forEach((h,i)=>zip.file(`xl/worksheets/sheet${i+1}.xml`,hojaXml(h,i)));
+  zip.file("xl/worksheets/_rels/sheet1.xml.rels",`${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${R}/drawing" Target="../drawings/drawing1.xml"/></Relationships>`);
+  zip.file("xl/drawings/drawing1.xml",`${XML}<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">${charts.map((c,i)=>`<xdr:twoCellAnchor><xdr:from><xdr:col>${c.de[0]}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${c.de[1]}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>${c.a[0]}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${c.a[1]}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to><xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="${i+2}" name="Gráfico ${i+1}"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr><xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"><c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:r="${R}" r:id="rId${i+1}"/></a:graphicData></a:graphic></xdr:graphicFrame><xdr:clientData/></xdr:twoCellAnchor>`).join("")}</xdr:wsDr>`);
+  zip.file("xl/drawings/_rels/drawing1.xml.rels",`${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${charts.map((_,i)=>`<Relationship Id="rId${i+1}" Type="${R}/chart" Target="../charts/chart${i+1}.xml"/>`).join("")}</Relationships>`);
+  charts.forEach((c,i)=>zip.file(`xl/charts/chart${i+1}.xml`,c.xml));
+  return zip.generateAsync({type:salida||"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",compression:"DEFLATE"});
+}
 /* ---------- GRÁFICO EN PANTALLA COMPLETA (Etapa 6, parte 3) ---------- */
 function tvAmpliar(on){
   $("tvc").classList.toggle("tv-fullscreen",on);
